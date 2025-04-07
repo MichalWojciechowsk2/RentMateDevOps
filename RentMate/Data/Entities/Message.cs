@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,6 +13,8 @@ namespace Data.Entities
         public int SenderId { get; set; }
         public int ReceiverId { get; set; }
         public int? IssueId { get; set; }
+        [Required]
+        [StringLength(4000)]
         public string Content { get; set; }
         public bool IsRead { get; set; }
         public DateTime CreatedAt { get; set; }
