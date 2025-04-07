@@ -10,9 +10,22 @@ namespace Data
 {
     public class RentMateDbContext : DbContext
     {
+
+
         public RentMateDbContext(DbContextOptions<RentMateDbContext> options)
         : base(options)
         {
+        }
+
+        public RentMateDbContext()
+        {
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+
+         optionsBuilder.UseSqlServer("Data Source=HP;Initial Catalog=RentMate;Integrated Security=True;Trust Server Certificate=True");
+
         }
 
         public DbSet<User> Users { get; set; }
@@ -27,26 +40,26 @@ namespace Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // User configuration
+            // konfiguracja usera
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
 
-            // Property configuration
+            // konfiguracja property
             modelBuilder.Entity<Property>()
                 .HasOne(p => p.Owner)
                 .WithMany()
                 .HasForeignKey(p => p.OwnerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Offer configuration
+            // konfiguracja offer
             modelBuilder.Entity<Offer>()
                 .HasOne(o => o.Property)
                 .WithMany(p => p.Offers)
                 .HasForeignKey(o => o.PropertyId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Payment configuration
+            // konfiguracja payment
             modelBuilder.Entity<Payment>()
                 .HasOne(p => p.Offer)
                 .WithMany(o => o.Payments)
@@ -59,7 +72,7 @@ namespace Data
                 .HasForeignKey(p => p.TenantId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Issue configuration
+            // konfiguracja issue
             modelBuilder.Entity<Issue>()
                 .HasOne(i => i.Property)
                 .WithMany(p => p.Issues)
@@ -72,7 +85,7 @@ namespace Data
                 .HasForeignKey(i => i.TenantId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Review configuration
+            // konfiguracja review
             modelBuilder.Entity<Review>()
                 .HasOne(r => r.Property)
                 .WithMany(p => p.Reviews)
@@ -85,7 +98,7 @@ namespace Data
                 .HasForeignKey(r => r.AuthorId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Message configuration
+            // konfiguracja message
             modelBuilder.Entity<Message>()
                 .HasOne(m => m.Sender)
                 .WithMany()
