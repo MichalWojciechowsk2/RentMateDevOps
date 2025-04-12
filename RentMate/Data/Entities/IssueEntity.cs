@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Data.Entities
 {
-    public class Issue
+    public class IssueEntity
     {
         public int Id { get; set; }
         public int PropertyId { get; set; }
@@ -24,9 +24,9 @@ namespace Data.Entities
         public DateTime CreatedAt { get; set; }
         public DateTime? ResolvedAt { get; set; }
 
-        public Property Property { get; set; }
-        public User Tenant { get; set; }
-        public ICollection<Message> Messages { get; set; }
+        public PropertyEntity Property { get; set; }
+        public UserEntity Tenant { get; set; }
+        public ICollection<MessageEntity> Messages { get; set; }
     }
 
     public enum IssueStatus

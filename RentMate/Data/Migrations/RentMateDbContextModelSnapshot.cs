@@ -17,12 +17,12 @@ namespace Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.3")
+                .HasAnnotation("ProductVersion", "8.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Data.Entities.Issue", b =>
+            modelBuilder.Entity("Data.Entities.IssueEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -67,7 +67,7 @@ namespace Data.Migrations
                     b.ToTable("Issues");
                 });
 
-            modelBuilder.Entity("Data.Entities.Message", b =>
+            modelBuilder.Entity("Data.Entities.MessageEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -106,7 +106,7 @@ namespace Data.Migrations
                     b.ToTable("Messages");
                 });
 
-            modelBuilder.Entity("Data.Entities.Offer", b =>
+            modelBuilder.Entity("Data.Entities.OfferEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -150,7 +150,7 @@ namespace Data.Migrations
                     b.ToTable("Offers");
                 });
 
-            modelBuilder.Entity("Data.Entities.Payment", b =>
+            modelBuilder.Entity("Data.Entities.PaymentEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -193,7 +193,7 @@ namespace Data.Migrations
                     b.ToTable("Payments");
                 });
 
-            modelBuilder.Entity("Data.Entities.Property", b =>
+            modelBuilder.Entity("Data.Entities.PropertyEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -257,7 +257,7 @@ namespace Data.Migrations
                     b.ToTable("Properties");
                 });
 
-            modelBuilder.Entity("Data.Entities.Review", b =>
+            modelBuilder.Entity("Data.Entities.ReviewEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -291,7 +291,7 @@ namespace Data.Migrations
                     b.ToTable("Reviews");
                 });
 
-            modelBuilder.Entity("Data.Entities.User", b =>
+            modelBuilder.Entity("Data.Entities.UserEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -341,15 +341,15 @@ namespace Data.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Data.Entities.Issue", b =>
+            modelBuilder.Entity("Data.Entities.IssueEntity", b =>
                 {
-                    b.HasOne("Data.Entities.Property", "Property")
+                    b.HasOne("Data.Entities.PropertyEntity", "Property")
                         .WithMany("Issues")
                         .HasForeignKey("PropertyId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Data.Entities.User", "Tenant")
+                    b.HasOne("Data.Entities.UserEntity", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -360,20 +360,20 @@ namespace Data.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("Data.Entities.Message", b =>
+            modelBuilder.Entity("Data.Entities.MessageEntity", b =>
                 {
-                    b.HasOne("Data.Entities.Issue", "Issue")
+                    b.HasOne("Data.Entities.IssueEntity", "Issue")
                         .WithMany("Messages")
                         .HasForeignKey("IssueId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("Data.Entities.User", "Receiver")
+                    b.HasOne("Data.Entities.UserEntity", "Receiver")
                         .WithMany()
                         .HasForeignKey("ReceiverId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Data.Entities.User", "Sender")
+                    b.HasOne("Data.Entities.UserEntity", "Sender")
                         .WithMany()
                         .HasForeignKey("SenderId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -386,15 +386,15 @@ namespace Data.Migrations
                     b.Navigation("Sender");
                 });
 
-            modelBuilder.Entity("Data.Entities.Offer", b =>
+            modelBuilder.Entity("Data.Entities.OfferEntity", b =>
                 {
-                    b.HasOne("Data.Entities.Property", "Property")
+                    b.HasOne("Data.Entities.PropertyEntity", "Property")
                         .WithMany("Offers")
                         .HasForeignKey("PropertyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Data.Entities.User", "Tenant")
+                    b.HasOne("Data.Entities.UserEntity", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
@@ -403,15 +403,15 @@ namespace Data.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("Data.Entities.Payment", b =>
+            modelBuilder.Entity("Data.Entities.PaymentEntity", b =>
                 {
-                    b.HasOne("Data.Entities.Offer", "Offer")
+                    b.HasOne("Data.Entities.OfferEntity", "Offer")
                         .WithMany("Payments")
                         .HasForeignKey("OfferId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Data.Entities.User", "Tenant")
+                    b.HasOne("Data.Entities.UserEntity", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -422,9 +422,9 @@ namespace Data.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("Data.Entities.Property", b =>
+            modelBuilder.Entity("Data.Entities.PropertyEntity", b =>
                 {
-                    b.HasOne("Data.Entities.User", "Owner")
+                    b.HasOne("Data.Entities.UserEntity", "Owner")
                         .WithMany()
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -433,15 +433,15 @@ namespace Data.Migrations
                     b.Navigation("Owner");
                 });
 
-            modelBuilder.Entity("Data.Entities.Review", b =>
+            modelBuilder.Entity("Data.Entities.ReviewEntity", b =>
                 {
-                    b.HasOne("Data.Entities.User", "Author")
+                    b.HasOne("Data.Entities.UserEntity", "Author")
                         .WithMany()
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Data.Entities.Property", "Property")
+                    b.HasOne("Data.Entities.PropertyEntity", "Property")
                         .WithMany("Reviews")
                         .HasForeignKey("PropertyId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -452,17 +452,17 @@ namespace Data.Migrations
                     b.Navigation("Property");
                 });
 
-            modelBuilder.Entity("Data.Entities.Issue", b =>
+            modelBuilder.Entity("Data.Entities.IssueEntity", b =>
                 {
                     b.Navigation("Messages");
                 });
 
-            modelBuilder.Entity("Data.Entities.Offer", b =>
+            modelBuilder.Entity("Data.Entities.OfferEntity", b =>
                 {
                     b.Navigation("Payments");
                 });
 
-            modelBuilder.Entity("Data.Entities.Property", b =>
+            modelBuilder.Entity("Data.Entities.PropertyEntity", b =>
                 {
                     b.Navigation("Issues");
 

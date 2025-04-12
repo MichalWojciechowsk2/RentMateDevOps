@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Data.Entities
 {
-    public class Offer
+    public class OfferEntity
     {
         public int Id { get; set; }
         public int PropertyId { get; set; }
@@ -28,13 +28,13 @@ namespace Data.Entities
 
         // Dane najemcy (gdy oferta zostanie zaakceptowana)
         public int? TenantId { get; set; }
-        public User Tenant { get; set; }
+        public UserEntity Tenant { get; set; }
 
         public DateTime CreatedAt { get; set; }
         public DateTime? AcceptedAt { get; set; }
 
-        public Property Property { get; set; }
-        public ICollection<Payment> Payments { get; set; }
+        public PropertyEntity Property { get; set; }
+        public ICollection<PaymentEntity> Payments { get; set; }
     }
 
     public enum OfferStatus

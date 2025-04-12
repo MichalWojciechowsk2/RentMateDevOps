@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Data.Entities
 {
-    public class Property
+    public class PropertyEntity
     {
         public int Id { get; set; }
         public int OwnerId { get; set; }
@@ -44,9 +44,9 @@ namespace Data.Entities
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 
-        public User Owner { get; set; }
-        public ICollection<Offer> Offers { get; set; }
-        public ICollection<Issue> Issues { get; set; }
-        public ICollection<Review> Reviews { get; set; }
+        public UserEntity Owner { get; set; }
+        public ICollection<OfferEntity> Offers { get; set; }
+        public ICollection<IssueEntity> Issues { get; set; }
+        public ICollection<ReviewEntity> Reviews { get; set; }
     }
 }
