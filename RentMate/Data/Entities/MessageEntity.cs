@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Data.Entities
 {
-    public class Message
+    public class MessageEntity
     {
         public int Id { get; set; }
         public int SenderId { get; set; }
@@ -19,8 +19,8 @@ namespace Data.Entities
         public bool IsRead { get; set; }
         public DateTime CreatedAt { get; set; }
 
-        public User Sender { get; set; }
-        public User Receiver { get; set; }
-        public Issue Issue { get; set; }
+        public UserEntity Sender { get; set; }
+        public UserEntity Receiver { get; set; }
+        public IssueEntity Issue { get; set; }
     }
 }

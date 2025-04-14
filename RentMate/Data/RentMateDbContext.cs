@@ -1,17 +1,10 @@
 ﻿using Data.Entities;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Data
 {
     public class RentMateDbContext : DbContext
     {
-
-
         public RentMateDbContext(DbContextOptions<RentMateDbContext> options)
         : base(options)
         {
@@ -24,94 +17,95 @@ namespace Data
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
 
-         optionsBuilder.UseSqlServer("Data Source=HP;Initial Catalog=RentMate;Integrated Security=True;Trust Server Certificate=True");
+         optionsBuilder.UseSqlServer("Data Source=DESKTOP-GI765C2;Initial Catalog=RentMate;Integrated Security=True;Trust Server Certificate=True");
 
         }
 
-        public DbSet<User> Users { get; set; }
-        public DbSet<Property> Properties { get; set; }
-        public DbSet<Offer> Offers { get; set; }
-        public DbSet<Payment> Payments { get; set; }
-        public DbSet<Issue> Issues { get; set; }
-        public DbSet<Review> Reviews { get; set; }
-        public DbSet<Message> Messages { get; set; }
+        public DbSet<UserEntity> Users { get; set; }
+        public DbSet<PropertyEntity> Properties { get; set; }
+        public DbSet<OfferEntity> Offers { get; set; }
+        public DbSet<PaymentEntity> Payments { get; set; }
+        public DbSet<IssueEntity> Issues { get; set; }
+        public DbSet<ReviewEntity> Reviews { get; set; }
+        public DbSet<MessageEntity> Messages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+           
 
             // konfiguracja usera
-            modelBuilder.Entity<User>()
+            modelBuilder.Entity<UserEntity>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
 
             // konfiguracja property
-            modelBuilder.Entity<Property>()
+            modelBuilder.Entity<PropertyEntity>()
                 .HasOne(p => p.Owner)
                 .WithMany()
                 .HasForeignKey(p => p.OwnerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // konfiguracja offer
-            modelBuilder.Entity<Offer>()
+            modelBuilder.Entity<OfferEntity>()
                 .HasOne(o => o.Property)
                 .WithMany(p => p.Offers)
                 .HasForeignKey(o => o.PropertyId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // konfiguracja payment
-            modelBuilder.Entity<Payment>()
+            modelBuilder.Entity<PaymentEntity>()
                 .HasOne(p => p.Offer)
                 .WithMany(o => o.Payments)
                 .HasForeignKey(p => p.OfferId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Payment>()
+            modelBuilder.Entity<PaymentEntity>()
                 .HasOne(p => p.Tenant)
                 .WithMany()
                 .HasForeignKey(p => p.TenantId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // konfiguracja issue
-            modelBuilder.Entity<Issue>()
+            modelBuilder.Entity<IssueEntity>()
                 .HasOne(i => i.Property)
                 .WithMany(p => p.Issues)
                 .HasForeignKey(i => i.PropertyId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Issue>()
+            modelBuilder.Entity<IssueEntity>()
                 .HasOne(i => i.Tenant)
                 .WithMany()
                 .HasForeignKey(i => i.TenantId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // konfiguracja review
-            modelBuilder.Entity<Review>()
+            modelBuilder.Entity<ReviewEntity>()
                 .HasOne(r => r.Property)
                 .WithMany(p => p.Reviews)
                 .HasForeignKey(r => r.PropertyId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Review>()
+            modelBuilder.Entity<ReviewEntity>()
                 .HasOne(r => r.Author)
                 .WithMany()
                 .HasForeignKey(r => r.AuthorId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // konfiguracja message
-            modelBuilder.Entity<Message>()
+            modelBuilder.Entity<MessageEntity>()
                 .HasOne(m => m.Sender)
                 .WithMany()
                 .HasForeignKey(m => m.SenderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Message>()
+            modelBuilder.Entity<MessageEntity>()
                 .HasOne(m => m.Receiver)
                 .WithMany()
                 .HasForeignKey(m => m.ReceiverId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Message>()
+            modelBuilder.Entity<MessageEntity>()
                 .HasOne(m => m.Issue)
                 .WithMany(i => i.Messages)
                 .HasForeignKey(m => m.IssueId)

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Data.Entities
 {
-    public class Payment
+    public class PaymentEntity
     {
         public int Id { get; set; }
         public int OfferId { get; set; }
@@ -18,8 +18,8 @@ namespace Data.Entities
         public string PaymentMethod { get; set; }
         public string TransactionId { get; set; }
 
-        public Offer Offer { get; set; }
-        public User Tenant { get; set; }
+        public OfferEntity Offer { get; set; }
+        public UserEntity Tenant { get; set; }
     }
 
     public enum PaymentStatus
