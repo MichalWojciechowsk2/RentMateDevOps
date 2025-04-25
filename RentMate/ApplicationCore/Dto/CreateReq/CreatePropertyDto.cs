@@ -37,5 +37,10 @@ namespace ApplicationCore.Dto.CreateReq
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal BaseDeposit { get; set; } //kaucja
+
+        public bool IsActive { get; set; } = true;
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedAt { get; set; }
     }
 }

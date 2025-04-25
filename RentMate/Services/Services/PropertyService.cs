@@ -17,7 +17,7 @@ namespace Services.Services
         public async Task<bool> CreateProperty(CreatePropertyDto propertyDto)
         {
             var dtoToEntity = _mapper.Map<PropertyEntity>(propertyDto);
-            dtoToEntity.OwnerId = 2; // CHANGE IN FUTURE!
+            dtoToEntity.OwnerId = 1; // CHANGE IN FUTURE!
             await _propertyRepository.CreateProperty(dtoToEntity);
             return true;
         }

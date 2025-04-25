@@ -1,5 +1,7 @@
 using Data;
+using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Services.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +11,9 @@ builder.Services.AddDbContext<RentMateDbContext>(options =>
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+builder.Services.AddScoped<IPropertyRepository, PropertyReporitory>();
+builder.Services.AddScoped<IPropertyService, PropertyService>();
 
 var app = builder.Build();
 

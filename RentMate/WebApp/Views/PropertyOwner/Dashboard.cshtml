@@ -1,0 +1,39 @@
+@{
+    ViewData["Title"] = "Panel właściciela";
+}
+
+<div class="container mt-4">
+    <h1>Panel właściciela mieszkań</h1>
+    
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Dodaj nowe mieszkanie</h5>
+                    <p class="card-text">Dodaj nowe mieszkanie do swojej oferty.</p>
+                    <a asp-action="AddProperty" class="btn btn-primary">Dodaj mieszkanie</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Moje mieszkania</h5>
+                    <p class="card-text">Zarządzaj swoimi mieszkaniami.</p>
+                    <a asp-action="MyProperties" class="btn btn-primary">Zobacz mieszkania</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Zgłoszenia</h5>
+                    <p class="card-text">Zobacz zgłoszenia od najemców.</p>
+                    <a href="#" class="btn btn-primary">Zobacz zgłoszenia</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

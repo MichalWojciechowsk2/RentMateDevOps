@@ -1,0 +1,123 @@
+@model IEnumerable<Data.Entities.PropertyEntity>
+
+@{
+    ViewData["Title"] = "Moje mieszkania";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1>Moje mieszkania</h1>
+        <a asp-action="AddProperty" class="btn btn-primary">Dodaj nowe mieszkanie</a>
+    </div>
+
+    <div class="row mt-4">
+        @foreach (var property in Model)
+        {
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    @if (property.Images != null && property.Images.Any())
+                    {
+                        var mainImage = property.Images.FirstOrDefault(i => i.IsMainImage) ?? property.Images.First();
+                        <img src="/@mainImage.ImagePath" class="card-img-top" alt="@property.Title" style="height: 200px; object-fit: cover;">
+                    }
+                    <div class="card-body">
+                        <h5 class="card-title">@property.Title</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">@property.City, @property.Address</h6>
+                        
+                        <div class="row mt-3">
+                            <div class="col-6">
+                                <p class="mb-1"><strong>Powierzchnia:</strong> @property.Area m²</p>
+                                <p class="mb-1"><strong>Liczba pokoi:</strong> @property.RoomCount</p>
+                            </div>
+                            <div class="col-6">
+                                <p class="mb-1"><strong>Cena:</strong> @property.BasePrice PLN</p>
+                                <p class="mb-1"><strong>Kaucja:</strong> @property.BaseDeposit PLN</p>
+                            </div>
+                        </div>
+
+                        <p class="card-text mt-3">
+                            @(property.Description?.Length > 200 
+                                ? property.Description.Substring(0, 200) + "..." 
+                                : property.Description)
+                        </p>
+
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#imagesModal_@property.Id">
+                                Zarządzaj zdjęciami
+                            </button>
+                            <a href="#" class="btn btn-sm btn-outline-info">Szczegóły</a>
+                            <a href="#" class="btn btn-sm btn-outline-danger">Usuń</a>
+                            @if (property.IsActive)
+                            {
+                                <span class="badge bg-success float-end">Aktywne</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary float-end">Nieaktywne</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal zarządzania zdjęciami -->
+            <div class="modal fade" id="imagesModal_@property.Id" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Zarządzaj zdjęciami - @property.Title</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form asp-action="UploadImages" method="post" enctype="multipart/form-data">
+                                <input type="hidden" name="propertyId" value="@property.Id" />
+                                <div class="mb-3">
+                                    <label class="form-label">Dodaj nowe zdjęcia</label>
+                                    <input type="file" name="images" multiple class="form-control" accept="image/*" />
+                                </div>
+                                <button type="submit" class="btn btn-primary mb-3">Dodaj zdjęcia</button>
+                            </form>
+
+                            <div class="row">
+                                @if (property.Images != null)
+                                {
+                                    foreach (var image in property.Images)
+                                    {
+                                        <div class="col-md-4 mb-3">
+                                            <div class="card">
+                                                <img src="/@image.ImagePath" class="card-img-top" alt="Zdjęcie mieszkania" style="height: 150px; object-fit: cover;">
+                                                <div class="card-body">
+                                                    <div class="btn-group w-100">
+                                                        @if (!image.IsMainImage)
+                                                        {
+                                                            <form asp-action="SetMainImage" method="post" style="display: inline;">
+                                                                <input type="hidden" name="imageId" value="@image.Id" />
+                                                                <input type="hidden" name="propertyId" value="@property.Id" />
+                                                                <button type="submit" class="btn btn-sm btn-outline-primary">Ustaw jako główne</button>
+                                                            </form>
+                                                        }
+                                                        <form asp-action="DeleteImage" method="post" style="display: inline;">
+                                                            <input type="hidden" name="imageId" value="@image.Id" />
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Czy na pewno chcesz usunąć to zdjęcie?')">Usuń</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info mt-4">
+            Nie masz jeszcze żadnych mieszkań. Kliknij przycisk "Dodaj nowe mieszkanie" aby dodać pierwsze mieszkanie.
+        </div>
+    }
+</div> 

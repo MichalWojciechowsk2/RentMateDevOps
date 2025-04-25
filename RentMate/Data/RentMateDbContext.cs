@@ -16,9 +16,7 @@ namespace Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-
-         optionsBuilder.UseSqlServer("Data Source=DESKTOP-GI765C2;Initial Catalog=RentMate;Integrated Security=True;Trust Server Certificate=True");
-
+            optionsBuilder.UseSqlServer("Data Source=HP;Initial Catalog=RentMate;Integrated Security=True;Trust Server Certificate=True");
         }
 
         public DbSet<UserEntity> Users { get; set; }
@@ -28,12 +26,12 @@ namespace Data
         public DbSet<IssueEntity> Issues { get; set; }
         public DbSet<ReviewEntity> Reviews { get; set; }
         public DbSet<MessageEntity> Messages { get; set; }
+        public DbSet<PropertyImageEntity> PropertyImages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
            
-
             // konfiguracja usera
             modelBuilder.Entity<UserEntity>()
                 .HasIndex(u => u.Email)
@@ -45,6 +43,13 @@ namespace Data
                 .WithMany()
                 .HasForeignKey(p => p.OwnerId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // konfiguracja property images
+            modelBuilder.Entity<PropertyImageEntity>()
+                .HasOne(pi => pi.Property)
+                .WithMany(p => p.Images)
+                .HasForeignKey(pi => pi.PropertyId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // konfiguracja offer
             modelBuilder.Entity<OfferEntity>()
