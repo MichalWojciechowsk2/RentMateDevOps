@@ -5,6 +5,14 @@
 }
 
 <div class="container mt-4">
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     <div class="d-flex justify-content-between align-items-center">
         <h1>Moje mieszkania</h1>
         <a asp-action="AddProperty" class="btn btn-primary">Dodaj nowe mieszkanie</a>
@@ -46,7 +54,9 @@
                                 Zarządzaj zdjęciami
                             </button>
                             <a href="#" class="btn btn-sm btn-outline-info">Szczegóły</a>
-                            <a href="#" class="btn btn-sm btn-outline-danger">Usuń</a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal_@property.Id">
+                                Usuń
+                            </button>
                             @if (property.IsActive)
                             {
                                 <span class="badge bg-success float-end">Aktywne</span>
@@ -107,6 +117,29 @@
                                     }
                                 }
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal potwierdzenia usunięcia -->
+            <div class="modal fade" id="deleteModal_@property.Id" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Potwierdź usunięcie</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Czy na pewno chcesz usunąć mieszkanie "@property.Title"?</p>
+                            <p class="text-danger">Ta operacja jest nieodwracalna!</p>
+                        </div>
+                        <div class="modal-footer">
+                            <form asp-action="DeleteProperty" method="post">
+                                <input type="hidden" name="propertyId" value="@property.Id" />
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                                <button type="submit" class="btn btn-danger">Usuń mieszkanie</button>
+                            </form>
                         </div>
                     </div>
                 </div>

@@ -181,5 +181,45 @@ namespace WebApp.Controllers
 
             return RedirectToAction(nameof(MyProperties));
         }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteProperty(int propertyId)
+        {
+            var property = await _context.Properties
+                .Include(p => p.Images)
+                .FirstOrDefaultAsync(p => p.Id == propertyId);
+
+            if (property == null)
+            {
+                return NotFound("Nie znaleziono mieszkania.");
+            }
+
+            // Usuwamy wszystkie zdjęcia z dysku
+            if (property.Images != null && property.Images.Any())
+            {
+                var propertyImagesPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "properties", propertyId.ToString());
+                
+                foreach (var image in property.Images)
+                {
+                    var filePath = Path.Combine(_webHostEnvironment.WebRootPath, image.ImagePath);
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
+                }
+
+                // Usuwamy folder mieszkania, jeśli jest pusty
+                if (Directory.Exists(propertyImagesPath))
+                {
+                    Directory.Delete(propertyImagesPath, true);
+                }
+            }
+
+            _context.Properties.Remove(property);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Mieszkanie zostało usunięte.";
+            return RedirectToAction(nameof(MyProperties));
+        }
     }
 }
