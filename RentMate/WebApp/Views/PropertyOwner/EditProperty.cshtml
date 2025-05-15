@@ -1,0 +1,101 @@
+@model Data.Entities.PropertyEntity
+
+@{
+    ViewData["Title"] = "Edytuj mieszkanie";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h1>Edytuj mieszkanie</h1>
+            
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            
+            <form asp-action="EditProperty" method="post" class="mt-4">
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="CreatedAt" />
+                <input type="hidden" asp-for="OwnerId" />
+                <input type="hidden" asp-for="IsActive" />
+
+                <div class="form-group mb-3">
+                    <label asp-for="Title" class="control-label">Tytuł</label>
+                    <input asp-for="Title" class="form-control" required maxlength="150" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Description" class="control-label">Opis</label>
+                    <textarea asp-for="Description" class="form-control" rows="4" required maxlength="2000"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="City" class="control-label">Miasto</label>
+                            <input asp-for="City" class="form-control" required maxlength="100" />
+                            <span asp-validation-for="City" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="Address" class="control-label">Adres</label>
+                            <input asp-for="Address" class="form-control" required maxlength="200" />
+                            <span asp-validation-for="Address" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="Area" class="control-label">Powierzchnia (m²)</label>
+                            <input asp-for="Area" class="form-control" type="number" step="0.01" required min="0" />
+                            <span asp-validation-for="Area" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="RoomCount" class="control-label">Liczba pokoi</label>
+                            <input asp-for="RoomCount" class="form-control" type="number" required min="1" />
+                            <span asp-validation-for="RoomCount" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="PostalCode" class="control-label">Kod pocztowy</label>
+                            <input asp-for="PostalCode" class="form-control" required maxlength="10" />
+                            <span asp-validation-for="PostalCode" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="BasePrice" class="control-label">Cena bazowa (PLN)</label>
+                            <input asp-for="BasePrice" class="form-control" type="number" step="0.01" required min="0" />
+                            <span asp-validation-for="BasePrice" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="BaseDeposit" class="control-label">Kaucja (PLN)</label>
+                            <input asp-for="BaseDeposit" class="form-control" type="number" step="0.01" required min="0" />
+                            <span asp-validation-for="BaseDeposit" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group mt-4">
+                    <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+                    <a asp-action="MyProperties" class="btn btn-secondary">Powrót do listy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} 

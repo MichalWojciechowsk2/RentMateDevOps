@@ -53,7 +53,10 @@
                             <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#imagesModal_@property.Id">
                                 Zarządzaj zdjęciami
                             </button>
-                            <a href="#" class="btn btn-sm btn-outline-info">Szczegóły</a>
+                            <a asp-action="PropertyDetails" asp-route-id="@property.Id" class="btn btn-sm btn-outline-info">Szczegóły</a>
+                            <a asp-action="EditProperty" asp-route-id="@property.Id" class="btn btn-sm btn-outline-warning">
+                                <i class="fas fa-edit"></i> Edytuj
+                            </a>
                             <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal_@property.Id">
                                 Usuń
                             </button>

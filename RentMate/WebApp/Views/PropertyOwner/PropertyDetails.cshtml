@@ -1,0 +1,177 @@
+@model Data.Entities.PropertyEntity
+
+@{
+    ViewData["Title"] = "Szczegóły mieszkania";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <h1>@Model.Title</h1>
+            <h6 class="text-muted">@Model.City, @Model.Address</h6>
+            
+            <!-- Galeria zdjęć -->
+            <div id="propertyCarousel" class="carousel slide mt-4" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    @if (Model.Images != null && Model.Images.Any())
+                    {
+                        var first = true;
+                        foreach (var image in Model.Images)
+                        {
+                            <div class="carousel-item @(first ? "active" : "")">
+                                <img src="/@image.ImagePath" class="d-block w-100" alt="Zdjęcie mieszkania" style="height: 400px; object-fit: cover;">
+                            </div>
+                            first = false;
+                        }
+                    }
+                    else
+                    {
+                        <div class="carousel-item active">
+                            <img src="/images/no-image.jpg" class="d-block w-100" alt="Brak zdjęcia" style="height: 400px; object-fit: cover;">
+                        </div>
+                    }
+                </div>
+                @if (Model.Images != null && Model.Images.Count > 1)
+                {
+                    <button class="carousel-control-prev" type="button" data-bs-target="#propertyCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Poprzednie</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#propertyCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Następne</span>
+                    </button>
+                }
+            </div>
+
+            <!-- Miniaturki zdjęć -->
+            @if (Model.Images != null && Model.Images.Any())
+            {
+                <div class="row mt-3">
+                    @foreach (var image in Model.Images)
+                    {
+                        <div class="col-md-3 mb-3">
+                            <img src="/@image.ImagePath" class="img-thumbnail" alt="Miniatura" 
+                                 style="height: 100px; width: 100%; object-fit: cover; cursor: pointer;"
+                                 onclick="$('#propertyCarousel').carousel(@Model.Images.ToList().IndexOf(image))">
+                        </div>
+                    }
+                </div>
+            }
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h5>Szczegóły</h5>
+                    <p><strong>Powierzchnia:</strong> @Model.Area m²</p>
+                    <p><strong>Liczba pokoi:</strong> @Model.RoomCount</p>
+                    <p><strong>Cena:</strong> @Model.BasePrice PLN</p>
+                    <p><strong>Kaucja:</strong> @Model.BaseDeposit PLN</p>
+                    <p><strong>Kod pocztowy:</strong> @Model.PostalCode</p>
+                    <p><strong>Data dodania:</strong> @Model.CreatedAt.ToString("dd.MM.yyyy")</p>
+                    @if (Model.UpdatedAt.HasValue)
+                    {
+                        <p><strong>Ostatnia aktualizacja:</strong> @Model.UpdatedAt.Value.ToString("dd.MM.yyyy")</p>
+                    }
+                </div>
+                <div class="col-md-6">
+                    <h5>Opis</h5>
+                    <p>@Model.Description</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Akcje</h5>
+                    <div class="d-grid gap-2">
+                        <a asp-action="EditProperty" asp-route-id="@Model.Id" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> Edytuj mieszkanie
+                        </a>
+                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#imagesModal">
+                            <i class="fas fa-images"></i> Zarządzaj zdjęciami
+                        </button>
+                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            <i class="fas fa-trash"></i> Usuń mieszkanie
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal do zarządzania zdjęciami -->
+<div class="modal fade" id="imagesModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Zarządzanie zdjęciami</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form asp-action="UploadImages" method="post" enctype="multipart/form-data" class="mb-4">
+                    <input type="hidden" name="propertyId" value="@Model.Id" />
+                    <div class="mb-3">
+                        <label class="form-label">Dodaj nowe zdjęcia</label>
+                        <input type="file" name="images" multiple class="form-control" accept="image/*" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Dodaj zdjęcia</button>
+                </form>
+
+                <div class="row">
+                    @if (Model.Images != null)
+                    {
+                        foreach (var image in Model.Images)
+                        {
+                            <div class="col-md-4 mb-3">
+                                <div class="card">
+                                    <img src="/@image.ImagePath" class="card-img-top" alt="Zdjęcie mieszkania" style="height: 150px; object-fit: cover;">
+                                    <div class="card-body">
+                                        <div class="btn-group w-100">
+                                            @if (!image.IsMainImage)
+                                            {
+                                                <form asp-action="SetMainImage" method="post" style="display: inline;">
+                                                    <input type="hidden" name="imageId" value="@image.Id" />
+                                                    <input type="hidden" name="propertyId" value="@Model.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-primary">Ustaw jako główne</button>
+                                                </form>
+                                            }
+                                            <form asp-action="DeleteImage" method="post" style="display: inline;">
+                                                <input type="hidden" name="imageId" value="@image.Id" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Czy na pewno chcesz usunąć to zdjęcie?')">Usuń</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal potwierdzenia usunięcia -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Potwierdź usunięcie</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Czy na pewno chcesz usunąć mieszkanie "@Model.Title"?</p>
+                <p class="text-danger">Ta operacja jest nieodwracalna!</p>
+            </div>
+            <div class="modal-footer">
+                <form asp-action="DeleteProperty" method="post">
+                    <input type="hidden" name="propertyId" value="@Model.Id" />
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="submit" class="btn btn-danger">Usuń mieszkanie</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div> 

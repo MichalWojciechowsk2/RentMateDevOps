@@ -108,26 +108,26 @@ namespace WebApp.Controllers
         {
             if (images == null || !images.Any())
             {
-                return BadRequest("Nie wybrano żadnych zdjęć.");
+                TempData["Error"] = "Nie wybrano żadnych zdjęć.";
+                return RedirectToAction(nameof(PropertyDetails), new { id = propertyId });
             }
 
-            var property = await _context.Properties.FindAsync(propertyId);
+            var property = await _propertyService.GetPropertyById(propertyId);
             if (property == null)
             {
-                return NotFound("Nie znaleziono mieszkania.");
+                return NotFound();
             }
-
-            var uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "properties", propertyId.ToString());
-            Directory.CreateDirectory(uploadPath);
 
             foreach (var image in images)
             {
                 if (image.Length > 0)
                 {
-                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(image.FileName);
-                    var filePath = Path.Combine(uploadPath, fileName);
+                    var fileName = Path.GetRandomFileName() + Path.GetExtension(image.FileName);
+                    var filePath = Path.Combine("uploads", "properties", fileName);
+                    var fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", filePath);
 
-                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
+                    using (var stream = new FileStream(fullPath, FileMode.Create))
                     {
                         await image.CopyToAsync(stream);
                     }
@@ -135,91 +135,141 @@ namespace WebApp.Controllers
                     var propertyImage = new PropertyImageEntity
                     {
                         PropertyId = propertyId,
-                        ImagePath = Path.Combine("uploads", "properties", propertyId.ToString(), fileName),
-                        IsMainImage = !await _context.PropertyImages.AnyAsync(pi => pi.PropertyId == propertyId),
-                        UploadedAt = DateTime.UtcNow
+                        ImagePath = filePath,
+                        IsMainImage = !property.Images.Any() // Pierwsze zdjęcie będzie głównym
                     };
 
-                    await _context.PropertyImages.AddAsync(propertyImage);
+                    await _propertyService.AddPropertyImage(propertyImage);
                 }
             }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(MyProperties));
+            TempData["Success"] = "Zdjęcia zostały dodane pomyślnie.";
+            return RedirectToAction(nameof(PropertyDetails), new { id = propertyId });
         }
 
         [HttpPost]
         public async Task<IActionResult> SetMainImage(int imageId, int propertyId)
         {
-            var images = await _context.PropertyImages.Where(pi => pi.PropertyId == propertyId).ToListAsync();
-            foreach (var image in images)
+            var property = await _propertyService.GetPropertyById(propertyId);
+            if (property == null)
             {
-                image.IsMainImage = image.Id == imageId;
+                return NotFound();
             }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(MyProperties));
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> DeleteImage(int imageId)
-        {
-            var image = await _context.PropertyImages.FindAsync(imageId);
+            var image = property.Images.FirstOrDefault(i => i.Id == imageId);
             if (image == null)
             {
                 return NotFound();
             }
 
-            var filePath = Path.Combine(_webHostEnvironment.WebRootPath, image.ImagePath);
-            if (System.IO.File.Exists(filePath))
+            await _propertyService.SetMainImage(propertyId, imageId);
+            TempData["Success"] = "Zdjęcie główne zostało zaktualizowane.";
+            return RedirectToAction(nameof(PropertyDetails), new { id = propertyId });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteImage(int imageId, int propertyId)
+        {
+            var property = await _propertyService.GetPropertyById(propertyId);
+            if (property == null)
             {
-                System.IO.File.Delete(filePath);
+                return NotFound();
             }
 
-            _context.PropertyImages.Remove(image);
-            await _context.SaveChangesAsync();
+            var image = property.Images.FirstOrDefault(i => i.Id == imageId);
+            if (image == null)
+            {
+                return NotFound();
+            }
 
-            return RedirectToAction(nameof(MyProperties));
+            await _propertyService.DeletePropertyImage(imageId);
+            
+            // Usuń plik fizyczny
+            var fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", image.ImagePath);
+            if (System.IO.File.Exists(fullPath))
+            {
+                System.IO.File.Delete(fullPath);
+            }
+
+            TempData["Success"] = "Zdjęcie zostało usunięte.";
+            return RedirectToAction(nameof(PropertyDetails), new { id = propertyId });
         }
 
         [HttpPost]
         public async Task<IActionResult> DeleteProperty(int propertyId)
         {
+            var property = await _propertyService.GetPropertyById(propertyId);
+            if (property == null)
+            {
+                return NotFound();
+            }
+
+            // Usuń wszystkie zdjęcia fizycznie
+            foreach (var image in property.Images)
+            {
+                var fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", image.ImagePath);
+                if (System.IO.File.Exists(fullPath))
+                {
+                    System.IO.File.Delete(fullPath);
+                }
+            }
+
+            await _propertyService.DeleteProperty(propertyId);
+            TempData["Success"] = "Mieszkanie zostało usunięte.";
+            return RedirectToAction(nameof(MyProperties));
+        }
+
+        public async Task<IActionResult> EditProperty(int id)
+        {
             var property = await _context.Properties
-                .Include(p => p.Images)
-                .FirstOrDefaultAsync(p => p.Id == propertyId);
+                .FirstOrDefaultAsync(p => p.Id == id);
 
             if (property == null)
             {
-                return NotFound("Nie znaleziono mieszkania.");
+                return NotFound();
             }
 
-            // Usuwamy wszystkie zdjęcia z dysku
-            if (property.Images != null && property.Images.Any())
+            return View(property);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditProperty(PropertyEntity property)
+        {
+
+            try
             {
-                var propertyImagesPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "properties", propertyId.ToString());
-                
-                foreach (var image in property.Images)
+                var success = await _propertyService.UpdateProperty(property);
+                if (success)
                 {
-                    var filePath = Path.Combine(_webHostEnvironment.WebRootPath, image.ImagePath);
-                    if (System.IO.File.Exists(filePath))
-                    {
-                        System.IO.File.Delete(filePath);
-                    }
+                    TempData["Success"] = "Mieszkanie zostało zaktualizowane pomyślnie.";
+                    return RedirectToAction(nameof(MyProperties));
                 }
-
-                // Usuwamy folder mieszkania, jeśli jest pusty
-                if (Directory.Exists(propertyImagesPath))
+                else
                 {
-                    Directory.Delete(propertyImagesPath, true);
+                    ModelState.AddModelError("", "Nie udało się zaktualizować mieszkania. Spróbuj ponownie.");
+                    return View(property);
                 }
             }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Wystąpił błąd podczas zapisywania zmian. Spróbuj ponownie.");
+                return View(property);
+            }
+        }
 
-            _context.Properties.Remove(property);
-            await _context.SaveChangesAsync();
+        public async Task<IActionResult> PropertyDetails(int id)
+        {
+            var property = await _context.Properties
+                .Include(p => p.Images)
+                .FirstOrDefaultAsync(p => p.Id == id);
 
-            TempData["Success"] = "Mieszkanie zostało usunięte.";
-            return RedirectToAction(nameof(MyProperties));
+            if (property == null)
+            {
+                return NotFound();
+            }
+
+            return View(property);
         }
     }
 }

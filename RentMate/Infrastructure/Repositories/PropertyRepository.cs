@@ -30,16 +30,35 @@ namespace Infrastructure.Repositories
             return await _context.Properties.ToListAsync();
             
         }
-        public async Task<PropertyEntity> GetPropertieById(int id)
+        public async Task<PropertyEntity> GetPropertyById(int id)
         {
-            return await _context.Properties.FirstOrDefaultAsync(x => x.Id == id);
+            return await _context.Properties
+                .Include(p => p.Images)
+                .FirstOrDefaultAsync(p => p.Id == id);
         }
         public async Task<bool> UpdatePropertie(int id, PropertyEntity entity)
         {
             try
             {
-                _context.ChangeTracker.Clear();
-                _context.Entry(entity).State = EntityState.Modified;
+                var existingProperty = await _context.Properties
+                    .FirstOrDefaultAsync(x => x.Id == id);
+
+                if (existingProperty == null)
+                {
+                    return false;
+                }
+
+                existingProperty.Title = entity.Title;
+                existingProperty.Description = entity.Description ?? string.Empty;
+                existingProperty.Address = entity.Address;
+                existingProperty.City = entity.City;
+                existingProperty.PostalCode = entity.PostalCode;
+                existingProperty.Area = entity.Area;
+                existingProperty.RoomCount = entity.RoomCount;
+                existingProperty.BasePrice = entity.BasePrice;
+                existingProperty.BaseDeposit = entity.BaseDeposit;
+                existingProperty.UpdatedAt = entity.UpdatedAt;
+
                 await _context.SaveChangesAsync();
                 return true;
             }
@@ -67,15 +86,45 @@ namespace Infrastructure.Repositories
             }
         }
 
+        public async Task AddPropertyImage(PropertyImageEntity image)
+        {
+            await _context.PropertyImages.AddAsync(image);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeletePropertyImage(int imageId)
+        {
+            var image = await _context.PropertyImages.FindAsync(imageId);
+            if (image != null)
+            {
+                _context.PropertyImages.Remove(image);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task DeleteProperty(int propertyId)
+        {
+            var property = await _context.Properties
+                .Include(p => p.Images)
+                .FirstOrDefaultAsync(p => p.Id == propertyId);
+
+            if (property != null)
+            {
+                _context.Properties.Remove(property);
+                await _context.SaveChangesAsync();
+            }
+        }
     }
     public interface IPropertyRepository
     {
         Task<bool> CreateProperty(PropertyEntity entity);
         Task<IEnumerable<PropertyEntity>> GetAllProperties();
-        Task<PropertyEntity> GetPropertieById(int id);
+        Task<PropertyEntity> GetPropertyById(int id);
         Task<bool> UpdatePropertie(int id, PropertyEntity entity);
         Task<bool> DeleteProperite(int id);
-
+        Task AddPropertyImage(PropertyImageEntity image);
+        Task DeletePropertyImage(int imageId);
+        Task DeleteProperty(int propertyId);
     }
 }
 
