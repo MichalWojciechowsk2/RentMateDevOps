@@ -1,4 +1,3 @@
-
 using Data;
 using Infrastructure.Repositories;
 using Services.AutoMapper;
@@ -13,6 +12,16 @@ namespace RentMateApi
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll",
+                    builder =>
+                    {
+                        builder.AllowAnyOrigin()
+                               .AllowAnyMethod()
+                               .AllowAnyHeader();
+                    });
+            });
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -36,8 +45,10 @@ namespace RentMateApi
 
             app.UseHttpsRedirection();
 
-            app.UseAuthorization();
+            // Use CORS before authorization
+            app.UseCors("AllowAll");
 
+            app.UseAuthorization();
 
             app.MapControllers();
 
