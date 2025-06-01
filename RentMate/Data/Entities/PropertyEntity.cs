@@ -23,7 +23,7 @@ namespace Data.Entities
         [Required]
         [StringLength(200)]
         public string Address { get; set; }
-        public decimal Area { get; set; }
+        public string Area { get; set; } //zmiana decimal na string
         public int RoomCount { get; set; }
 
         [Required]

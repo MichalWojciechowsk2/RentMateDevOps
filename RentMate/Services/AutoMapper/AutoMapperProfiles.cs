@@ -1,4 +1,4 @@
-﻿using ApplicationCore.Dto.CreateReq;
+﻿using ApplicationCore.Dto.Property;
 using AutoMapper;
 using Data.Entities;
 
@@ -9,7 +9,8 @@ namespace Services.AutoMapper
     {
         public AutoMapperProfiles()
         {
-            CreateMap<CreatePropertyDto, PropertyEntity>();
+            CreateMap<PropertyDto, PropertyEntity>();
+            CreateMap<PropertyEntity, PropertyDto>();
         }
     }
 }

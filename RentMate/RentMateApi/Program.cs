@@ -3,6 +3,7 @@ using Data;
 using Infrastructure.Repositories;
 using Services.AutoMapper;
 using Services.Services;
+using static Services.Services.PropertyService;
 
 namespace RentMateApi
 {
