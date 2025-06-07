@@ -1,5 +1,6 @@
 ﻿using ApplicationCore.Dto.Property;
-using Microsoft.AspNetCore.Http;
+using ApplicationCore.Enums;
+using ApplicationCore.Enums.DistrictByCity;
 using Microsoft.AspNetCore.Mvc;
 using Services.Services;
 using static Services.Services.PropertyService;
@@ -36,6 +37,30 @@ namespace RentMateApi.Controllers.Property
         {
             var result = await _propertyService.SearchProperties(filters);
             return Ok(result);
+        }
+        [HttpGet("cities")]
+        public IActionResult GetCities() => Ok(Enum.GetValues(typeof(City)).Cast<City>().Select(c => new {
+            Id = (int)c,
+            Name = c.ToString()
+        }));
+        [HttpGet("districts/{cityId}")]
+        public IActionResult GetDistricts(int cityId)
+        {
+            if (cityId == (int)City.Krakow)
+            {
+                return Ok(Enum.GetValues(typeof(KrakowDistricts)).Cast<KrakowDistricts>().Select(d => new {
+                    Id = (int)d,
+                    Name = d.ToString()
+                }));
+            }
+            if (cityId == (int)City.Warszawa)
+            {
+                return Ok(Enum.GetValues(typeof(WarszawaDistricts)).Cast<WarszawaDistricts>().Select(d => new {
+                    Id = (int)d,
+                    Name = d.ToString()
+                }));
+            }
+            return NotFound();
         }
     }
 }

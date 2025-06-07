@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ApplicationCore.Enums.NeighbourhoodsByCity
+﻿namespace ApplicationCore.Enums.DistrictByCity
 {
     public enum KrakowDistricts
     {
@@ -12,7 +6,7 @@ namespace ApplicationCore.Enums.NeighbourhoodsByCity
         StareMiasto,
         Grzegorzki,
         PradnikCzerwony,
-        PradnikBialy,
+        PradikBialy,
         Krowodrza,
         Bronowice,
         Zwierzyniec,
