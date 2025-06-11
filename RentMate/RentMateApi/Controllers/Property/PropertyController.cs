@@ -46,18 +46,21 @@ namespace RentMateApi.Controllers.Property
         [HttpGet("districts/{cityId}")]
         public IActionResult GetDistricts(int cityId)
         {
-            if (cityId == (int)City.Krakow)
+            if (cityId == (int)City.Kraków)
             {
-                return Ok(Enum.GetValues(typeof(KrakowDistricts)).Cast<KrakowDistricts>().Select(d => new {
+                return Ok(Enum.GetValues(typeof(KrakowDistricts)).Cast<KrakowDistricts>().Select(d => new
+                {
                     Id = (int)d,
-                    Name = d.ToString()
+                    Name = d.GetDisplayName(),
+                    EnumName = d.ToString()
                 }));
             }
             if (cityId == (int)City.Warszawa)
             {
                 return Ok(Enum.GetValues(typeof(WarszawaDistricts)).Cast<WarszawaDistricts>().Select(d => new {
                     Id = (int)d,
-                    Name = d.ToString()
+                    Name = d.GetDisplayName(),
+                    EnumName = d.ToString()
                 }));
             }
             return NotFound();

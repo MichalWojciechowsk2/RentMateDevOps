@@ -20,7 +20,8 @@ namespace ApplicationCore.Dto.Property
         [Required]
         [StringLength(200)]
         public string Address { get; set; }
-        public string Area { get; set; }
+        public decimal Area { get; set; }
+        public string District { get; set; }
         public int RoomCount { get; set; }
 
         [Required]

@@ -34,7 +34,7 @@ namespace Services.Services
             if (!string.IsNullOrEmpty(filters.City))
                 query = query.Where(p => p.City == filters.City);
             if (!string.IsNullOrEmpty(filters.District))
-                query = query.Where(p => p.Area == filters.District);
+                query = query.Where(p => p.District == filters.District);
             if (filters.PriceFrom.HasValue)
                 query = query.Where(p => p.BasePrice >= filters.PriceFrom.Value);
 
