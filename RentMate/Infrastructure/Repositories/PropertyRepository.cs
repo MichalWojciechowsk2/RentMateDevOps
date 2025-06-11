@@ -67,6 +67,11 @@ namespace Infrastructure.Repositories
             }
         }
 
+        public IQueryable<PropertyEntity> GetPropertiesQueryable()
+        {
+            return _context.Properties.AsQueryable();
+        }
+
     }
     public interface IPropertyRepository
     {
@@ -75,7 +80,7 @@ namespace Infrastructure.Repositories
         Task<PropertyEntity> GetPropertieById(int id);
         Task<bool> UpdatePropertie(int id, PropertyEntity entity);
         Task<bool> DeleteProperite(int id);
-
+        IQueryable<PropertyEntity> GetPropertiesQueryable();
     }
 }
 

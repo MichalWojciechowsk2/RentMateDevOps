@@ -1,8 +1,8 @@
-
 using Data;
 using Infrastructure.Repositories;
 using Services.AutoMapper;
 using Services.Services;
+using static Services.Services.PropertyService;
 
 namespace RentMateApi
 {
@@ -23,21 +23,31 @@ namespace RentMateApi
             builder.Services.AddScoped<IPropertyService , PropertyService>();
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
-
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowFrontend", policy =>
+                {
+                    policy
+                        .WithOrigins("http://localhost:5173")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+            });
             var app = builder.Build();
             RentMateApi.Seed.SeedData.EnsureSeeded(app);
-
+            
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-
+            builder.Services.AddCors();
+            //app.UseCors(builder => builder.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:5173"));
+            app.UseCors("AllowFrontend");
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
 
             app.MapControllers();
 

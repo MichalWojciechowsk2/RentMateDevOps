@@ -6,9 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ApplicationCore.Dto.CreateReq
+namespace ApplicationCore.Dto.Property
 {
-    public class CreatePropertyDto
+    public class PropertyDto
     {
         [Required]
         [StringLength(150)]
@@ -20,7 +20,7 @@ namespace ApplicationCore.Dto.CreateReq
         [Required]
         [StringLength(200)]
         public string Address { get; set; }
-        public decimal Area { get; set; }
+        public string Area { get; set; }
         public int RoomCount { get; set; }
 
         [Required]
