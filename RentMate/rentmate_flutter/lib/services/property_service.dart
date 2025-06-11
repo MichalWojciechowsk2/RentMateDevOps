@@ -160,4 +160,40 @@ class PropertyService {
       throw Exception('Failed to upload image: $e');
     }
   }
+
+  Future<List<String>> getCities() async {
+    final response = await http.get(
+      Uri.parse('$_baseUrl/Property/cities'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((city) => city['name'].toString()).toList();
+    } else {
+      throw Exception('Failed to load cities: \\${response.body}');
+    }
+  }
+
+  Future<List<Property>> searchProperties({String? city, double? priceFrom, double? priceTo, int? rooms}) async {
+    final queryParams = <String, String>{};
+    if (city != null && city.isNotEmpty) queryParams['city'] = city;
+    if (priceFrom != null) queryParams['priceFrom'] = priceFrom.toString();
+    if (priceTo != null) queryParams['priceTo'] = priceTo.toString();
+    if (rooms != null) queryParams['rooms'] = rooms.toString();
+    final uri = Uri.parse('$_baseUrl/Property/search').replace(queryParameters: queryParams);
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((json) => Property.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to search properties: \\${response.body}');
+    }
+  }
 } 

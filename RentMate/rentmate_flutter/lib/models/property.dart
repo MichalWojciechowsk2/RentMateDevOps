@@ -9,7 +9,7 @@ class Property {
   final String city;
   final String postalCode;
   final int roomCount;
-  final double area;
+  final String area;
   final List<String> images;
   final bool isActive;
   final DateTime createdAt;
@@ -35,21 +35,21 @@ class Property {
 
   factory Property.fromJson(Map<String, dynamic> json) {
     return Property(
-      id: json['id'] as int,
-      ownerId: json['ownerId'] as int,
-      title: json['title'] as String,
-      description: json['description'] as String,
-      basePrice: (json['basePrice'] as num).toDouble(),
-      baseDeposit: (json['baseDeposit'] as num).toDouble(),
-      address: json['address'] as String,
-      city: json['city'] as String,
-      postalCode: json['postalCode'] as String,
-      roomCount: json['roomCount'] as int,
-      area: (json['area'] as num).toDouble(),
-      images: List<String>.from(json['images'] ?? []),
-      isActive: json['isActive'] as bool,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt'] as String) : null,
+      id: json['id'] is int ? json['id'] ?? 0 : int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      ownerId: json['ownerId'] is int ? json['ownerId'] ?? 0 : int.tryParse(json['ownerId']?.toString() ?? '') ?? 0,
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      basePrice: json['basePrice'] != null ? (json['basePrice'] as num).toDouble() : 0.0,
+      baseDeposit: json['baseDeposit'] != null ? (json['baseDeposit'] as num).toDouble() : 0.0,
+      address: json['address']?.toString() ?? '',
+      city: json['city']?.toString() ?? '',
+      postalCode: json['postalCode']?.toString() ?? '',
+      roomCount: json['roomCount'] is int ? json['roomCount'] ?? 0 : int.tryParse(json['roomCount']?.toString() ?? '') ?? 0,
+      area: json['area']?.toString() ?? '',
+      images: (json['images'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      isActive: json['isActive'] is bool ? json['isActive'] ?? false : (json['isActive']?.toString() == 'true'),
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
+      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
     );
   }
 
@@ -83,7 +83,7 @@ class Property {
     required String city,
     required String postalCode,
     required int roomCount,
-    required double area,
+    required String area,
     List<String> images = const [],
     bool isActive = true,
   }) {

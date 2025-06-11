@@ -45,7 +45,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
     _cityController.text = _property.city;
     _postalCodeController.text = _property.postalCode;
     _roomCountController.text = _property.roomCount.toString();
-    _areaController.text = _property.area.toString();
+    _areaController.text = _property.area;
     _selectedImages = List.from(_property.images);
   }
 
@@ -85,7 +85,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
         city: _cityController.text,
         postalCode: _postalCodeController.text,
         roomCount: int.parse(_roomCountController.text),
-        area: double.parse(_areaController.text),
+        area: _areaController.text,
         images: _selectedImages,
         isActive: _property.isActive,
         createdAt: _property.createdAt,
@@ -293,13 +293,10 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
                             labelText: 'Area (m²)',
                             border: OutlineInputBorder(),
                           ),
-                          keyboardType: TextInputType.number,
+                          keyboardType: TextInputType.text,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter area';
-                            }
-                            if (double.tryParse(value) == null) {
-                              return 'Please enter a valid number';
                             }
                             return null;
                           },
