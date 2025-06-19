@@ -28,6 +28,10 @@ namespace Services.Services
         {
             return await _propertyRepository.GetAllProperties();
         }
+        public async Task<PropertyEntity> GetPropertyById(int id)
+        {
+            return await _propertyRepository.GetPropertieById(id);
+        }
         public async Task<IEnumerable<PropertyDto>> SearchProperties(PropertyFilterDto filters)
         {
             var query = _propertyRepository.GetPropertiesQueryable();
@@ -51,6 +55,7 @@ namespace Services.Services
             Task<bool> CreateProperty(PropertyDto dto);
             Task<IEnumerable<PropertyEntity>> GetAllProperties();
             Task<IEnumerable<PropertyDto>> SearchProperties(PropertyFilterDto filters);
+            Task<PropertyEntity> GetPropertyById(int id);
         }
     }
 }
