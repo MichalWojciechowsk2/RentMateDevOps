@@ -1,4 +1,5 @@
 ﻿using ApplicationCore.Dto.Property;
+using ApplicationCore.Dto.User;
 using AutoMapper;
 using Data.Entities;
 
@@ -11,6 +12,9 @@ namespace Services.AutoMapper
         {
             CreateMap<PropertyDto, PropertyEntity>();
             CreateMap<PropertyEntity, PropertyDto>();
+
+            CreateMap<UserDto, UserEntity>();
+            CreateMap<UserEntity, UserDto>();
         }
     }
 }

@@ -24,13 +24,16 @@ namespace Services.Services
             return true;
         }
 
-        public async Task<IEnumerable<PropertyEntity>> GetAllProperties()
+        public async Task<IEnumerable<PropertyDto>> GetAllProperties()
         {
-            return await _propertyRepository.GetAllProperties();
+            var entities = await _propertyRepository.GetAllProperties();
+            return _mapper.Map<IEnumerable<PropertyDto>>(entities);
         }
-        public async Task<PropertyEntity> GetPropertyById(int id)
+        public async Task<PropertyDto> GetPropertyById(int id)
         {
-            return await _propertyRepository.GetPropertieById(id);
+            var property = await _propertyRepository.GetPropertieById(id);
+            if (property == null) return null;
+            return _mapper.Map<PropertyDto>(property);
         }
         public async Task<IEnumerable<PropertyDto>> SearchProperties(PropertyFilterDto filters)
         {
@@ -53,9 +56,9 @@ namespace Services.Services
         public interface IPropertyService
         {
             Task<bool> CreateProperty(PropertyDto dto);
-            Task<IEnumerable<PropertyEntity>> GetAllProperties();
+            Task<IEnumerable<PropertyDto>> GetAllProperties();
             Task<IEnumerable<PropertyDto>> SearchProperties(PropertyFilterDto filters);
-            Task<PropertyEntity> GetPropertyById(int id);
+            Task<PropertyDto> GetPropertyById(int id);
         }
     }
 }

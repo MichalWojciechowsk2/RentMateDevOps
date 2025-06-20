@@ -10,6 +10,7 @@ namespace ApplicationCore.Dto.Property
 {
     public class PropertyDto
     {
+        public string OwnerId {  get; set; }
         [Required]
         [StringLength(150)]
         public string Title { get; set; }
