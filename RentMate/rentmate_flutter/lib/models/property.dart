@@ -14,6 +14,7 @@ class Property {
   final bool isActive;
   final DateTime createdAt;
   final DateTime? updatedAt;
+  final String? ownerUsername;
 
   Property({
     required this.id,
@@ -31,6 +32,7 @@ class Property {
     required this.isActive,
     required this.createdAt,
     this.updatedAt,
+    this.ownerUsername,
   });
 
   factory Property.fromJson(Map<String, dynamic> json) {
@@ -50,6 +52,7 @@ class Property {
       isActive: json['isActive'] is bool ? json['isActive'] ?? false : (json['isActive']?.toString() == 'true'),
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
+      ownerUsername: json['ownerUsername']?.toString(),
     );
   }
 
@@ -70,6 +73,7 @@ class Property {
       'isActive': isActive,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
+      'ownerUsername': ownerUsername,
     };
   }
 

@@ -27,7 +27,7 @@ namespace Infrastructure.Repositories
         }
         public async Task<IEnumerable<PropertyEntity>> GetAllProperties()
         {
-            return await _context.Properties.ToListAsync();
+            return await _context.Properties.Include(p => p.Owner).ToListAsync();
             
         }
         public async Task<PropertyEntity> GetPropertieById(int id)

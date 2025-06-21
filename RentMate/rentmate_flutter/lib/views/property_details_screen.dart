@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../models/property.dart';
 import '../services/property_service.dart';
 import '../services/auth_service.dart';
+import 'chat_screen.dart';
 
 class PropertyDetailsScreen extends StatefulWidget {
   final int propertyId;
@@ -255,7 +256,15 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                 width: double.infinity,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    // TODO: Implement contact owner functionality
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ChatScreen(
+                                          otherUserId: _property!.ownerId,
+                                          otherUsername: _property!.ownerUsername ?? 'Property Owner',
+                                        ),
+                                      ),
+                                    );
                                   },
                                   child: const Text('Contact Owner'),
                                 ),

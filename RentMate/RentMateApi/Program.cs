@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using static Services.Services.PropertyService;
+using ApplicationCore.Interfaces;
 
 namespace RentMateApi
 {
@@ -35,8 +36,16 @@ namespace RentMateApi
             builder.Services.AddScoped<IPropertyRepository, PropertyReporitory>();
             builder.Services.AddScoped<IPropertyService, PropertyService>();
             builder.Services.AddScoped<AuthService>();
+            builder.Services.AddScoped<MessageRepository>();
+            builder.Services.AddScoped<IMessageService, MessageService>();
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
+
+            /*builder.Services.AddControllers().AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.PropertyNamingPolicy = null; // lub JsonNamingPolicy.CamelCase
+                options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+            });*/
 
             // Configure JWT Authentication
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

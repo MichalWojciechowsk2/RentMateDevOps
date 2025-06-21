@@ -37,5 +37,8 @@ namespace ApplicationCore.Dto.Property
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal BaseDeposit { get; set; } //kaucja
+
+        public int OwnerId { get; set; }
+        public string OwnerUsername { get; set; }
     }
 }

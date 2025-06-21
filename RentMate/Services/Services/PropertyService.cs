@@ -51,6 +51,7 @@ namespace Services.Services
         {
             var entities = await _propertyRepository.GetPropertiesQueryable()
                                                 .Where(p => p.OwnerId == ownerId)
+                                                .Include(p => p.Owner)
                                                 .ToListAsync();
             return _mapper.Map<IEnumerable<PropertyDto>>(entities);
         }
@@ -58,6 +59,7 @@ namespace Services.Services
         public async Task<PropertyDto> GetPropertyDetails(int id)
         {
             var entity = await _propertyRepository.GetPropertiesQueryable()
+                                                .Include(p => p.Owner)
                                                 .FirstOrDefaultAsync(p => p.Id == id);
             return _mapper.Map<PropertyDto>(entity);
         }

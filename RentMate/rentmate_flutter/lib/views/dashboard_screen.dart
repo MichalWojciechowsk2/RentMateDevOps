@@ -4,6 +4,7 @@ import '../models/property.dart';
 import '../services/property_service.dart';
 import '../services/auth_service.dart';
 import '../models/user.dart';
+import '../views/my_chats_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -130,6 +131,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
               : 'My Properties',
         ),
         actions: [
+          if (_currentUser?.role == 'Owner' || _currentUser?.role == 'Tenant')
+            IconButton(
+              icon: const Icon(Icons.message),
+              tooltip: 'My Messages',
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MyChatsScreen()),
+                );
+              },
+            ),
           if (_currentUser?.role == 'Owner')
             IconButton(
               icon: const Icon(Icons.home_work),
