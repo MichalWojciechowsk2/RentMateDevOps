@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/property.dart';
 import '../services/property_service.dart';
+import '../services/auth_service.dart';
 
 class AddPropertyScreen extends StatefulWidget {
   const AddPropertyScreen({super.key});
@@ -53,6 +54,11 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
 
     setState(() => _isLoading = true);
     try {
+      final currentUser = await AuthService().getCurrentUser();
+      if (currentUser == null) {
+        throw Exception('User not logged in');
+      }
+
       final property = Property.createNew(
         title: _titleController.text,
         description: _descriptionController.text,
@@ -64,6 +70,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
         roomCount: int.parse(_roomCountController.text),
         area: _areaController.text,
         images: _selectedImages,
+        ownerUsername: currentUser.email,
       );
 
       await _propertyService.createProperty(property);

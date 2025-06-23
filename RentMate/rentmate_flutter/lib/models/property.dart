@@ -88,6 +88,7 @@ class Property {
     required String postalCode,
     required int roomCount,
     required String area,
+    required String ownerUsername,
     List<String> images = const [],
     bool isActive = true,
   }) {
@@ -106,6 +107,7 @@ class Property {
       images: images,
       isActive: isActive,
       createdAt: DateTime.now(),
+      ownerUsername: ownerUsername,
     );
   }
 } 

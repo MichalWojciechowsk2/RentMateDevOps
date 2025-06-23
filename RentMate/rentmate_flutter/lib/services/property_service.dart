@@ -63,6 +63,7 @@ class PropertyService {
         'area': property.area,
         'isActive': property.isActive,
         'images': property.images,
+        'ownerUsername': property.ownerUsername,
       };
 
       print('Sending property data: ${json.encode(propertyData)}'); // Debug print
