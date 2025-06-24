@@ -5,6 +5,7 @@ import 'views/dashboard_screen.dart';
 import 'views/add_property_screen.dart';
 import 'views/edit_property_screen.dart';
 import 'views/property_details_screen.dart';
+import 'views/my_properties_screen.dart';
 import 'services/auth_service.dart';
 
 void main() {
@@ -42,14 +43,18 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      initialRoute: '/dashboard',
+      initialRoute: '/',
       routes: {
         '/': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
-        '/dashboard': (context) => const DashboardScreen(),
+        '/home': (context) => const DashboardScreen(),
         '/add-property': (context) => const AddPropertyScreen(),
         '/edit-property': (context) => const EditPropertyScreen(),
-        '/property-details': (context) => const PropertyDetailsScreen(),
+        '/property-details': (context) {
+          final propertyId = ModalRoute.of(context)!.settings.arguments as int;
+          return PropertyDetailsScreen(propertyId: propertyId);
+        },
+        '/my-properties': (context) => const MyPropertiesScreen(),
       },
     );
   }

@@ -4,9 +4,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../models/property.dart';
 import '../services/property_service.dart';
 import '../services/auth_service.dart';
+import 'chat_screen.dart';
 
 class PropertyDetailsScreen extends StatefulWidget {
-  const PropertyDetailsScreen({super.key});
+  final int propertyId;
+  const PropertyDetailsScreen({super.key, required this.propertyId});
 
   @override
   State<PropertyDetailsScreen> createState() => _PropertyDetailsScreenState();
@@ -15,22 +17,44 @@ class PropertyDetailsScreen extends StatefulWidget {
 class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
   final _propertyService = PropertyService();
   final _authService = AuthService();
-  bool _isLoading = false;
-  late Property _property;
+  bool _isLoading = true;
+  Property? _property;
   bool _isOwner = false;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _property = ModalRoute.of(context)!.settings.arguments as Property;
-    _checkOwnership();
+  void initState() {
+    super.initState();
+    _loadPropertyDetails();
+  }
+
+  Future<void> _loadPropertyDetails() async {
+    setState(() => _isLoading = true);
+    try {
+      final property = await _propertyService.getPropertyDetails(widget.propertyId);
+      setState(() {
+        _property = property;
+        _isLoading = false;
+      });
+      _checkOwnership();
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load property details: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        Navigator.pop(context); // Powrót, jeśli nie udało się załadować
+      }
+    }
   }
 
   Future<void> _checkOwnership() async {
     final currentUser = await _authService.getCurrentUser();
-    if (currentUser != null) {
+    if (currentUser != null && _property != null) {
       setState(() {
-        _isOwner = currentUser.id == _property.ownerId;
+        _isOwner = currentUser.id == _property!.ownerId;
       });
     }
   }
@@ -57,7 +81,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
     if (confirmed == true) {
       setState(() => _isLoading = true);
       try {
-        await _propertyService.deleteProperty(_property.id);
+        await _propertyService.deleteProperty(_property!.id);
         if (mounted) {
           Navigator.pop(context);
         }
@@ -94,9 +118,8 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                   arguments: _property,
                 );
                 if (mounted) {
-                  setState(() {
-                    _property = ModalRoute.of(context)!.settings.arguments as Property;
-                  });
+                  // Po edycji, ponownie załaduj szczegóły nieruchomości
+                  _loadPropertyDetails();
                 }
               },
             ),
@@ -109,139 +132,149 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (_property.images.isNotEmpty)
-                    FlutterCarousel(
-                      options: CarouselOptions(
-                        height: 300,
-                        viewportFraction: 1.0,
-                        enableInfiniteScroll: _property.images.length > 1,
-                        autoPlay: _property.images.length > 1,
-                      ),
-                      items: _property.images.map((imageUrl) {
-                        return CachedNetworkImage(
-                          imageUrl: imageUrl,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          placeholder: (context, url) => Container(
-                            color: Colors.grey[300],
-                            child: const Center(
-                              child: CircularProgressIndicator(),
-                            ),
+          : _property == null
+              ? const Center(child: Text('Property not found.'))
+              : SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (_property!.images.isNotEmpty)
+                        FlutterCarousel(
+                          options: CarouselOptions(
+                            height: 300,
+                            viewportFraction: 1.0,
+                            enableInfiniteScroll: _property!.images.length > 1,
+                            autoPlay: _property!.images.length > 1,
                           ),
-                          errorWidget: (context, url, error) => Container(
-                            color: Colors.grey[300],
-                            child: const Icon(
-                              Icons.error,
+                          items: _property!.images.map((imageUrl) {
+                            return CachedNetworkImage(
+                              imageUrl: imageUrl,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              placeholder: (context, url) => Container(
+                                color: Colors.grey[300],
+                                child: const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              ),
+                              errorWidget: (context, url, error) => Container(
+                                color: Colors.grey[300],
+                                child: const Icon(
+                                  Icons.error,
+                                  color: Colors.grey,
+                                  size: 50,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        )
+                      else
+                        Container(
+                          height: 300,
+                          color: Colors.grey[300],
+                          child: const Center(
+                            child: Icon(
+                              Icons.home,
+                              size: 100,
                               color: Colors.grey,
-                              size: 50,
                             ),
                           ),
-                        );
-                      }).toList(),
-                    )
-                  else
-                    Container(
-                      height: 300,
-                      color: Colors.grey[300],
-                      child: const Center(
-                        child: Icon(
-                          Icons.home,
-                          size: 100,
-                          color: Colors.grey,
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _property!.title,
+                              style: Theme.of(context).textTheme.headlineMedium,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '\$${_property!.basePrice.toStringAsFixed(2)} per month',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              _property!.description,
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ),
+                            const SizedBox(height: 24),
+                            const Text(
+                              'Location',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '${_property!.address}, ${_property!.city}, ${_property!.postalCode}',
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ),
+                            const SizedBox(height: 24),
+                            const Text(
+                              'Details',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildDetailItem(
+                                    Icons.door_front_door,
+                                    '${_property!.roomCount} Rooms',
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _buildDetailItem(
+                                    Icons.square_foot,
+                                    '${_property!.area} m²',
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildDetailItem(
+                                    Icons.attach_money,
+                                    'Base Deposit: \$${_property!.baseDeposit.toStringAsFixed(2)}',
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            if (!_isOwner)
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ChatScreen(
+                                          otherUserId: _property!.ownerId,
+                                          otherUsername: _property!.ownerUsername ?? 'Property Owner',
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text('Contact Owner'),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
-                    ),
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _property.title,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '\$${_property.basePrice.toStringAsFixed(2)} per month',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                color: Theme.of(context).primaryColor,
-                              ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _property.description,
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
-                        const SizedBox(height: 24),
-                        const Text(
-                          'Location',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${_property.address}, ${_property.city}, ${_property.postalCode}',
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
-                        const SizedBox(height: 24),
-                        const Text(
-                          'Details',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildDetailItem(
-                                Icons.door_front_door,
-                                '${_property.roomCount} Rooms',
-                              ),
-                            ),
-                            Expanded(
-                              child: _buildDetailItem(
-                                Icons.square_foot,
-                                '${_property.area} m²',
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildDetailItem(
-                                Icons.attach_money,
-                                'Base Deposit: \$${_property.baseDeposit.toStringAsFixed(2)}',
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        if (!_isOwner)
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                // TODO: Implement contact owner functionality
-                              },
-                              child: const Text('Contact Owner'),
-                            ),
-                          ),
-                      ],
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ),
     );
   }
 

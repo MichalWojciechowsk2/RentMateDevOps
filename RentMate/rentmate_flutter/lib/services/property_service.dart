@@ -10,10 +10,10 @@ class PropertyService {
   Future<List<Property>> getMyProperties() async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/Property'),
+        Uri.parse('$_baseUrl/Property/my-properties'),
         headers: {
           'Content-Type': 'application/json',
-          // 'Authorization': 'Bearer ${await _authService.getToken()}',
+          'Authorization': 'Bearer ${await _authService.getToken()}',
         },
       );
 
@@ -34,7 +34,7 @@ class PropertyService {
         Uri.parse('$_baseUrl/Property/$id'),
         headers: {
           'Content-Type': 'application/json',
-          // 'Authorization': 'Bearer ${await _authService.getToken()}',
+          'Authorization': 'Bearer ${await _authService.getToken()}',
         },
       );
 
@@ -63,6 +63,7 @@ class PropertyService {
         'area': property.area,
         'isActive': property.isActive,
         'images': property.images,
+        'ownerUsername': property.ownerUsername,
       };
 
       print('Sending property data: ${json.encode(propertyData)}'); // Debug print
@@ -71,7 +72,7 @@ class PropertyService {
         Uri.parse('$_baseUrl/Property'),
         headers: {
           'Content-Type': 'application/json',
-          // 'Authorization': 'Bearer ${await _authService.getToken()}',
+          'Authorization': 'Bearer ${await _authService.getToken()}',
         },
         body: json.encode(propertyData),
       );
@@ -101,7 +102,7 @@ class PropertyService {
         Uri.parse('$_baseUrl/Property/${property.id}'),
         headers: {
           'Content-Type': 'application/json',
-          // 'Authorization': 'Bearer ${await _authService.getToken()}',
+          'Authorization': 'Bearer ${await _authService.getToken()}',
         },
         body: json.encode(property.toJson()),
       );
@@ -122,7 +123,7 @@ class PropertyService {
         Uri.parse('$_baseUrl/Property/$id'),
         headers: {
           'Content-Type': 'application/json',
-          // 'Authorization': 'Bearer ${await _authService.getToken()}',
+          'Authorization': 'Bearer ${await _authService.getToken()}',
         },
       );
 
@@ -142,7 +143,7 @@ class PropertyService {
       );
 
       request.headers.addAll({
-        // 'Authorization': 'Bearer ${await _authService.getToken()}',
+        'Authorization': 'Bearer ${await _authService.getToken()}',
       });
 
       request.files.add(await http.MultipartFile.fromPath('file', imagePath));
@@ -194,6 +195,27 @@ class PropertyService {
       return data.map((json) => Property.fromJson(json)).toList();
     } else {
       throw Exception('Failed to search properties: \\${response.body}');
+    }
+  }
+
+  Future<List<Property>> getAllProperties() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/Property'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${await _authService.getToken()}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((json) => Property.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to load all properties: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Failed to load all properties: $e');
     }
   }
 } 

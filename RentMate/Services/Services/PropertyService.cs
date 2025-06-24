@@ -16,10 +16,10 @@ namespace Services.Services
             _propertyRepository = propertyRepository;
             _mapper = mapper;
         }
-        public async Task<bool> CreateProperty(PropertyDto propertyDto)
+        public async Task<bool> CreateProperty(PropertyDto propertyDto, int ownerId)
         {
             var dtoToEntity = _mapper.Map<PropertyEntity>(propertyDto);
-            dtoToEntity.OwnerId = 2; // CHANGE IN FUTURE!
+            dtoToEntity.OwnerId = ownerId; // Assign the correct OwnerId
             await _propertyRepository.CreateProperty(dtoToEntity);
             return true;
         }
@@ -53,11 +53,31 @@ namespace Services.Services
             var entities = await query.ToListAsync();
             return _mapper.Map<IEnumerable<PropertyDto>>(entities);
         }
+
+        public async Task<IEnumerable<PropertyDto>> GetPropertiesByOwnerId(int ownerId)
+        {
+            var entities = await _propertyRepository.GetPropertiesQueryable()
+                                                .Where(p => p.OwnerId == ownerId)
+                                                .Include(p => p.Owner)
+                                                .ToListAsync();
+            return _mapper.Map<IEnumerable<PropertyDto>>(entities);
+        }
+
+        public async Task<PropertyDto> GetPropertyDetails(int id)
+        {
+            var entity = await _propertyRepository.GetPropertiesQueryable()
+                                                .Include(p => p.Owner)
+                                                .FirstOrDefaultAsync(p => p.Id == id);
+            return _mapper.Map<PropertyDto>(entity);
+        }
+
         public interface IPropertyService
         {
-            Task<bool> CreateProperty(PropertyDto dto);
-            Task<IEnumerable<PropertyDto>> GetAllProperties();
+            Task<bool> CreateProperty(PropertyDto dto, int ownerId);
+            Task<IEnumerable<PropertyEntity>> GetAllProperties();
             Task<IEnumerable<PropertyDto>> SearchProperties(PropertyFilterDto filters);
+            Task<IEnumerable<PropertyDto>> GetPropertiesByOwnerId(int ownerId);
+            Task<PropertyDto> GetPropertyDetails(int id);
             Task<PropertyDto> GetPropertyById(int id);
         }
     }
