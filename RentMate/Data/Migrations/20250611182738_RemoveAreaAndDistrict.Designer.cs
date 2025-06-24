@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(RentMateDbContext))]
-    [Migration("20250601223549_ChangeAreaTypeToString")]
-    partial class ChangeAreaTypeToString
+    [Migration("20250611182738_RemoveAreaAndDistrict")]
+    partial class RemoveAreaAndDistrict
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -208,10 +208,6 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("Area")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("BaseDeposit")
                         .HasColumnType("decimal(18,2)");

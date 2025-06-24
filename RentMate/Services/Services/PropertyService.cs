@@ -24,9 +24,16 @@ namespace Services.Services
             return true;
         }
 
-        public async Task<IEnumerable<PropertyEntity>> GetAllProperties()
+        public async Task<IEnumerable<PropertyDto>> GetAllProperties()
         {
-            return await _propertyRepository.GetAllProperties();
+            var entities = await _propertyRepository.GetAllProperties();
+            return _mapper.Map<IEnumerable<PropertyDto>>(entities);
+        }
+        public async Task<PropertyDto> GetPropertyById(int id)
+        {
+            var property = await _propertyRepository.GetPropertieById(id);
+            if (property == null) return null;
+            return _mapper.Map<PropertyDto>(property);
         }
         public async Task<IEnumerable<PropertyDto>> SearchProperties(PropertyFilterDto filters)
         {
@@ -34,7 +41,7 @@ namespace Services.Services
             if (!string.IsNullOrEmpty(filters.City))
                 query = query.Where(p => p.City == filters.City);
             if (!string.IsNullOrEmpty(filters.District))
-                query = query.Where(p => p.Area == filters.District);
+                query = query.Where(p => p.District == filters.District);
             if (filters.PriceFrom.HasValue)
                 query = query.Where(p => p.BasePrice >= filters.PriceFrom.Value);
 
@@ -71,6 +78,7 @@ namespace Services.Services
             Task<IEnumerable<PropertyDto>> SearchProperties(PropertyFilterDto filters);
             Task<IEnumerable<PropertyDto>> GetPropertiesByOwnerId(int ownerId);
             Task<PropertyDto> GetPropertyDetails(int id);
+            Task<PropertyDto> GetPropertyById(int id);
         }
     }
 }

@@ -1,8 +1,10 @@
-﻿namespace ApplicationCore.Enums
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ApplicationCore.Enums
 {
     public enum City
     {
-        Krakow,
+        Kraków,
         Warszawa,
     }
 }
