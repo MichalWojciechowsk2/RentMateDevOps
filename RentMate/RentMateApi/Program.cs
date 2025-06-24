@@ -19,8 +19,12 @@ namespace RentMateApi
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddDbContext<RentMateDbContext>();
+            //repositories and services
             builder.Services.AddScoped<IPropertyRepository, PropertyReporitory>();
             builder.Services.AddScoped<IPropertyService , PropertyService>();
+            builder.Services.AddScoped<IUserRepository , UserRepository>();
+            builder.Services.AddScoped<IUserService , UserService>();
+            //mapper
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
             builder.Services.AddCors(options =>
