@@ -66,8 +66,8 @@ namespace RentMateApi.Controllers.Property
             return Ok(result);
         }
 
-        [HttpGet("search")]
-        public async Task<IActionResult> Search([FromQuery] PropertyFilterDto filters)
+        //[HttpGet("search")]
+        //public async Task<IActionResult> Search([FromQuery] PropertyFilterDto filters)
 
         [HttpGet("getPropertyById")]
         public async Task<IActionResult> GetPropertyById(int id)

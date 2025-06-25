@@ -74,7 +74,8 @@ namespace Services.Services
         public interface IPropertyService
         {
             Task<bool> CreateProperty(PropertyDto dto, int ownerId);
-            Task<IEnumerable<PropertyEntity>> GetAllProperties();
+            //Task<IEnumerable<PropertyEntity>> GetAllProperties();
+            Task<IEnumerable<PropertyDto>> GetAllProperties();
             Task<IEnumerable<PropertyDto>> SearchProperties(PropertyFilterDto filters);
             Task<IEnumerable<PropertyDto>> GetPropertiesByOwnerId(int ownerId);
             Task<PropertyDto> GetPropertyDetails(int id);

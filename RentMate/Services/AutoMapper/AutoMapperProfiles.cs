@@ -14,8 +14,8 @@ namespace Services.AutoMapper
             CreateMap<PropertyDto, PropertyEntity>();
 
             CreateMap<PropertyEntity, PropertyDto>()
-    .ForMember(dest => dest.OwnerId, opt => opt.MapFrom(src => src.OwnerId))
-    .ForMember(dest => dest.OwnerUsername, opt => opt.MapFrom(src => src.Owner.FirstName + " " + src.Owner.LastName));
+                .ForMember(dest => dest.OwnerId, opt => opt.MapFrom(src => src.OwnerId))
+                .ForMember(dest => dest.OwnerUsername, opt => opt.MapFrom(src => src.Owner.FirstName + " " + src.Owner.LastName));
 
             CreateMap<MessageEntity, MessageDto>()
                 .ForMember(dest => dest.SenderUsername, opt => opt.MapFrom(src => $"{src.Sender.FirstName} {src.Sender.LastName}"))

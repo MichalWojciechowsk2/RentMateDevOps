@@ -5,7 +5,6 @@ namespace ApplicationCore.Enums.DistrictByCity
 {
     public enum KrakowDistricts
     {
-        //District = area w Properties
         [Display(Name ="Stare Miasto")]
         StareMiasto,
         [Display(Name = "Grzegórzki")]
