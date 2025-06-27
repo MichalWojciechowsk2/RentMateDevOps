@@ -28,6 +28,7 @@ namespace Data
         public DbSet<IssueEntity> Issues { get; set; }
         public DbSet<ReviewEntity> Reviews { get; set; }
         public DbSet<MessageEntity> Messages { get; set; }
+        public DbSet<InvitationEntity> Invitation { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -109,6 +110,25 @@ namespace Data
                 .HasOne(m => m.Issue)
                 .WithMany(i => i.Messages)
                 .HasForeignKey(m => m.IssueId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            //konfiguracja invitation
+            modelBuilder.Entity<InvitationEntity>()
+                .HasOne(i => i.Sender)
+                .WithMany()
+                .HasForeignKey(i => i.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<InvitationEntity>()
+                .HasOne(i => i.Receiver)
+                .WithMany()
+                .HasForeignKey(i => i.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<InvitationEntity>()
+                .HasOne(i => i.Offer)
+                .WithMany()
+                .HasForeignKey(i => i.OfferId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }
