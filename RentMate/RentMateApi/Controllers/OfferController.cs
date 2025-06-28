@@ -27,5 +27,12 @@ namespace RentMateApi.Controllers
             var offers = await _offerService.GetActiveAndAcceptedOfferByPropId(propertyId);
             return Ok(offers);
         }
+        [HttpGet]
+        [Route("getOfferByUserId")]
+        public async Task<IActionResult> GetOfferByUserId(int userId)
+        {
+            var offer = await _offerService.GetOfferByUserId(userId);
+            return Ok(offer);
+        }
     }
 }

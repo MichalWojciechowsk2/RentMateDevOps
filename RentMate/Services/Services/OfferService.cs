@@ -33,10 +33,17 @@ namespace Services.Services
             if (offers == null) return null;
             return offers;
         }
+        public async Task<IEnumerable<OfferEntity>> GetOfferByUserId(int userId)
+        {
+            var offer = await _offerRepository.getOfferByUserId(userId);
+            if (offer == null) return null;
+            return offer;
+        }
     }
     public interface IOfferService
     {
         Task<bool> CreateOffer(CreateOfferDto offerDto);
         Task<IEnumerable<OfferEntity>> GetActiveAndAcceptedOfferByPropId(int propertyId);
+        Task<IEnumerable<OfferEntity>> GetOfferByUserId(int userId)
     }
 }

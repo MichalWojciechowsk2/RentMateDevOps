@@ -40,7 +40,21 @@ namespace Infrastructure.Repositories
             }
             catch(Exception ex)
             {
-                throw;
+                Console.Error.WriteLine($"Błąd podczas pobierania oferty dla propertyId {propertyId}: {ex.Message}");
+                return null;
+            }
+        }
+        public async Task<IEnumerable<OfferEntity>> getOfferByUserId(int userId)
+        {
+            try
+            {
+                return await _context.Offers
+                    .Where(o => o.TenantId == userId).ToListAsync();
+            }
+            catch(Exception ex)
+            {
+                Console.Error.WriteLine($"Błąd podczas pobierania oferty dla userId {userId}: {ex.Message}");
+                return null;
             }
         }
     }
@@ -48,5 +62,6 @@ namespace Infrastructure.Repositories
     {
         Task<bool> CreateOffer(OfferEntity entity);
         Task<IEnumerable<OfferEntity>> getActiveAndAcceptedOffersByPropId(int propertyId);
+        Task<IEnumerable<OfferEntity>> getOfferByUserId(int userId)
     }
 }
