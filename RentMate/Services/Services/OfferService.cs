@@ -27,9 +27,16 @@ namespace Services.Services
             await _offerRepository.CreateOffer(dtoToEntity);
             return true;
         }
+        public async Task<IEnumerable<OfferEntity>> GetActiveAndAcceptedOfferByPropId(int propertyId)
+        {
+            var offers = await _offerRepository.getActiveAndAcceptedOffersByPropId(propertyId);
+            if (offers == null) return null;
+            return offers;
+        }
     }
     public interface IOfferService
     {
         Task<bool> CreateOffer(CreateOfferDto offerDto);
+        Task<IEnumerable<OfferEntity>> GetActiveAndAcceptedOfferByPropId(int propertyId);
     }
 }

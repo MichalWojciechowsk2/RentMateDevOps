@@ -1,5 +1,6 @@
 ﻿using Data;
 using Data.Entities;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,9 +29,24 @@ namespace Infrastructure.Repositories
                 return false;
             }
         }
+        public async Task<IEnumerable<OfferEntity>> getActiveAndAcceptedOffersByPropId(int propertyId)
+        {
+            try
+            {
+                return await _context.Offers
+                    .Where(o => o.PropertyId == propertyId &&
+                    (o.Status == OfferStatus.Active || o.Status == OfferStatus.Accepted))
+                    .ToListAsync();
+            }
+            catch(Exception ex)
+            {
+                throw;
+            }
+        }
     }
     public interface IOfferRepository
     {
         Task<bool> CreateOffer(OfferEntity entity);
+        Task<IEnumerable<OfferEntity>> getActiveAndAcceptedOffersByPropId(int propertyId);
     }
 }
