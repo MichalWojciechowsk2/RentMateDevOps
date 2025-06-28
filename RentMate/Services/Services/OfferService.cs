@@ -39,11 +39,21 @@ namespace Services.Services
             if (offer == null) return null;
             return offer;
         }
+        public async Task<OfferEntity> UpdateOfferStatus(int offerId, OfferStatus newStatus)
+        {
+            var offer = await _offerRepository.getById(offerId);
+            if (offer == null) throw new KeyNotFoundException($"Oferta o ID {offerId} nie istnieje");
+            offer.Status = newStatus;
+            offer.AcceptedAt = DateTime.Now;
+            await _offerRepository.UpdateAsync(offer);
+            return offer;
+        }
     }
     public interface IOfferService
     {
         Task<bool> CreateOffer(CreateOfferDto offerDto);
         Task<IEnumerable<OfferEntity>> GetActiveAndAcceptedOfferByPropId(int propertyId);
-        Task<IEnumerable<OfferEntity>> GetOfferByUserId(int userId)
+        Task<IEnumerable<OfferEntity>> GetOfferByUserId(int userId);
+        Task<OfferEntity> UpdateOfferStatus(int offerId, OfferStatus newStatus);
     }
 }

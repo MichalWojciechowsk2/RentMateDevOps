@@ -34,5 +34,22 @@ namespace RentMateApi.Controllers
             var offer = await _offerService.GetOfferByUserId(userId);
             return Ok(offer);
         }
+        [HttpPatch("{offerId}/status")]
+        public async Task<IActionResult> UpdateStatus(int offerId, [FromBody] OfferStatus status)
+        {
+            try
+            {
+                var updatedOffer = await _offerService.UpdateOfferStatus(offerId, status);
+                return Ok(updatedOffer);
+            }
+            catch (KeyNotFoundException) 
+            {
+                return NotFound();
+            }
+            catch
+            {
+                return StatusCode(500, "Wystąpił błąd podczas aktualizacji statusu.");
+            }
+        }
     }
 }
