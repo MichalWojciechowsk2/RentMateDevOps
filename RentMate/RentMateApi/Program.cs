@@ -40,9 +40,11 @@ namespace RentMateApi
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<MessageRepository>();
             builder.Services.AddScoped<IMessageService, MessageService>();
+            builder.Services.AddScoped<IOfferService, OfferService>();
 
             builder.Services.AddScoped<IUserRepository , UserRepository>();
             builder.Services.AddScoped<IUserService , UserService>();
+            builder.Services.AddScoped<IOfferRepository, OfferRepository>();
             //mapper
 
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());

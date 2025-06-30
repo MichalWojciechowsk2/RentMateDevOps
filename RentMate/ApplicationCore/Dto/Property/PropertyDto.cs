@@ -40,6 +40,7 @@ namespace ApplicationCore.Dto.Property
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal BaseDeposit { get; set; } //kaucja
+        public bool isActive { get; set; }
 
         public string? OwnerUsername { get; set; }
     }
