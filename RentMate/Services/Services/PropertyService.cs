@@ -20,6 +20,7 @@ namespace Services.Services
         {
             var dtoToEntity = _mapper.Map<PropertyEntity>(propertyDto);
             dtoToEntity.OwnerId = ownerId; // Assign the correct OwnerId
+            dtoToEntity.CreatedAt = DateTime.UtcNow;
             await _propertyRepository.CreateProperty(dtoToEntity);
             return true;
         }
@@ -35,6 +36,12 @@ namespace Services.Services
             var property = await _propertyRepository.GetPropertieById(id);
             if (property == null) return null;
             return _mapper.Map<PropertyDto>(property);
+        }
+        public async Task<PropertyEntity> GetOwnerPropertyById(int id)
+        {
+            var property = await _propertyRepository.GetPropertieById(id);
+            if (property == null) return null;
+            return property;
         }
         public async Task<IEnumerable<PropertyDto>> SearchProperties(PropertyFilterDto filters)
         {
@@ -71,7 +78,7 @@ namespace Services.Services
                                                 .FirstOrDefaultAsync(p => p.Id == id);
             return _mapper.Map<PropertyDto>(entity);
         }
-        public async Task<PropertyDto> UdpatePropertyById(int id, bool updateIsActive)
+        public async Task<PropertyDto> UdpatePropertyIsActiveById(int id, bool updateIsActive)
         {
             var entity = await _propertyRepository.GetPropertieById(id);
             if (entity == null) throw new KeyNotFoundException($"Mieszkanie z id: {id} nie zostało znalezione");
@@ -79,17 +86,27 @@ namespace Services.Services
             await _propertyRepository.UpdateAsync(entity);
             return _mapper.Map<PropertyDto>(entity);
         }
+        public async Task<PropertyDto> UdpatePropertyById(int id, UpdatePropertyDto dto)
+        {
+            var entity = await _propertyRepository.GetPropertieById(id);
+            if (entity == null) throw new KeyNotFoundException($"Mieszkanie z id: {id} nie zostało znalezione");
+            entity = _mapper.Map(dto, entity);
+            entity.UpdatedAt = DateTime.Now;
+            await _propertyRepository.UpdateAsync(entity);
+            return _mapper.Map<PropertyDto>(entity);
+        }
 
         public interface IPropertyService
         {
             Task<bool> CreateProperty(PropertyDto dto, int ownerId);
-            //Task<IEnumerable<PropertyEntity>> GetAllProperties();
             Task<IEnumerable<PropertyDto>> GetAllActiveProperties();
             Task<IEnumerable<PropertyDto>> SearchProperties(PropertyFilterDto filters);
             Task<IEnumerable<PropertyDto>> GetPropertiesByOwnerId(int ownerId);
             Task<PropertyDto> GetPropertyDetails(int id);
             Task<PropertyDto> GetPropertyById(int id);
-            Task<PropertyDto> UdpatePropertyById(int id, bool updateIsActive);
+            Task<PropertyEntity> GetOwnerPropertyById(int id);
+            Task<PropertyDto> UdpatePropertyIsActiveById(int id, bool updateIsActive);
+            Task<PropertyDto> UdpatePropertyById(int id, UpdatePropertyDto dto);
         }
     }
 }

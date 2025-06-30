@@ -40,8 +40,25 @@ namespace RentMateApi.Controllers.Property
         {
             try
             {
-                var updateOfferIsActive = await _propertyService.UdpatePropertyById(propertyId, newIsActive);
+                var updateOfferIsActive = await _propertyService.UdpatePropertyIsActiveById(propertyId, newIsActive);
                 return Ok(updateOfferIsActive);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch
+            {
+                return StatusCode(500, "Wystąpił błąd podczas aktualizacji aktywności.");
+            }
+        }
+        [HttpPatch("{propertyId}/updateProperty")]
+        public async Task<IActionResult> UpdateProperty(int propertyId, [FromBody] UpdatePropertyDto dto)
+        {
+            try
+            {
+                var updateOffer = await _propertyService.UdpatePropertyById(propertyId, dto);
+                return Ok(updateOffer);
             }
             catch (KeyNotFoundException)
             {
@@ -91,6 +108,12 @@ namespace RentMateApi.Controllers.Property
         public async Task<IActionResult> GetPropertyById(int id)
         {
             var result = await _propertyService.GetPropertyById(id);
+            return Ok(result);
+        }
+        [HttpGet("getPropertyEntityById")]
+        public async Task<IActionResult> GetPropertyEntityById(int id)
+        {
+            var result = await _propertyService.GetOwnerPropertyById(id);
             return Ok(result);
         }
         [HttpGet("getPropertiesByOwnerId")]

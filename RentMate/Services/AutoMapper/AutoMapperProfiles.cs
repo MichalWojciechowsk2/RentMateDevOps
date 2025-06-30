@@ -14,6 +14,9 @@ namespace Services.AutoMapper
         {
             //Property
             CreateMap<PropertyDto, PropertyEntity>();
+            CreateMap<UpdatePropertyDto, PropertyEntity>();
+            CreateMap<PropertyEntity, UpdatePropertyDto>();
+
 
             CreateMap<PropertyEntity, PropertyDto>()
                 .ForMember(dest => dest.OwnerId, opt => opt.MapFrom(src => src.OwnerId))
