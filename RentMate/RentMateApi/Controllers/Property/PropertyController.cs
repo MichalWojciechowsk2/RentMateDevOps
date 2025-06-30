@@ -6,6 +6,7 @@ using Services.Services;
 using static Services.Services.PropertyService;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using System.Linq.Expressions;
 
 namespace RentMateApi.Controllers.Property
 {
@@ -34,11 +35,28 @@ namespace RentMateApi.Controllers.Property
             var result = await _propertyService.CreateProperty(createPropertyDto, ownerId);
             return result == true ? StatusCode(201) : Conflict();
         }
+        [HttpPatch("{propertyId}/isActive")]
+        public async Task<IActionResult> UpdatePropertyIsActive(int propertyId, [FromBody] bool newIsActive)
+        {
+            try
+            {
+                var updateOfferIsActive = await _propertyService.UdpatePropertyById(propertyId, newIsActive);
+                return Ok(updateOfferIsActive);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch
+            {
+                return StatusCode(500, "Wystąpił błąd podczas aktualizacji aktywności.");
+            }
+        }
 
         [HttpGet]
         public async Task<IActionResult> GetAllProperties()
         {
-            var result = await _propertyService.GetAllProperties();
+            var result = await _propertyService.GetAllActiveProperties();
             return Ok(result);
         }
 

@@ -24,10 +24,11 @@ namespace Services.Services
             return true;
         }
 
-        public async Task<IEnumerable<PropertyDto>> GetAllProperties()
+        public async Task<IEnumerable<PropertyDto>> GetAllActiveProperties()
         {
             var entities = await _propertyRepository.GetAllProperties();
-            return _mapper.Map<IEnumerable<PropertyDto>>(entities);
+            var activeEntities = entities.Where(p => p.IsActive);
+            return _mapper.Map<IEnumerable<PropertyDto>>(activeEntities);
         }
         public async Task<PropertyDto> GetPropertyById(int id)
         {
@@ -70,16 +71,25 @@ namespace Services.Services
                                                 .FirstOrDefaultAsync(p => p.Id == id);
             return _mapper.Map<PropertyDto>(entity);
         }
+        public async Task<PropertyDto> UdpatePropertyById(int id, bool updateIsActive)
+        {
+            var entity = await _propertyRepository.GetPropertieById(id);
+            if (entity == null) throw new KeyNotFoundException($"Mieszkanie z id: {id} nie zostało znalezione");
+            entity.IsActive = updateIsActive;
+            await _propertyRepository.UpdateAsync(entity);
+            return _mapper.Map<PropertyDto>(entity);
+        }
 
         public interface IPropertyService
         {
             Task<bool> CreateProperty(PropertyDto dto, int ownerId);
             //Task<IEnumerable<PropertyEntity>> GetAllProperties();
-            Task<IEnumerable<PropertyDto>> GetAllProperties();
+            Task<IEnumerable<PropertyDto>> GetAllActiveProperties();
             Task<IEnumerable<PropertyDto>> SearchProperties(PropertyFilterDto filters);
             Task<IEnumerable<PropertyDto>> GetPropertiesByOwnerId(int ownerId);
             Task<PropertyDto> GetPropertyDetails(int id);
             Task<PropertyDto> GetPropertyById(int id);
+            Task<PropertyDto> UdpatePropertyById(int id, bool updateIsActive);
         }
     }
 }

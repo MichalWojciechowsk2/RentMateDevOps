@@ -25,6 +25,11 @@ namespace Infrastructure.Repositories
                 return false;
             }
         }
+        public async Task UpdateAsync(PropertyEntity entity)
+        {
+            _context.Properties.Update(entity);
+            await _context.SaveChangesAsync();
+        }
         public async Task<IEnumerable<PropertyEntity>> GetAllProperties()
         {
 
@@ -33,20 +38,6 @@ namespace Infrastructure.Repositories
         public async Task<PropertyEntity> GetPropertieById(int id)
         {
             return await _context.Properties.FirstOrDefaultAsync(x => x.Id == id);
-        }
-        public async Task<bool> UpdatePropertie(int id, PropertyEntity entity)
-        {
-            try
-            {
-                _context.ChangeTracker.Clear();
-                _context.Entry(entity).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                return false;
-            }
         }
         public async Task<bool> DeleteProperite(int id)
         {
@@ -72,13 +63,14 @@ namespace Infrastructure.Repositories
             return _context.Properties.AsQueryable();
         }
 
+
     }
     public interface IPropertyRepository
     {
         Task<bool> CreateProperty(PropertyEntity entity);
+        Task UpdateAsync(PropertyEntity entity);
         Task<IEnumerable<PropertyEntity>> GetAllProperties();
         Task<PropertyEntity> GetPropertieById(int id);
-        Task<bool> UpdatePropertie(int id, PropertyEntity entity);
         Task<bool> DeleteProperite(int id);
         IQueryable<PropertyEntity> GetPropertiesQueryable();
     }
