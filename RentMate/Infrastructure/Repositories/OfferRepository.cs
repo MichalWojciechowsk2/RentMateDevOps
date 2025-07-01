@@ -37,10 +37,9 @@ namespace Infrastructure.Repositories
         {
             try
             {
-                return await _context.Offers
+                return await _context.Offers.Include(o => o.Tenant)
                     .Where(o => o.PropertyId == propertyId &&
-                    (o.Status == OfferStatus.Active || o.Status == OfferStatus.Accepted))
-                    .ToListAsync();
+                    (o.Status == OfferStatus.Active || o.Status == OfferStatus.Accepted)).ToListAsync();
             }
             catch(Exception ex)
             {

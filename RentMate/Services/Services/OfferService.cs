@@ -27,11 +27,12 @@ namespace Services.Services
             await _offerRepository.CreateOffer(dtoToEntity);
             return true;
         }
-        public async Task<IEnumerable<OfferEntity>> GetActiveAndAcceptedOfferByPropId(int propertyId)
+        public async Task<IEnumerable<OfferDto>> GetActiveAndAcceptedOfferByPropId(int propertyId)
         {
             var offers = await _offerRepository.getActiveAndAcceptedOffersByPropId(propertyId);
+
             if (offers == null) return null;
-            return offers;
+            return _mapper.Map<IEnumerable<OfferDto>>(offers);
         }
         public async Task<IEnumerable<OfferEntity>> GetOfferByUserId(int userId)
         {
@@ -52,7 +53,7 @@ namespace Services.Services
     public interface IOfferService
     {
         Task<bool> CreateOffer(CreateOfferDto offerDto);
-        Task<IEnumerable<OfferEntity>> GetActiveAndAcceptedOfferByPropId(int propertyId);
+        Task<IEnumerable<OfferDto>> GetActiveAndAcceptedOfferByPropId(int propertyId);
         Task<IEnumerable<OfferEntity>> GetOfferByUserId(int userId);
         Task<OfferEntity> UpdateOfferStatus(int offerId, OfferStatus newStatus);
     }
