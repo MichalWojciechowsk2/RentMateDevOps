@@ -7,6 +7,7 @@ class Property {
   final double baseDeposit;
   final String address;
   final String city;
+  final String district;
   final String postalCode;
   final int roomCount;
   final String area;
@@ -25,6 +26,7 @@ class Property {
     required this.baseDeposit,
     required this.address,
     required this.city,
+    required this.district,
     required this.postalCode,
     required this.roomCount,
     required this.area,
@@ -45,6 +47,7 @@ class Property {
       baseDeposit: json['baseDeposit'] != null ? (json['baseDeposit'] as num).toDouble() : 0.0,
       address: json['address']?.toString() ?? '',
       city: json['city']?.toString() ?? '',
+      district: json['district']?.toString() ?? '',
       postalCode: json['postalCode']?.toString() ?? '',
       roomCount: json['roomCount'] is int ? json['roomCount'] ?? 0 : int.tryParse(json['roomCount']?.toString() ?? '') ?? 0,
       area: json['area']?.toString() ?? '',
@@ -66,6 +69,7 @@ class Property {
       'baseDeposit': baseDeposit,
       'address': address,
       'city': city,
+      'district': district,
       'postalCode': postalCode,
       'roomCount': roomCount,
       'area': area,
@@ -85,6 +89,7 @@ class Property {
     required double baseDeposit,
     required String address,
     required String city,
+    required String district,
     required String postalCode,
     required int roomCount,
     required String area,
@@ -101,6 +106,7 @@ class Property {
       baseDeposit: baseDeposit,
       address: address,
       city: city,
+      district: district,
       postalCode: postalCode,
       roomCount: roomCount,
       area: area,
