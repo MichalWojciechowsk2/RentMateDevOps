@@ -25,6 +25,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   final _baseDepositController = TextEditingController();
   final _addressController = TextEditingController();
   final _cityController = TextEditingController();
+  final _districtController = TextEditingController();
   final _postalCodeController = TextEditingController();
   final _roomCountController = TextEditingController();
   final _areaController = TextEditingController();
@@ -66,6 +67,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
         baseDeposit: double.parse(_baseDepositController.text),
         address: _addressController.text,
         city: _cityController.text,
+        district: _districtController.text,
         postalCode: _postalCodeController.text,
         roomCount: int.parse(_roomCountController.text),
         area: _areaController.text,
@@ -101,6 +103,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     _baseDepositController.dispose();
     _addressController.dispose();
     _cityController.dispose();
+    _districtController.dispose();
     _postalCodeController.dispose();
     _roomCountController.dispose();
     _areaController.dispose();
@@ -209,40 +212,46 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _cityController,
-                          decoration: const InputDecoration(
-                            labelText: 'City',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a city';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _postalCodeController,
-                          decoration: const InputDecoration(
-                            labelText: 'Postal Code',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a postal code';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                    ],
+                  TextFormField(
+                    controller: _cityController,
+                    decoration: const InputDecoration(
+                      labelText: 'City',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a city';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _districtController,
+                    decoration: const InputDecoration(
+                      labelText: 'District',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a district';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _postalCodeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Postal Code',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a postal code';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16),
                   Row(

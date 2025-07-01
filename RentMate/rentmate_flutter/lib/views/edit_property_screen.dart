@@ -25,6 +25,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
   final _baseDepositController = TextEditingController();
   final _addressController = TextEditingController();
   final _cityController = TextEditingController();
+  final _districtController = TextEditingController();
   final _postalCodeController = TextEditingController();
   final _roomCountController = TextEditingController();
   final _areaController = TextEditingController();
@@ -43,6 +44,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
     _baseDepositController.text = _property.baseDeposit.toString();
     _addressController.text = _property.address;
     _cityController.text = _property.city;
+    _districtController.text = _property.district;
     _postalCodeController.text = _property.postalCode;
     _roomCountController.text = _property.roomCount.toString();
     _areaController.text = _property.area;
@@ -83,6 +85,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
         baseDeposit: double.parse(_baseDepositController.text),
         address: _addressController.text,
         city: _cityController.text,
+        district: _districtController.text,
         postalCode: _postalCodeController.text,
         roomCount: int.parse(_roomCountController.text),
         area: _areaController.text,
@@ -90,6 +93,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
         isActive: _property.isActive,
         createdAt: _property.createdAt,
         updatedAt: DateTime.now(),
+        ownerUsername: _property.ownerUsername,
       );
 
       await _propertyService.updateProperty(updatedProperty);
@@ -120,6 +124,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
     _baseDepositController.dispose();
     _addressController.dispose();
     _cityController.dispose();
+    _districtController.dispose();
     _postalCodeController.dispose();
     _roomCountController.dispose();
     _areaController.dispose();
@@ -228,40 +233,46 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _cityController,
-                          decoration: const InputDecoration(
-                            labelText: 'City',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a city';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _postalCodeController,
-                          decoration: const InputDecoration(
-                            labelText: 'Postal Code',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a postal code';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                    ],
+                  TextFormField(
+                    controller: _cityController,
+                    decoration: const InputDecoration(
+                      labelText: 'City',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a city';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _districtController,
+                    decoration: const InputDecoration(
+                      labelText: 'District',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a district';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _postalCodeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Postal Code',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a postal code';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16),
                   Row(

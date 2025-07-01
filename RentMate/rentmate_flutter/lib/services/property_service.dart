@@ -58,6 +58,7 @@ class PropertyService {
         'baseDeposit': property.baseDeposit,
         'address': property.address,
         'city': property.city,
+        'district': property.district,
         'postalCode': property.postalCode,
         'roomCount': property.roomCount,
         'area': property.area,
@@ -183,7 +184,7 @@ class PropertyService {
     if (priceFrom != null) queryParams['priceFrom'] = priceFrom.toString();
     if (priceTo != null) queryParams['priceTo'] = priceTo.toString();
     if (rooms != null) queryParams['rooms'] = rooms.toString();
-    final uri = Uri.parse('$_baseUrl/Property/search').replace(queryParameters: queryParams);
+    final uri = Uri.parse('$_baseUrl/Property/filter').replace(queryParameters: queryParams);
     final response = await http.get(
       uri,
       headers: {
@@ -194,7 +195,7 @@ class PropertyService {
       final List<dynamic> data = json.decode(response.body);
       return data.map((json) => Property.fromJson(json)).toList();
     } else {
-      throw Exception('Failed to search properties: \\${response.body}');
+      throw Exception('Failed to filter properties: ${response.body}');
     }
   }
 
