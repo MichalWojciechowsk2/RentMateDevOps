@@ -12,6 +12,7 @@ namespace Data.Entities
         public int OfferId { get; set; }
         public int TenantId { get; set; }
         public decimal Amount { get; set; }
+        public string Description { get; set; }
         public PaymentStatus Status { get; set; }
         public DateTime DueDate { get; set; }
         public DateTime? PaidAt { get; set; }
