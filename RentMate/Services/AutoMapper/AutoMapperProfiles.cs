@@ -1,4 +1,5 @@
 ﻿using ApplicationCore.Dto.Message;
+using ApplicationCore.Dto.Payment;
 using ApplicationCore.Dto.Property;
 using ApplicationCore.Dto.Property.Offer;
 using ApplicationCore.Dto.User;
@@ -38,6 +39,12 @@ namespace Services.AutoMapper
                 .ForMember(dest => dest.TenantLastName, opt => opt.MapFrom(src=>src.Tenant.LastName))
                 .ForMember(dest => dest.TenantPhoneNumber, opt => opt.MapFrom(src=>src.Tenant.PhoneNumber))
                 .ForMember(dest => dest.TenantEmail, opt => opt.MapFrom(src => src.Tenant.Email));
+
+            //Payment
+            CreateMap<PaymentEntity, CreatePaymentDto>();
+            CreateMap<CreatePaymentDto, PaymentEntity>()
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => PaymentStatus.Pending));
+
         }
     }
 }

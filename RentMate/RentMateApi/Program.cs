@@ -35,18 +35,23 @@ namespace RentMateApi
             builder.Services.AddDbContext<RentMateDbContext>();
             //repositories and services
             builder.Services.AddScoped<IPropertyRepository, PropertyReporitory>();
-          
             builder.Services.AddScoped<IPropertyService, PropertyService>();
+
             builder.Services.AddScoped<AuthService>();
+
             builder.Services.AddScoped<MessageRepository>();
             builder.Services.AddScoped<IMessageService, MessageService>();
+
             builder.Services.AddScoped<IOfferService, OfferService>();
+            builder.Services.AddScoped<IOfferRepository, OfferRepository>();
 
             builder.Services.AddScoped<IUserRepository , UserRepository>();
             builder.Services.AddScoped<IUserService , UserService>();
-            builder.Services.AddScoped<IOfferRepository, OfferRepository>();
-            //mapper
 
+            builder.Services.AddScoped<IPaymentService, PaymentService>();
+            builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+
+            //mapper
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
 
