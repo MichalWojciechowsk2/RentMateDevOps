@@ -30,22 +30,56 @@ namespace Services.Services
         }
         public async Task<bool> CreatePayment(CreatePaymentDto dto, int ownerId)
         {
-            var offer = await _offerRepository.getById(dto.OfferId);
-            if (offer == null)
-                throw (new Exception("Oferta nie istnieje"));
-            var property = await _propertyRepository.GetPropertieById(offer.PropertyId);
-            if (property.OwnerId != ownerId)
-                throw new UnauthorizedAccessException("Nie jesteś właścicielem tego mieszkania");
-            var dtoToEntity = _mapper.Map<PaymentEntity>(dto);
-            if (!offer.TenantId.HasValue)
-                throw new Exception("Oferta nie została zaakceptowana przez najemce");
-            dtoToEntity.TenantId = offer.TenantId.Value;
-            await _paymentRepository.CreatePayment(dtoToEntity);
-            return true;
+            if(dto.OfferId == -1)
+            {
+                var offers = await _offerRepository.getActiveAndAcceptedOffersByPropId(dto.PropertyId);
+                if(offers == null || !offers.Any())
+                {
+                    throw new Exception("Brak aktywnych ofert dla tego mieszkania");
+                }
+                foreach(var of in offers)
+                {
+                    if (of.Status != OfferStatus.Active) continue;
+
+                    var payment = _mapper.Map<PaymentEntity>(dto);
+                    payment.OfferId = of.Id;
+                    payment.TenantId = of.TenantId.Value;
+                    payment.Id = 0;
+                    await _paymentRepository.CreatePayment(payment);
+                }
+                return true;
+            }
+
+            if(dto.OfferId != -1)
+            {
+                var offer = await _offerRepository.getById(dto.OfferId);
+                if (offer == null)
+                    throw (new Exception("Oferta nie istnieje"));
+                var property = await _propertyRepository.GetPropertieById(offer.PropertyId);
+                if (property.OwnerId != ownerId)
+                    throw new UnauthorizedAccessException("Nie jesteś właścicielem tego mieszkania");
+                var dtoToEntity = _mapper.Map<PaymentEntity>(dto);
+                if (offer.Status == OfferStatus.Active)
+                    throw new Exception("Oferta nie została zaakceptowana przez najemce");
+                if (offer.Status == OfferStatus.Completed)
+                    throw new Exception("Oferta wygasła");
+                if (offer.Status == OfferStatus.Cancelled)
+                    throw new Exception("Oferta została anulowana");
+                dtoToEntity.TenantId = offer.TenantId.Value;
+                await _paymentRepository.CreatePayment(dtoToEntity);
+                return true;
+            }
+            return false;
+        }
+
+        public async Task<IEnumerable<PaymentEntity>> GetAllPayments()
+        {
+            return await _paymentRepository.GetAllPayments();
         }
     }
     public interface IPaymentService
     {
         Task<bool> CreatePayment(CreatePaymentDto dto, int ownerId);
+        Task<IEnumerable<PaymentEntity>> GetAllPayments();
     }
 }

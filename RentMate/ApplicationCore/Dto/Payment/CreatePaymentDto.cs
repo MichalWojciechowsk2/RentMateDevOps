@@ -9,6 +9,7 @@ namespace ApplicationCore.Dto.Payment
 {
     public class CreatePaymentDto
     {
+        public int PropertyId {  get; set; }
         public int OfferId { get; set; }
         public decimal Amount { get; set; }
         public string Description { get; set; }

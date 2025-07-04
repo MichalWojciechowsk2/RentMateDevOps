@@ -34,6 +34,10 @@ namespace Infrastructure.Repositories
             _context.Payments.Update(entity);
             await _context.SaveChangesAsync();
         }
+        public async Task<IEnumerable<PaymentEntity>> GetAllPayments()
+        {
+            return await _context.Payments.ToListAsync();
+        }
         public async Task<IEnumerable<PaymentEntity>> GetAllPaymentsByOfferId(int id)
         {
             return await _context.Payments.Where(p => p.OfferId == id).ToListAsync();
@@ -47,6 +51,7 @@ namespace Infrastructure.Repositories
     {
         Task<bool> CreatePayment(PaymentEntity entity);
         Task UpdateAsync(PaymentEntity entity);
+        Task<IEnumerable<PaymentEntity>> GetAllPayments();
         Task<IEnumerable<PaymentEntity>> GetAllPaymentsByOfferId(int id);
         Task<PaymentEntity> GetPaymentById(int id);
 
