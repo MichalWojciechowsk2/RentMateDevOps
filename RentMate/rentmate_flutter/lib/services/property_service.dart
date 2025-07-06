@@ -1,6 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/property.dart';
+import '../models/property_image.dart';
 import 'auth_service.dart';
 
 class PropertyService {
@@ -82,11 +86,6 @@ class PropertyService {
       print('Response body: ${response.body}'); // Debug print
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        if (response.body.isEmpty) {
-          // Jeśli serwer zwraca pustą odpowiedź, ale status jest OK, zwróć oryginalny obiekt
-          print('Server returned empty response, returning original property');
-          return property;
-        }
         return Property.fromJson(json.decode(response.body));
       } else {
         throw Exception('Failed to create property: ${response.body}');
@@ -136,30 +135,81 @@ class PropertyService {
     }
   }
 
-  Future<String> uploadImage(String imagePath) async {
+  Future<List<PropertyImage>> uploadImages(int propertyId, List<XFile> imageFiles) async {
     try {
       final request = http.MultipartRequest(
         'POST',
-        Uri.parse('$_baseUrl/Property/upload-image'),
+        Uri.parse('$_baseUrl/Property/$propertyId/images'),
       );
 
       request.headers.addAll({
         'Authorization': 'Bearer ${await _authService.getToken()}',
       });
 
-      request.files.add(await http.MultipartFile.fromPath('file', imagePath));
+      for (XFile imageFile in imageFiles) {
+        if (kIsWeb) {
+          // For web, use bytes with proper content type
+          final bytes = await imageFile.readAsBytes();
+          String contentType = 'image/jpeg'; // default
+          
+          // Detect content type based on file extension
+          final extension = imageFile.name.toLowerCase().split('.').last;
+          switch (extension) {
+            case 'png':
+              contentType = 'image/png';
+              break;
+            case 'jpg':
+            case 'jpeg':
+              contentType = 'image/jpeg';
+              break;
+            case 'gif':
+              contentType = 'image/gif';
+              break;
+            default:
+              contentType = 'image/jpeg';
+          }
+          
+          request.files.add(http.MultipartFile.fromBytes(
+            'images',
+            bytes,
+            filename: imageFile.name,
+            contentType: MediaType.parse(contentType),
+          ));
+        } else {
+          // For mobile, use path
+          request.files.add(await http.MultipartFile.fromPath('images', imageFile.path));
+        }
+      }
 
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
 
       if (response.statusCode == 200) {
-        final data = json.decode(responseBody);
-        return data['imageUrl'];
+        final List<dynamic> data = json.decode(responseBody);
+        return data.map((json) => PropertyImage.fromJson(json)).toList();
       } else {
-        throw Exception('Failed to upload image: $responseBody');
+        throw Exception('Failed to upload images: $responseBody');
       }
     } catch (e) {
-      throw Exception('Failed to upload image: $e');
+      throw Exception('Failed to upload images: $e');
+    }
+  }
+
+  Future<void> deleteImage(int imageId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$_baseUrl/Property/images/$imageId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${await _authService.getToken()}',
+        },
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete image: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Failed to delete image: $e');
     }
   }
 

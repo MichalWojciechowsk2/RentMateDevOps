@@ -146,7 +146,9 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                             enableInfiniteScroll: _property!.images.length > 1,
                             autoPlay: _property!.images.length > 1,
                           ),
-                          items: _property!.images.map((imageUrl) {
+                          items: _property!.images.map((propertyImage) {
+                            final imageUrl = 'https://localhost:7281${propertyImage.imageUrl}';
+                            print('Loading image from: $imageUrl'); // Debug print
                             return CachedNetworkImage(
                               imageUrl: imageUrl,
                               fit: BoxFit.cover,
@@ -157,14 +159,26 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                   child: CircularProgressIndicator(),
                                 ),
                               ),
-                              errorWidget: (context, url, error) => Container(
-                                color: Colors.grey[300],
-                                child: const Icon(
-                                  Icons.error,
-                                  color: Colors.grey,
-                                  size: 50,
-                                ),
-                              ),
+                              errorWidget: (context, url, error) {
+                                print('Error loading image: $error'); // Debug print
+                                return Container(
+                                  color: Colors.grey[300],
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.error,
+                                        color: Colors.grey,
+                                        size: 50,
+                                      ),
+                                      Text(
+                                        'Error: $error',
+                                        style: const TextStyle(color: Colors.grey),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
                             );
                           }).toList(),
                         )

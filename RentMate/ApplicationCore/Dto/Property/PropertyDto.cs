@@ -43,5 +43,7 @@ namespace ApplicationCore.Dto.Property
         public bool isActive { get; set; }
 
         public string? OwnerUsername { get; set; }
+        
+        public List<PropertyImageDto>? Images { get; set; }
     }
 }

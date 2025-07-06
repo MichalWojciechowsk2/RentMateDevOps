@@ -1,3 +1,5 @@
+import 'property_image.dart';
+
 class Property {
   final int id;
   final int ownerId;
@@ -11,7 +13,7 @@ class Property {
   final String postalCode;
   final int roomCount;
   final String area;
-  final List<String> images;
+  final List<PropertyImage> images;
   final bool isActive;
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -51,7 +53,7 @@ class Property {
       postalCode: json['postalCode']?.toString() ?? '',
       roomCount: json['roomCount'] is int ? json['roomCount'] ?? 0 : int.tryParse(json['roomCount']?.toString() ?? '') ?? 0,
       area: json['area']?.toString() ?? '',
-      images: (json['images'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      images: (json['images'] as List?)?.map((e) => PropertyImage.fromJson(e)).toList() ?? [],
       isActive: json['isActive'] is bool ? json['isActive'] ?? false : (json['isActive']?.toString() == 'true'),
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
@@ -73,7 +75,7 @@ class Property {
       'postalCode': postalCode,
       'roomCount': roomCount,
       'area': area,
-      'images': images,
+      'images': images.map((e) => e.toJson()).toList(),
       'isActive': isActive,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
@@ -94,7 +96,7 @@ class Property {
     required int roomCount,
     required String area,
     required String ownerUsername,
-    List<String> images = const [],
+    List<PropertyImage> images = const [],
     bool isActive = true,
   }) {
     return Property(
@@ -115,5 +117,16 @@ class Property {
       createdAt: DateTime.now(),
       ownerUsername: ownerUsername,
     );
+  }
+  
+  // Metoda pomocnicza do pobierania głównego zdjęcia
+  String? get mainImageUrl {
+    final mainImage = images.where((img) => img.isMainImage).firstOrNull;
+    return mainImage?.imageUrl ?? images.firstOrNull?.imageUrl;
+  }
+  
+  // Metoda pomocnicza do pobierania wszystkich URL zdjęć
+  List<String> get imageUrls {
+    return images.map((img) => img.imageUrl).toList();
   }
 } 

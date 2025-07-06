@@ -30,6 +30,7 @@ namespace Data
         public DbSet<ReviewEntity> Reviews { get; set; }
         public DbSet<MessageEntity> Messages { get; set; }
         public DbSet<InvitationEntity> Invitation { get; set; }
+        public DbSet<PropertyImageEntity> PropertyImages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -131,6 +132,14 @@ namespace Data
                 .WithMany()
                 .HasForeignKey(i => i.OfferId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // konfiguracja PropertyImage
+            modelBuilder.Entity<PropertyImageEntity>()
+                .ToTable("PropertyImageEntity")
+                .HasOne(pi => pi.Property)
+                .WithMany(p => p.PropertyImages)
+                .HasForeignKey(pi => pi.PropertyId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

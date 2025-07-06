@@ -73,9 +73,9 @@ class _MyPropertiesScreenState extends State<MyPropertiesScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              property.images != null && property.images!.isNotEmpty
+                              property.mainImageUrl != null
                                   ? CachedNetworkImage(
-                                      imageUrl: property.images![0],
+                                      imageUrl: 'https://localhost:7281${property.mainImageUrl}',
                                       placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
                                       errorWidget: (context, url, error) => const Icon(Icons.error),
                                       height: 150,

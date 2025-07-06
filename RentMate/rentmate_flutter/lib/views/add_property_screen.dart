@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:io';
 import '../models/property.dart';
 import '../services/property_service.dart';
 import '../services/auth_service.dart';
@@ -17,7 +18,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   final _propertyService = PropertyService();
   final _imagePicker = ImagePicker();
   bool _isLoading = false;
-  List<String> _selectedImages = [];
+  List<XFile> _selectedImages = [];
 
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -32,21 +33,64 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
 
   Future<void> _pickImage() async {
     try {
-      final image = await _imagePicker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
+      final images = await _imagePicker.pickMultiImage();
+      if (images.isNotEmpty) {
         setState(() {
-          _selectedImages.add(image.path);
+          _selectedImages.addAll(images);
         });
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text('Error selecting images: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
       }
+    }
+  }
+
+  Future<Widget> _buildImageWidget(XFile imageFile) async {
+    if (kIsWeb) {
+      // For web, use Image.memory with bytes from XFile
+      final bytes = await imageFile.readAsBytes();
+      return Image.memory(
+        bytes,
+        width: 100,
+        height: 100,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            width: 100,
+            height: 100,
+            color: Colors.grey[300],
+            child: const Icon(
+              Icons.error,
+              color: Colors.grey,
+            ),
+          );
+        },
+      );
+    } else {
+      // For mobile, use Image.file
+      return Image.file(
+        File(imageFile.path),
+        width: 100,
+        height: 100,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            width: 100,
+            height: 100,
+            color: Colors.grey[300],
+            child: const Icon(
+              Icons.error,
+              color: Colors.grey,
+            ),
+          );
+        },
+      );
     }
   }
 
@@ -71,19 +115,32 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
         postalCode: _postalCodeController.text,
         roomCount: int.parse(_roomCountController.text),
         area: _areaController.text,
-        images: _selectedImages,
+        images: [], // Początkowo puste, dodamy po utworzeniu
         ownerUsername: currentUser.email,
       );
 
-      await _propertyService.createProperty(property);
+      // Najpierw utwórz property
+      final createdProperty = await _propertyService.createProperty(property);
+      
+      // Jeśli są wybrane zdjęcia, upload je
+      if (_selectedImages.isNotEmpty) {
+        await _propertyService.uploadImages(createdProperty.id, _selectedImages);
+      }
+      
       if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Property created successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text('Error: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -314,23 +371,24 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                             padding: const EdgeInsets.only(right: 8),
                             child: Stack(
                               children: [
-                                CachedNetworkImage(
-                                  imageUrl: _selectedImages[index],
-                                  width: 100,
-                                  height: 100,
-                                  fit: BoxFit.cover,
-                                  placeholder: (context, url) => Container(
-                                    color: Colors.grey[300],
-                                    child: const Center(
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                  ),
-                                  errorWidget: (context, url, error) => Container(
-                                    color: Colors.grey[300],
-                                    child: const Icon(
-                                      Icons.error,
-                                      color: Colors.grey,
-                                    ),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: FutureBuilder<Widget>(
+                                    future: _buildImageWidget(_selectedImages[index]),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.hasData) {
+                                        return snapshot.data!;
+                                      } else {
+                                        return Container(
+                                          width: 100,
+                                          height: 100,
+                                          color: Colors.grey[300],
+                                          child: const Center(
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                        );
+                                      }
+                                    },
                                   ),
                                 ),
                                 Positioned(

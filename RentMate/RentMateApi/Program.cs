@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using static Services.Services.PropertyService;
 using ApplicationCore.Interfaces;
+using Microsoft.Extensions.FileProviders;
 
 namespace RentMateApi
 {
@@ -86,7 +87,20 @@ namespace RentMateApi
 
             app.UseHttpsRedirection();
 
-            // Use CORS before authorization
+            app.UseStaticFiles();
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(
+                    Path.Combine(Directory.GetCurrentDirectory(), "uploads")),
+                RequestPath = "/uploads",
+                OnPrepareResponse = context =>
+                {
+                    context.Context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+                    context.Context.Response.Headers.Add("Access-Control-Allow-Methods", "GET");
+                    context.Context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+                }
+            });
+
             app.UseCors("AllowAll");
 
             app.UseAuthentication();

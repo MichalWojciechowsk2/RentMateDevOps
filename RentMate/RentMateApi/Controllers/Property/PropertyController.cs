@@ -32,8 +32,15 @@ namespace RentMateApi.Controllers.Property
                 return Unauthorized(new { message = "User not authenticated or invalid user ID." });
             }
 
-            var result = await _propertyService.CreateProperty(createPropertyDto, ownerId);
-            return result == true ? StatusCode(201) : Conflict();
+            try
+            {
+                var result = await _propertyService.CreateProperty(createPropertyDto, ownerId);
+                return CreatedAtAction(nameof(GetPropertyDetails), new { id = result.Id }, result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while creating the property.", error = ex.Message });
+            }
         }
         [HttpPatch("{propertyId}/isActive")]
         public async Task<IActionResult> UpdatePropertyIsActive(int propertyId, [FromBody] bool newIsActive)
@@ -157,6 +164,64 @@ namespace RentMateApi.Controllers.Property
                 }));
             }
             return NotFound();
+        }
+
+        [HttpPost("{propertyId}/images")]
+        [Authorize]
+        public async Task<IActionResult> UploadPropertyImages(int propertyId, List<IFormFile> images)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return Unauthorized(new { message = "User not authenticated or invalid user ID." });
+            }
+
+            try
+            {
+                var result = await _propertyService.UploadPropertyImages(propertyId, userId, images);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Unauthorized(new { message = "You don't have permission to upload images for this property." });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while uploading images.", error = ex.Message });
+            }
+        }
+
+        [HttpDelete("images/{imageId}")]
+        [Authorize]
+        public async Task<IActionResult> DeletePropertyImage(int imageId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return Unauthorized(new { message = "User not authenticated or invalid user ID." });
+            }
+
+            try
+            {
+                await _propertyService.DeletePropertyImage(imageId, userId);
+                return Ok(new { message = "Image deleted successfully." });
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Unauthorized(new { message = "You don't have permission to delete this image." });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while deleting the image.", error = ex.Message });
+            }
         }
     }
 }

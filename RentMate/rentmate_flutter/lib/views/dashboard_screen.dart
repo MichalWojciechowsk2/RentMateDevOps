@@ -262,12 +262,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (property.images.isNotEmpty)
+                                    if (property.mainImageUrl != null)
                                       SizedBox(
                                         height: 200,
                                         width: double.infinity,
                                         child: CachedNetworkImage(
-                                          imageUrl: property.images.first,
+                                          imageUrl: 'https://localhost:7281${property.mainImageUrl}',
                                           fit: BoxFit.cover,
                                           placeholder: (context, url) => Container(
                                             color: Colors.grey[300],
