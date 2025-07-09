@@ -81,10 +81,24 @@ namespace Services.Services
         public async Task<IEnumerable<PaymentDto>> GetPaymentsByActiveUserOffers(int ownerId)
         {
             var payments = await _paymentRepository.GetPaymentsByActiveUserOffers(ownerId);
+            var now = DateTime.UtcNow;
+            var updated = false;
+
+            foreach (var payment in payments)
+            {
+                if (payment.Status == PaymentStatus.Pending && payment.DueDate < now)
+                {
+                    payment.Status = PaymentStatus.Failed;
+                    updated = true;
+                }
+            }
+            if (updated)
+            {
+                await _paymentRepository.SaveChangesAsync();
+            }
             var entityToDto = _mapper.Map<IEnumerable<PaymentDto>>(payments);
             return entityToDto;
         }
-
     }
     public interface IPaymentService
     {

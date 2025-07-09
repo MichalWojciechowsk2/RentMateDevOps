@@ -29,6 +29,10 @@ namespace Infrastructure.Repositories
                 return false;
             }
         }
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
+        }
         public async Task UpdateAsync(PaymentEntity entity)
         {
             _context.Payments.Update(entity);
@@ -49,13 +53,14 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<PaymentEntity>> GetPaymentsByActiveUserOffers(int userId)
         {
             return await _context.Payments.Include(p => p.Offer)
-                .Where(p => p.TenantId == userId && p.Offer.Status == OfferStatus.Active)
+                .Where(p => p.TenantId == userId && p.Offer.Status == OfferStatus.Accepted)
                 .ToListAsync();
         }
     }
     public interface IPaymentRepository
     {
         Task<bool> CreatePayment(PaymentEntity entity);
+        Task SaveChangesAsync();
         Task UpdateAsync(PaymentEntity entity);
         Task<IEnumerable<PaymentEntity>> GetAllPayments();
         Task<IEnumerable<PaymentEntity>> GetAllPaymentsByOfferId(int id);
