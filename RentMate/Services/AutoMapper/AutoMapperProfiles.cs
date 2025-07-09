@@ -44,6 +44,7 @@ namespace Services.AutoMapper
             CreateMap<PaymentEntity, CreatePaymentDto>();
             CreateMap<CreatePaymentDto, PaymentEntity>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => PaymentStatus.Pending));
+            CreateMap<PaymentDto, PaymentEntity>();
 
         }
     }

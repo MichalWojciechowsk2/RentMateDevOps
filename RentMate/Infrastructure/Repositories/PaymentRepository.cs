@@ -46,6 +46,12 @@ namespace Infrastructure.Repositories
         {
             return await _context.Payments.Where(p => p.Id == id).FirstOrDefaultAsync();
         }
+        public async Task<IEnumerable<PaymentEntity>> GetPaymentsByActiveUserOffers(int userId)
+        {
+            return await _context.Payments.Include(p => p.Offer)
+                .Where(p => p.TenantId == userId && p.Offer.Status == OfferStatus.Active)
+                .ToListAsync();
+        }
     }
     public interface IPaymentRepository
     {
@@ -54,6 +60,7 @@ namespace Infrastructure.Repositories
         Task<IEnumerable<PaymentEntity>> GetAllPayments();
         Task<IEnumerable<PaymentEntity>> GetAllPaymentsByOfferId(int id);
         Task<PaymentEntity> GetPaymentById(int id);
+        Task<IEnumerable<PaymentEntity>> GetPaymentsByActiveUserOffers(int userId);
 
     }
 }

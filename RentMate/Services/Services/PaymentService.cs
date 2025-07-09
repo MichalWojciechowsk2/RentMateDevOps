@@ -72,14 +72,24 @@ namespace Services.Services
             return false;
         }
 
+
         public async Task<IEnumerable<PaymentEntity>> GetAllPayments()
         {
             return await _paymentRepository.GetAllPayments();
         }
+
+        public async Task<IEnumerable<PaymentDto>> GetPaymentsByActiveUserOffers(int ownerId)
+        {
+            var payments = await _paymentRepository.GetPaymentsByActiveUserOffers(ownerId);
+            var entityToDto = _mapper.Map<IEnumerable<PaymentDto>>(payments);
+            return entityToDto;
+        }
+
     }
     public interface IPaymentService
     {
         Task<bool> CreatePayment(CreatePaymentDto dto, int ownerId);
         Task<IEnumerable<PaymentEntity>> GetAllPayments();
+        Task<IEnumerable<PaymentDto>> GetPaymentsByActiveUserOffers(int ownerId);
     }
 }
