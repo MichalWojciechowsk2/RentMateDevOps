@@ -47,5 +47,19 @@ namespace RentMateApi.Controllers
             var payments = await _paymentService.GetPaymentsByActiveUserOffers(userId);
             return Ok(payments);
         }
+
+        //Sprawdzić czy użytkownik jest właścicielem mieszkania.
+        [HttpGet("getAllPaymentsForPropertyByActiveUserOffers")]
+        [Authorize]
+        public async Task<IActionResult> GetAllPaymentsForPropertyByActiveUserOffers(int propertyId)
+        {
+            //var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            //if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            //{
+            //    return Unauthorized(new { message = "User not authenticated or invalid user ID." });
+            //}
+            var payments = await _paymentService.GetAllPaymentsForPropertyByActiveUserOffers(propertyId);
+            return Ok(payments);
+        }
     }
 }

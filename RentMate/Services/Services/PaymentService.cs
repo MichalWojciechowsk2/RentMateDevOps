@@ -78,9 +78,34 @@ namespace Services.Services
             return await _paymentRepository.GetAllPayments();
         }
 
+        //Nie można za każdym razem iterować po payment bo będzie to spowalniało system, trzeba zrobić osobny system 
+        //który będzie sprawdzał czy data płatności minęła, jeżeli tak to zmienia status na failed.
         public async Task<IEnumerable<PaymentDto>> GetPaymentsByActiveUserOffers(int ownerId)
         {
             var payments = await _paymentRepository.GetPaymentsByActiveUserOffers(ownerId);
+            var now = DateTime.UtcNow;
+            var updated = false;
+
+            foreach (var payment in payments)
+            {
+                if (payment.Status == PaymentStatus.Pending && payment.DueDate < now)
+                {
+                    payment.Status = PaymentStatus.Failed;
+                    updated = true;
+                }
+            }
+            if (updated)
+            {
+                await _paymentRepository.SaveChangesAsync();
+            }
+            var entityToDto = _mapper.Map<IEnumerable<PaymentDto>>(payments);
+            return entityToDto;
+        }
+        //Nie można za każdym razem iterować po payment bo będzie to spowalniało system, trzeba zrobić osobny system 
+        //który będzie sprawdzał czy data płatności minęła, jeżeli tak to zmienia status na failed.
+        public async Task<IEnumerable<PaymentDto>> GetAllPaymentsForPropertyByActiveUserOffers(int propertyId)
+        {
+            var payments = await _paymentRepository.GetAllPaymentsForPropertyByActiveUserOffers(propertyId);
             var now = DateTime.UtcNow;
             var updated = false;
 
@@ -105,5 +130,6 @@ namespace Services.Services
         Task<bool> CreatePayment(CreatePaymentDto dto, int ownerId);
         Task<IEnumerable<PaymentEntity>> GetAllPayments();
         Task<IEnumerable<PaymentDto>> GetPaymentsByActiveUserOffers(int ownerId);
+        Task<IEnumerable<PaymentDto>> GetAllPaymentsForPropertyByActiveUserOffers(int propertyId);
     }
 }

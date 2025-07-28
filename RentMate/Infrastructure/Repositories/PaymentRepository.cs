@@ -56,6 +56,15 @@ namespace Infrastructure.Repositories
                 .Where(p => p.TenantId == userId && p.Offer.Status == OfferStatus.Accepted)
                 .ToListAsync();
         }
+        public async Task<IEnumerable<PaymentEntity>> GetAllPaymentsForPropertyByActiveUserOffers(int propertyId)
+        {
+            return await _context.Properties
+                .Where(p => p.Id == propertyId)
+                .SelectMany(p => p.Offers)
+                .Where(o=>o.Status == OfferStatus.Accepted && o.Payments != null)
+                .SelectMany(o => o.Payments)
+                .ToListAsync();
+        }
     }
     public interface IPaymentRepository
     {
@@ -66,6 +75,7 @@ namespace Infrastructure.Repositories
         Task<IEnumerable<PaymentEntity>> GetAllPaymentsByOfferId(int id);
         Task<PaymentEntity> GetPaymentById(int id);
         Task<IEnumerable<PaymentEntity>> GetPaymentsByActiveUserOffers(int userId);
+        Task<IEnumerable<PaymentEntity>> GetAllPaymentsForPropertyByActiveUserOffers(int propertyId);
 
     }
 }
