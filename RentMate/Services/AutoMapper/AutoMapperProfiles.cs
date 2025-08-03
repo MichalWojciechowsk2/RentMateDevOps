@@ -48,6 +48,8 @@ namespace Services.AutoMapper
             CreateMap<PaymentDto, PaymentEntity>();
             CreateMap<PaymentEntity, PaymentDto>();
 
+            CreateMap<PaymentEntity, PaymentDtoWithTenantName>();
+
         }
     }
 }

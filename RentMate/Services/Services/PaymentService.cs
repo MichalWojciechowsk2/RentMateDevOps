@@ -16,16 +16,19 @@ namespace Services.Services
         private readonly IPaymentRepository _paymentRepository;
         private readonly IOfferRepository _offerRepository;
         private readonly IPropertyRepository _propertyRepository;
+        private readonly IUserService _userService;
         private readonly IMapper _mapper;
         public PaymentService (
             IPaymentRepository paymentRepository, 
             IOfferRepository offerRepository,
             IPropertyRepository propertyRepository,
+            IUserService userService,
             IMapper mapper)
         {
             _paymentRepository = paymentRepository;
             _offerRepository = offerRepository;
             _propertyRepository = propertyRepository;
+            _userService = userService;
             _mapper = mapper;
         }
         public async Task<bool> CreatePayment(CreatePaymentDto dto, int ownerId)
@@ -103,7 +106,7 @@ namespace Services.Services
         }
         //Nie można za każdym razem iterować po payment bo będzie to spowalniało system, trzeba zrobić osobny system 
         //który będzie sprawdzał czy data płatności minęła, jeżeli tak to zmienia status na failed.
-        public async Task<IEnumerable<PaymentDto>> GetAllPaymentsForPropertyByActiveUserOffers(int propertyId)
+        public async Task<IEnumerable<PaymentDtoWithTenantName>> GetAllPaymentsForPropertyByActiveUserOffers(int propertyId)
         {
             var payments = await _paymentRepository.GetAllPaymentsForPropertyByActiveUserOffers(propertyId);
             var now = DateTime.UtcNow;
@@ -121,8 +124,21 @@ namespace Services.Services
             {
                 await _paymentRepository.SaveChangesAsync();
             }
-            var entityToDto = _mapper.Map<IEnumerable<PaymentDto>>(payments);
-            return entityToDto;
+            var result = new List<PaymentDtoWithTenantName>();
+
+            foreach (var payment in payments)
+            {
+                var dto = _mapper.Map<PaymentDtoWithTenantName>(payment);
+
+                var tenant = await _userService.GetUserById(payment.TenantId);
+                dto.TenantName = tenant.FirstName;
+                dto.TenantSurname = tenant.LastName;
+
+                result.Add(dto);
+            }
+
+            return result;
+
         }
     }
     public interface IPaymentService
@@ -130,6 +146,6 @@ namespace Services.Services
         Task<bool> CreatePayment(CreatePaymentDto dto, int ownerId);
         Task<IEnumerable<PaymentEntity>> GetAllPayments();
         Task<IEnumerable<PaymentDto>> GetPaymentsByActiveUserOffers(int ownerId);
-        Task<IEnumerable<PaymentDto>> GetAllPaymentsForPropertyByActiveUserOffers(int propertyId);
+        Task<IEnumerable<PaymentDtoWithTenantName>> GetAllPaymentsForPropertyByActiveUserOffers(int propertyId);
     }
 }
