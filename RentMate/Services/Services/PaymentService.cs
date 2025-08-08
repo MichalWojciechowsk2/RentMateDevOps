@@ -42,7 +42,7 @@ namespace Services.Services
                 }
                 foreach(var of in offers)
                 {
-                    if (of.Status != OfferStatus.Active) continue;
+                    if (of.Status != OfferStatus.Accepted) continue;
 
                     var payment = _mapper.Map<PaymentEntity>(dto);
                     payment.OfferId = of.Id;
