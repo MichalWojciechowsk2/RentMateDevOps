@@ -13,5 +13,11 @@
   <ItemGroup>
     <Folder Include="Mapper\" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Update="OfferTemplates\rental_contract_v1.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
 
