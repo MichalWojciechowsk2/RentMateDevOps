@@ -58,7 +58,7 @@ namespace Services.Services
         }
         public async Task<bool> CheckIfUserCanAcceptNewOffer(int userId)
         {
-            var activeOffer = _offerRepository.getFirstActiveOfferByUserId(userId);
+            var activeOffer = await _offerRepository.getFirstActiveOfferByUserId(userId);
             if (activeOffer == null) return true;
             return false;
         }

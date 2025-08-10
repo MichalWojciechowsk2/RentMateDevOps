@@ -16,6 +16,6 @@ namespace ApplicationCore.Dto.Property.Offer
         public decimal DepositAmount { get; set; }
         public DateTime RentalPeriodStart { get; set; }
         public DateTime RentalPeriodEnd { get; set; }
-        public int? TenantId { get; set; }
+        public int TenantId { get; set; }
     }
 }

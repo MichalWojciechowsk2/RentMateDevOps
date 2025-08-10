@@ -25,6 +25,11 @@ namespace RentMateApi.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateOffer(CreateOfferDto createOfferDto)
         {
+            var canCreateOffer = await _offerService.CheckIfUserCanAcceptNewOffer(createOfferDto.TenantId);
+            if (!canCreateOffer)
+            {
+                return Conflict(new { message = "Użytkownik ma już aktywną ofertę." });
+            }
             var result = await _offerService.CreateOffer(createOfferDto);
             
             var offerContract = await _offerService.GetOfferAndTenantByOfferId(result.Id);
