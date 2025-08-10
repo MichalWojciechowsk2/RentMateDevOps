@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="OfferTemplates\rental_contract_v1.txt">
+    <None Update="OfferTemplates\rental_contract_v1.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

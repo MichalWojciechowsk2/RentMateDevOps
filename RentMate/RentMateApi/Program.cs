@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using static Services.Services.PropertyService;
 using ApplicationCore.Interfaces;
+using QuestPDF.Infrastructure;
 
 namespace RentMateApi
 {
@@ -80,6 +81,9 @@ namespace RentMateApi
             builder.Services.AddAuthorization();
 
             var app = builder.Build();
+            //Free education Community MIT License
+            QuestPDF.Settings.License = LicenseType.Community;
+
             RentMateApi.Seed.SeedData.EnsureSeeded(app);
 
             // Configure the HTTP request pipeline.

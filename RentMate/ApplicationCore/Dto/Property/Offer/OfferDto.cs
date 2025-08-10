@@ -26,17 +26,13 @@ namespace ApplicationCore.Dto.Property.Offer
 
         // Status oferty
         public OfferStatus Status { get; set; }
+        public string OfferContract { get; set; }
 
         // Dane najemcy (gdy oferta zostanie zaakceptowana)
         public int? TenantId { get; set; }
 
         public DateTime CreatedAt { get; set; }
         public DateTime? AcceptedAt { get; set; }
-        public string TenantEmail { get; set; }
-
-        public string TenantName {  get; set; }
-        public string TenantLastName { get; set; }
-        public string TenantPhoneNumber { get; set; }
         public UserEntity Tenant { get; set; }
     }
 }

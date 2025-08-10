@@ -34,11 +34,7 @@ namespace Services.AutoMapper
 
             //Offer
             CreateMap<CreateOfferDto, OfferEntity>();
-            CreateMap<OfferEntity, OfferDto>()
-                .ForMember(dest => dest.TenantName, opt => opt.MapFrom(src=>src.Tenant.FirstName))
-                .ForMember(dest => dest.TenantLastName, opt => opt.MapFrom(src=>src.Tenant.LastName))
-                .ForMember(dest => dest.TenantPhoneNumber, opt => opt.MapFrom(src=>src.Tenant.PhoneNumber))
-                .ForMember(dest => dest.TenantEmail, opt => opt.MapFrom(src => src.Tenant.Email));
+            CreateMap<OfferEntity, OfferDto>();
 
             //Payment
             CreateMap<PaymentEntity, CreatePaymentDto>();

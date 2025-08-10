@@ -4,6 +4,7 @@ using Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Services.Services;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 using static Services.Services.PropertyService;
 
 namespace RentMateApi.Controllers
@@ -25,8 +26,51 @@ namespace RentMateApi.Controllers
         public async Task<IActionResult> CreateOffer(CreateOfferDto createOfferDto)
         {
             var result = await _offerService.CreateOffer(createOfferDto);
-            return Ok(result);
+            
+            var offerContract = await _offerService.GetOfferAndTenantByOfferId(result.Id);
+            var property = await _propertyService.GetPropertyById(offerContract.PropertyId);
+            var propertyCity = property.City;
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int ownerId))
+            {
+                return Unauthorized(new { message = "User not authenticated or invalid user ID." });
+            }
+            var owner = await _userService.GetUserById(ownerId);
+
+            var data = new Dictionary<string, string>
+            {
+                {"CreatedAt", offerContract.CreatedAt.ToString("yyyy-MM-dd")},
+                {"City", propertyCity},
+                {"OwnerNameSurname", String.Concat(owner.FirstName," ", owner.LastName)},
+                {"TenantNameSurname", String.Concat(offerContract.Tenant.FirstName," ", offerContract.Tenant.LastName)},
+                {"PropertyCity", propertyCity},
+                {"PropertyAdressStreet", property.Address},
+                {"PropertyRoomCount",property.RoomCount.ToString()},
+                {"PropertyArea",property.Area.ToString()},
+                {"RentalStartDate", offerContract.RentalPeriodStart.ToString("dd-MM-yyyy")},
+                {"RentalEndDate", offerContract.RentalPeriodEnd.ToString("dd-MM-yyyy")},
+                {"RentAmount", offerContract.RentAmount.ToString()},
+            };
+
+            var contract = _offerService.GenerateOfferContract(data);
+            await _offerService.AddOfferContractToOffer(offerContract.Id, contract);
+
+            return Ok(new { message = "Offer and contract generated successfully" });
         }
+        [HttpGet("{offerId}/offerContract/pdf")]
+        public async Task<IActionResult> DownloadOfferContractPdf(int offerId)
+        {
+            var offer = await _offerService.GetOfferById(offerId);
+
+            if (offer == null || string.IsNullOrEmpty(offer.OfferContract))
+                return NotFound("Offer or contract not found.");
+
+            var pdfBytes = _offerService.GenerateOfferContractPdf(offer.OfferContract);
+
+            return File(pdfBytes, "application/pdf", $"Umowa_Najmu_{offerId}.pdf");
+        }
+
         [HttpGet]
         [Route("getActiveAndAcceptedOffersByPropId")]
         public async Task<IActionResult> GetActiveAndAcceptedOfferByPropId(int propertyId)
@@ -57,38 +101,6 @@ namespace RentMateApi.Controllers
             {
                 return StatusCode(500, "Wystąpił błąd podczas aktualizacji statusu.");
             }
-        }
-        [HttpPost("generate")]
-        public async IActionResult GenerateOfferContract([FromBody] OfferDto offerContract)
-        {   
-            var property = await _propertyService.GetPropertyById(offerContract.PropertyId);
-            var propertyCity = property.City;
-
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int ownerId))
-            {
-                return Unauthorized(new { message = "User not authenticated or invalid user ID." });
-            }
-            var owner = await _userService.GetUserById(ownerId);
-
-            var data = new Dictionary<string, string>
-            {
-                {"CreatedAt", offerContract.CreatedAt.ToString("yyyy-MM-dd")},
-                {"City", propertyCity},
-                {"OwnerNameSurname", owner.LastName},
-                {"TenantNameSurname", String.Concat(offerContract.TenantName, offerContract.TenantLastName)},
-                {"PropertyCity", propertyCity},
-                {"PropertyAdressStreet", property.Address},
-                {"PropertyRoomCount",property.RoomCount.ToString()},
-                {"PropertyArea",property.Area.ToString()},
-                {"RentalStartDate", offerContract.RentalPeriodStart.ToString("yyyy-MM-dd")},
-                {"RentalEndDate", offerContract.RentalPeriodEnd.ToString("yyyy-MM-dd")},
-                {"RentAmount", offerContract.RentAmount.ToString()},
-            };
-
-             _offerService.GenerateOfferContract(data);
-            //EDYCJA OFERTY (Dodanie pola Kontrakt)
-
         }
     }
 }

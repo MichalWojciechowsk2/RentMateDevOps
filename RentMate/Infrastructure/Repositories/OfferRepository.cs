@@ -64,9 +64,13 @@ namespace Infrastructure.Repositories
         {
             return await _context.Offers.FirstOrDefaultAsync(o => o.Id == offerId);
         }
-        public async Task UpdateAsync(OfferEntity offer)
+        public async Task<OfferEntity> getOfferAndTenantByOfferId(int offerId)
         {
-            _context.Set<OfferEntity>().Update(offer);
+            return await _context.Offers.Include(o => o.Tenant).FirstOrDefaultAsync(o => o.Id == offerId);
+        }
+        public async Task updateAsync(OfferEntity offerEntity)
+        {
+            _context.Offers.Update(offerEntity);
             await _context.SaveChangesAsync();
         }
     }
@@ -77,6 +81,7 @@ namespace Infrastructure.Repositories
         Task<IEnumerable<OfferEntity>> getActiveAndAcceptedOffersByPropId(int propertyId);
         Task<IEnumerable<OfferEntity>> getOfferByUserId(int userId);
         Task<OfferEntity> getOfferById(int offerId);
-        Task UpdateAsync(OfferEntity offer);
+        Task<OfferEntity> getOfferAndTenantByOfferId(int offerId);
+        Task updateAsync(OfferEntity offerEntity);
     }
 }

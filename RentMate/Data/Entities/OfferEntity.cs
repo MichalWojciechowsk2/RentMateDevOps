@@ -35,6 +35,7 @@ namespace Data.Entities
 
         public PropertyEntity Property { get; set; }
         public ICollection<PaymentEntity> Payments { get; set; }
+        public string? OfferContract { get; set; }
     }
 
     public enum OfferStatus
