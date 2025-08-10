@@ -40,7 +40,7 @@ namespace Services.Services
         }
         public async Task<IEnumerable<OfferEntity>> GetOfferByUserId(int userId)
         {
-            var offer = await _offerRepository.getOfferByUserId(userId);
+            var offer = await _offerRepository.getOffersByUserId(userId);
             if (offer == null) return null;
             return offer;
         }
@@ -55,6 +55,12 @@ namespace Services.Services
             var offer = await _offerRepository.getOfferAndTenantByOfferId(offerId);
             if (offer == null) return null;
             return _mapper.Map<OfferDto>(offer);
+        }
+        public async Task<bool> CheckIfUserCanAcceptNewOffer(int userId)
+        {
+            var activeOffer = _offerRepository.getFirstActiveOfferByUserId(userId);
+            if (activeOffer == null) return true;
+            return false;
         }
         public async Task<OfferEntity> UpdateOfferStatus(int offerId, OfferStatus newStatus)
         {
@@ -96,6 +102,7 @@ namespace Services.Services
         Task<IEnumerable<OfferEntity>> GetOfferByUserId(int userId);
         Task<OfferDto> GetOfferById(int offerId);
         Task<OfferDto> GetOfferAndTenantByOfferId(int offerId);
+        Task<bool> CheckIfUserCanAcceptNewOffer(int userId);
         Task<OfferEntity> UpdateOfferStatus(int offerId, OfferStatus newStatus);
         public string GenerateOfferContract(Dictionary<string, string> data);
         Task<OfferEntity> AddOfferContractToOffer(int offerId, string contract);

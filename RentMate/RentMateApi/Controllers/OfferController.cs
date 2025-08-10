@@ -88,12 +88,26 @@ namespace RentMateApi.Controllers
         [HttpPatch("{offerId}/status")]
         public async Task<IActionResult> UpdateStatus(int offerId, [FromBody] OfferStatus status)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int tenantId))
+            {
+                return Unauthorized(new { message = "User not authenticated or invalid user ID." });
+            }
+            if (status == OfferStatus.Accepted)
+            {
+                bool canAccept = await _offerService.CheckIfUserCanAcceptNewOffer(tenantId);
+                if (!canAccept)
+                {
+                    return Conflict(new { message = "Nie możesz zaakceptować więcej niż jednej oferty jednocześnie." });
+                }
+            }
+
             try
             {
                 var updatedOffer = await _offerService.UpdateOfferStatus(offerId, status);
                 return Ok(updatedOffer);
             }
-            catch (KeyNotFoundException) 
+            catch (KeyNotFoundException)
             {
                 return NotFound();
             }

@@ -47,7 +47,11 @@ namespace Infrastructure.Repositories
                 return null;
             }
         }
-        public async Task<IEnumerable<OfferEntity>> getOfferByUserId(int userId)
+        public async Task<OfferEntity> getFirstActiveOfferByUserId(int userId)
+        {
+            return await _context.Offers.Where(o => o.TenantId == userId && o.Status == OfferStatus.Accepted).FirstOrDefaultAsync();
+        }
+        public async Task<IEnumerable<OfferEntity>> getOffersByUserId(int userId)
         {
             try
             {
@@ -79,7 +83,8 @@ namespace Infrastructure.Repositories
         Task<OfferEntity> getById(int id);
         Task<bool> CreateOffer(OfferEntity entity);
         Task<IEnumerable<OfferEntity>> getActiveAndAcceptedOffersByPropId(int propertyId);
-        Task<IEnumerable<OfferEntity>> getOfferByUserId(int userId);
+        Task<OfferEntity> getFirstActiveOfferByUserId(int userId);
+        Task<IEnumerable<OfferEntity>> getOffersByUserId(int userId);
         Task<OfferEntity> getOfferById(int offerId);
         Task<OfferEntity> getOfferAndTenantByOfferId(int offerId);
         Task updateAsync(OfferEntity offerEntity);
