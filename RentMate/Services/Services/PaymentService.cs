@@ -17,18 +17,21 @@ namespace Services.Services
         private readonly IOfferRepository _offerRepository;
         private readonly IPropertyRepository _propertyRepository;
         private readonly IUserService _userService;
+        private readonly IRecurringPaymentRepository _recurringPaymentRepository;
         private readonly IMapper _mapper;
         public PaymentService (
             IPaymentRepository paymentRepository, 
             IOfferRepository offerRepository,
             IPropertyRepository propertyRepository,
             IUserService userService,
+            IRecurringPaymentRepository recurringPaymentRepository,
             IMapper mapper)
         {
             _paymentRepository = paymentRepository;
             _offerRepository = offerRepository;
             _propertyRepository = propertyRepository;
             _userService = userService;
+            _recurringPaymentRepository = recurringPaymentRepository;
             _mapper = mapper;
         }
         public async Task<bool> CreatePayment(CreatePaymentDto dto, int ownerId)
@@ -45,10 +48,23 @@ namespace Services.Services
                     if (of.Status != OfferStatus.Accepted) continue;
 
                     var payment = _mapper.Map<PaymentEntity>(dto);
+                    payment.CreateDateTime = DateTime.UtcNow;
                     payment.OfferId = of.Id;
                     payment.TenantId = of.TenantId.Value;
                     payment.Id = 0;
                     await _paymentRepository.CreatePayment(payment);
+
+                    if (dto.GenerateWithRecurring)
+                    {
+                        var newRecurringPayment = new RecurringPaymentEntity
+                        {
+                            PaymentId = payment.Id,
+                            Payment = payment,
+                            NextGenerationInDays = dto.NextGenerationInDays ?? 0,
+                            RecurrenceTimes = dto.RecurrenceTimes ?? 0
+                        };
+                       await _recurringPaymentRepository.CreateRecurringPayment(newRecurringPayment);
+                    }
                 }
                 return true;
             }
@@ -69,14 +85,14 @@ namespace Services.Services
                 if (offer.Status == OfferStatus.Cancelled)
                     throw new Exception("Oferta została anulowana");
                 dtoToEntity.TenantId = offer.TenantId.Value;
+                dtoToEntity.CreateDateTime = DateTime.UtcNow;
                 await _paymentRepository.CreatePayment(dtoToEntity);
                 return true;
             }
             return false;
         }
 
-
-        public async Task<IEnumerable<PaymentEntity>> GetAllPayments()
+            public async Task<IEnumerable<PaymentEntity>> GetAllPayments()
         {
             return await _paymentRepository.GetAllPayments();
         }

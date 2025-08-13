@@ -26,6 +26,7 @@ namespace Data
         public DbSet<PropertyEntity> Properties { get; set; }
         public DbSet<OfferEntity> Offers { get; set; }
         public DbSet<PaymentEntity> Payments { get; set; }
+        public DbSet<RecurringPaymentEntity> RecurringPayment { get; set; }
         public DbSet<IssueEntity> Issues { get; set; }
         public DbSet<ReviewEntity> Reviews { get; set; }
         public DbSet<MessageEntity> Messages { get; set; }
@@ -67,6 +68,13 @@ namespace Data
                 .WithMany()
                 .HasForeignKey(p => p.TenantId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            //konfiguracja RecurringPaymentEntity
+            modelBuilder.Entity<RecurringPaymentEntity>()
+            .HasOne(rp => rp.Payment)
+            .WithMany()
+            .HasForeignKey(rp => rp.PaymentId)
+            .OnDelete(DeleteBehavior.Restrict);
 
             // konfiguracja issue
             modelBuilder.Entity<IssueEntity>()
