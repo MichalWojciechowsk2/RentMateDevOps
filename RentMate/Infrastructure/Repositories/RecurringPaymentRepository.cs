@@ -40,7 +40,7 @@ namespace Infrastructure.Repositories
 
         public async Task<IEnumerable<RecurringPaymentEntity>> getAllWithPaymentByPropertyId(int propertyId)
         {
-            return await _dbContext.RecurringPayment.Include(rp=> rp.Payment).ThenInclude(p => p.Offer).ThenInclude(o => o.Property)
+            return await _dbContext.RecurringPayment.Include(rp=> rp.Payment).ThenInclude(p => p.Offer)
                 .Where(rp => rp.Payment.Offer.PropertyId == propertyId).ToListAsync();
         }
 

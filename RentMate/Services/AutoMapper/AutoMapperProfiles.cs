@@ -46,6 +46,9 @@ namespace Services.AutoMapper
 
             CreateMap<PaymentEntity, PaymentDtoWithTenantName>();
             CreateMap<PaymentEntity, PaymentEntity>();
+
+            CreateMap<RecurringPaymentEntity, RecurringPaymentDto>()
+            .ForMember(dest => dest.Payment, opt => opt.MapFrom(src => src.Payment));
         }
     }
 }

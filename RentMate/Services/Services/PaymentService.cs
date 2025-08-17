@@ -193,9 +193,11 @@ namespace Services.Services
             return count;
         }
 
-        public async Task<IEnumerable<RecurringPaymentEntity>> GetAllRecurringPaymentsWithPaymentByPropertyId(int propertyId)
+        public async Task<IEnumerable<RecurringPaymentDto>> GetAllRecurringPaymentsWithPaymentByPropertyId(int propertyId)
         {
-            return await _recurringPaymentRepository.getAllWithPaymentByPropertyId(propertyId);
+            var recurringPayments = await _recurringPaymentRepository.getAllWithPaymentByPropertyId(propertyId);
+            var recurringPaymentsDto = _mapper.Map<IEnumerable<RecurringPaymentDto>>(recurringPayments);
+            return recurringPaymentsDto;
         }
     }
     public interface IPaymentService
@@ -204,6 +206,6 @@ namespace Services.Services
         Task<IEnumerable<PaymentEntity>> GetAllPayments();
         Task<IEnumerable<PaymentDto>> GetPaymentsByActiveUserOffers(int ownerId);
         Task<IEnumerable<PaymentDtoWithTenantName>> GetAllPaymentsForPropertyByActiveUserOffers(int propertyId);
-        Task<IEnumerable<RecurringPaymentEntity>> GetAllRecurringPaymentsWithPaymentByPropertyId(int propertyId);
+        Task<IEnumerable<RecurringPaymentDto>> GetAllRecurringPaymentsWithPaymentByPropertyId(int propertyId);
     }
 }
