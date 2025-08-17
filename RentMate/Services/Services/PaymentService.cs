@@ -67,7 +67,7 @@ namespace Services.Services
                         {
                             PaymentId = payment.Id,
                             Payment = payment,
-                            RecurrenceTimes = dto.RecurrenceTimes ?? 0
+                            RecurrenceTimes = dto.RecurrenceTimes - 1 ?? 0
                         };
                        await _recurringPaymentRepository.CreateRecurringPayment(newRecurringPayment);
                     }

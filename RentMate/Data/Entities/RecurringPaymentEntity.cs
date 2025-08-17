@@ -11,7 +11,6 @@ namespace Data.Entities
         public int Id { get; set; }
         public int PaymentId { get; set; }
         public PaymentEntity Payment { get; set; }
-        //Ile razy oferta ma być stworzona w przód // od tego będzie odejmowane za każdą generacją 
         public int RecurrenceTimes { get; set; }
     }
 }

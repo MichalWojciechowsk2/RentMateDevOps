@@ -42,9 +42,8 @@ namespace Infrastructure.Repositories
         {
             var recurringPayment = await getRecurringPaymentById(recurringPaymentId);
             if (recurringPayment == null)   return false;
-            recurringPayment.Id = newPaymentId;
+            recurringPayment.PaymentId = newPaymentId;
             recurringPayment.RecurrenceTimes--;
-            _dbContext.RecurringPayment.Update(recurringPayment);
             await _dbContext.SaveChangesAsync();
             return true;
         }
