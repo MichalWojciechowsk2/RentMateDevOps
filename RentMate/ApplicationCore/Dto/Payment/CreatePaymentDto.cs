@@ -16,7 +16,6 @@ namespace ApplicationCore.Dto.Payment
         public DateTime DueDate {  get; set; }
         public string PaymentMethod { get; set; }
         public bool GenerateWithRecurring { get; set; }
-        public int? NextGenerationInDays {  get; set; }
         public int? RecurrenceTimes { get; set; }
     }
 }

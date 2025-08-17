@@ -54,13 +54,19 @@ namespace Services.Services
                     payment.Id = 0;
                     await _paymentRepository.CreatePayment(payment);
 
+                    var offer = await _offerRepository.getById(dto.OfferId);
+                    DateTime offerDueDate = offer.RentalPeriodEnd;
+                    if (dto.RecurrenceTimes == -1)
+                    {
+                        dto.RecurrenceTimes = GetFirstDaysCountUntilContractEnd(offerDueDate);
+                    }
+
                     if (dto.GenerateWithRecurring)
                     {
                         var newRecurringPayment = new RecurringPaymentEntity
                         {
                             PaymentId = payment.Id,
                             Payment = payment,
-                            NextGenerationInDays = dto.NextGenerationInDays ?? 0,
                             RecurrenceTimes = dto.RecurrenceTimes ?? 0
                         };
                        await _recurringPaymentRepository.CreateRecurringPayment(newRecurringPayment);
@@ -87,6 +93,23 @@ namespace Services.Services
                 dtoToEntity.TenantId = offer.TenantId.Value;
                 dtoToEntity.CreateDateTime = DateTime.UtcNow;
                 await _paymentRepository.CreatePayment(dtoToEntity);
+                
+                DateTime offerDueDate = offer.RentalPeriodEnd;
+                if (dto.RecurrenceTimes == -1)
+                {
+                    dto.RecurrenceTimes = GetFirstDaysCountUntilContractEnd(offerDueDate);
+                }
+
+                if (dto.GenerateWithRecurring)
+                {
+                    var newRecurringPayment = new RecurringPaymentEntity
+                    {
+                        PaymentId = dtoToEntity.Id,
+                        Payment = dtoToEntity,
+                        RecurrenceTimes = dto.RecurrenceTimes ?? 0
+                    };
+                    await _recurringPaymentRepository.CreateRecurringPayment(newRecurringPayment);
+                }
                 return true;
             }
             return false;
@@ -155,6 +178,19 @@ namespace Services.Services
 
             return result;
 
+        }
+        private int GetFirstDaysCountUntilContractEnd(DateTime endDate)
+        {
+            DateTime today = DateTime.Today;
+            DateTime firstDay = new DateTime(today.Year, today.Month, 1).AddMonths(1);
+            int count = 0;
+            while (firstDay <= endDate)
+            {
+                count++;
+                firstDay = firstDay.AddMonths(1);
+            }
+
+            return count;
         }
     }
     public interface IPaymentService

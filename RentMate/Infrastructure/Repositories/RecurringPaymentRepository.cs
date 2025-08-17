@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Repositories
 {
-    public class RecurringPaymentRepository
+    public class RecurringPaymentRepository : IRecurringPaymentRepository
     {
         private readonly RentMateDbContext _dbContext;
         public RecurringPaymentRepository(RentMateDbContext dbContext)
@@ -33,11 +33,28 @@ namespace Infrastructure.Repositories
         {
             return await _dbContext.RecurringPayment.Include(p => p.Payment).ToListAsync();
         }
+        public async Task<RecurringPaymentEntity> getRecurringPaymentById(int id)
+        {
+            return await _dbContext.RecurringPayment.Where(rp => rp.Id == id).FirstOrDefaultAsync();
+        }
+
+        public async Task<bool> updatePaymentId(int recurringPaymentId, int newPaymentId)
+        {
+            var recurringPayment = await getRecurringPaymentById(recurringPaymentId);
+            if (recurringPayment == null)   return false;
+            recurringPayment.Id = newPaymentId;
+            recurringPayment.RecurrenceTimes--;
+            _dbContext.RecurringPayment.Update(recurringPayment);
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
     }
 
     public interface IRecurringPaymentRepository
     {
-        Task<bool> CreateRecurringPayment(PaymentEntity entity);
+        Task<bool> CreateRecurringPayment(RecurringPaymentEntity entity);
         Task<IEnumerable<RecurringPaymentEntity>> getAllWithPayment();
+        Task<RecurringPaymentEntity> getRecurringPaymentById(int id);
+        Task<bool> updatePaymentId(int recurringPaymentId, int newPaymentId);
     }
 }

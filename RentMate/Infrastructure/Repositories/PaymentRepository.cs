@@ -16,28 +16,21 @@ namespace Infrastructure.Repositories
         {
             _context = context;
         }
-        public async Task<bool> CreatePayment(PaymentEntity entity)
+        public async Task<PaymentEntity?> CreatePayment(PaymentEntity entity)
         {
-            try
-            {
                 await _context.Payments.AddAsync(entity);
                 await _context.SaveChangesAsync();
-                return true;
-            }
-            catch(Exception ex)
-            {
-                return false;
-            }
+                return entity;
         }
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
         }
-        public async Task UpdateAsync(PaymentEntity entity)
-        {
-            _context.Payments.Update(entity);
-            await _context.SaveChangesAsync();
-        }
+            public async Task UpdateAsync(PaymentEntity entity)
+            {
+                _context.Payments.Update(entity);
+                await _context.SaveChangesAsync();
+            }
         public async Task<IEnumerable<PaymentEntity>> GetAllPayments()
         {
             return await _context.Payments.ToListAsync();
@@ -68,7 +61,7 @@ namespace Infrastructure.Repositories
     }
     public interface IPaymentRepository
     {
-        Task<bool> CreatePayment(PaymentEntity entity);
+        Task<PaymentEntity?> CreatePayment(PaymentEntity entity);
         Task SaveChangesAsync();
         Task UpdateAsync(PaymentEntity entity);
         Task<IEnumerable<PaymentEntity>> GetAllPayments();
