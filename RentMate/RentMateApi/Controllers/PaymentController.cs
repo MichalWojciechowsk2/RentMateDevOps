@@ -62,9 +62,9 @@ namespace RentMateApi.Controllers
             return Ok(payments);
         }
         [HttpGet("getAllRecuriingPaymentsByOfferId")]
-        public async Task<IActionResult> GetAllRecurringPaymentsByOfferId(int offerId)
+        public async Task<IActionResult> GetAllRecurringPaymentsByPropertyId(int offerId)
         {
-            var recurringPayments = _paymentService.GetAllRecurringPaymentsWithPaymentByOfferId(offerId);
+            var recurringPayments = _paymentService.GetAllRecurringPaymentsWithPaymentByPropertyId(offerId);
             return Ok(recurringPayments);
         }
     }

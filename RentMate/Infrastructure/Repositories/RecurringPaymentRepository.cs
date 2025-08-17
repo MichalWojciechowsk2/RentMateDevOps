@@ -38,9 +38,10 @@ namespace Infrastructure.Repositories
             return await _dbContext.RecurringPayment.Where(rp => rp.Id == id).FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<RecurringPaymentEntity>> getAllWithPaymentByOfferId(int offerId)
+        public async Task<IEnumerable<RecurringPaymentEntity>> getAllWithPaymentByPropertyId(int propertyId)
         {
-            return await _dbContext.RecurringPayment.Include(p=> p.Payment).Where(p=>p.Payment.OfferId == offerId).ToListAsync();
+            return await _dbContext.RecurringPayment.Include(rp=> rp.Payment).ThenInclude(p => p.Offer).ThenInclude(o => o.Property)
+                .Where(rp => rp.Payment.Offer.PropertyId == propertyId).ToListAsync();
         }
 
         public async Task<bool> updatePaymentId(int recurringPaymentId, int newPaymentId)
@@ -59,7 +60,7 @@ namespace Infrastructure.Repositories
         Task<bool> CreateRecurringPayment(RecurringPaymentEntity entity);
         Task<IEnumerable<RecurringPaymentEntity>> getAllWithPayment();
         Task<RecurringPaymentEntity> getRecurringPaymentById(int id);
-        Task<IEnumerable<RecurringPaymentEntity>> getAllWithPaymentByOfferId(int offerId);
+        Task<IEnumerable<RecurringPaymentEntity>> getAllWithPaymentByPropertyId(int propertyId);
         Task<bool> updatePaymentId(int recurringPaymentId, int newPaymentId);
     }
 }
