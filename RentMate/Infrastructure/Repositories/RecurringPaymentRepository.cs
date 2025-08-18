@@ -46,12 +46,26 @@ namespace Infrastructure.Repositories
 
         public async Task<bool> updatePaymentId(int recurringPaymentId, int newPaymentId)
         {
-            var recurringPayment = await getRecurringPaymentById(recurringPaymentId);
+            var recurringPayment = await _dbContext.RecurringPayment.FirstOrDefaultAsync(rp => rp.Id == recurringPaymentId);
             if (recurringPayment == null)   return false;
             recurringPayment.PaymentId = newPaymentId;
             recurringPayment.RecurrenceTimes--;
             await _dbContext.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<bool> deleteRecurringPaymentById(int recurringPaymentId)
+        {
+            var recurringPayment = await _dbContext.RecurringPayment.FirstOrDefaultAsync(rp => rp.Id == recurringPaymentId);
+            if(recurringPayment == null) return false;
+            _dbContext.RecurringPayment.Remove(recurringPayment);
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
+        public async Task<IEnumerable<RecurringPaymentEntity>> getAll()
+        {
+            var recurringPayments = await _dbContext.RecurringPayment.ToListAsync();
+            return recurringPayments;
         }
     }
 
@@ -62,5 +76,7 @@ namespace Infrastructure.Repositories
         Task<RecurringPaymentEntity> getRecurringPaymentById(int id);
         Task<IEnumerable<RecurringPaymentEntity>> getAllWithPaymentByPropertyId(int propertyId);
         Task<bool> updatePaymentId(int recurringPaymentId, int newPaymentId);
+        Task<bool> deleteRecurringPaymentById(int recurringPaymentId);
+        Task<IEnumerable<RecurringPaymentEntity>> getAll();
     }
 }

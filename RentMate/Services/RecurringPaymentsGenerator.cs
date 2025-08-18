@@ -54,7 +54,8 @@ namespace Services
                 //{
                 //    rpToGenerate.Add(item);
                 //}
-                if (item.RecurrenceTimes > 0) rpToGenerate.Add(item);
+                if (item.RecurrenceTimes == 0) await _recurringPaymentRepository.deleteRecurringPaymentById(item.Id);
+                else if (item.RecurrenceTimes > 0) rpToGenerate.Add(item);
             }
             return rpToGenerate;
         }

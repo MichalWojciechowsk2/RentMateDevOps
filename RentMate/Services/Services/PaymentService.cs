@@ -55,7 +55,7 @@ namespace Services.Services
                     await _paymentRepository.CreatePayment(payment);
 
                     var offer = await _offerRepository.getById(dto.OfferId);
-                    DateTime offerDueDate = offer.RentalPeriodEnd;
+                    DateTime offerDueDate = of.RentalPeriodEnd;
                     if (dto.RecurrenceTimes == -1)
                     {
                         dto.RecurrenceTimes = GetFirstDaysCountUntilContractEnd(offerDueDate);
@@ -69,11 +69,19 @@ namespace Services.Services
                             Payment = payment,
                             RecurrenceTimes = dto.RecurrenceTimes - 1 ?? 0
                         };
+                        //Sprawdzić to jeszcze
+                        var allRecurringPayments = await _recurringPaymentRepository.getAll();
+                        foreach (var recurringPayment in allRecurringPayments)
+                        {
+                            //Nie można zrobić dwóch recurringPayment do jendej ofery
+                            if(recurringPayment.PaymentId != payment.Id) continue;
+                        }
                        await _recurringPaymentRepository.CreateRecurringPayment(newRecurringPayment);
                     }
                 }
                 return true;
             }
+
 
             if(dto.OfferId != -1)
             {
@@ -115,10 +123,11 @@ namespace Services.Services
             return false;
         }
 
-            public async Task<IEnumerable<PaymentEntity>> GetAllPayments()
+        public async Task<IEnumerable<PaymentEntity>> GetAllPayments()
         {
             return await _paymentRepository.GetAllPayments();
         }
+
 
         //Nie można za każdym razem iterować po payment bo będzie to spowalniało system, trzeba zrobić osobny system 
         //który będzie sprawdzał czy data płatności minęła, jeżeli tak to zmienia status na failed.
@@ -199,6 +208,15 @@ namespace Services.Services
             var recurringPaymentsDto = _mapper.Map<IEnumerable<RecurringPaymentDto>>(recurringPayments);
             return recurringPaymentsDto;
         }
+        public async Task<IEnumerable<RecurringPaymentEntity>> GetAllRecurringPayments()
+        {
+            return await _recurringPaymentRepository.getAll();
+        }
+
+        public async Task<bool> DeleteRecurringPaymentById(int recurringPaymentId)
+        {
+            return await _recurringPaymentRepository.deleteRecurringPaymentById(recurringPaymentId);
+        }
     }
     public interface IPaymentService
     {
@@ -207,5 +225,6 @@ namespace Services.Services
         Task<IEnumerable<PaymentDto>> GetPaymentsByActiveUserOffers(int ownerId);
         Task<IEnumerable<PaymentDtoWithTenantName>> GetAllPaymentsForPropertyByActiveUserOffers(int propertyId);
         Task<IEnumerable<RecurringPaymentDto>> GetAllRecurringPaymentsWithPaymentByPropertyId(int propertyId);
+        Task<bool> DeleteRecurringPaymentById(int recurringPaymentId);
     }
 }

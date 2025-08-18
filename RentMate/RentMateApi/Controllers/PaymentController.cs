@@ -67,5 +67,12 @@ namespace RentMateApi.Controllers
             var recurringPayments = await _paymentService.GetAllRecurringPaymentsWithPaymentByPropertyId(propertyId);
             return Ok(recurringPayments);
         }
+
+        [HttpDelete("deleteRecurringPaymentById")]
+        public async Task<IActionResult> DeleteRecurringPayment(int recurringPaymentId)
+        {
+            var result = await _paymentService.DeleteRecurringPaymentById(recurringPaymentId);
+            return result ? NoContent() : NotFound();
+        }
     }
 }
