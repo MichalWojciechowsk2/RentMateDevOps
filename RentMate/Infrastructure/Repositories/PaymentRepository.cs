@@ -26,11 +26,11 @@ namespace Infrastructure.Repositories
         {
             await _context.SaveChangesAsync();
         }
-            public async Task UpdateAsync(PaymentEntity entity)
-            {
-                _context.Payments.Update(entity);
-                await _context.SaveChangesAsync();
-            }
+        public async Task UpdateAsync(PaymentEntity entity)
+        {
+            _context.Payments.Update(entity);
+            await _context.SaveChangesAsync();
+        }
         public async Task<IEnumerable<PaymentEntity>> GetAllPayments()
         {
             return await _context.Payments.ToListAsync();

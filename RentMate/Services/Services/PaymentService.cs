@@ -103,10 +103,12 @@ namespace Services.Services
                 await _paymentRepository.CreatePayment(dtoToEntity);
                 
                 DateTime offerDueDate = offer.RentalPeriodEnd;
+                var maxRecurrenceTimes = GetFirstDaysCountUntilContractEnd(offerDueDate);
                 if (dto.RecurrenceTimes == -1)
                 {
-                    dto.RecurrenceTimes = GetFirstDaysCountUntilContractEnd(offerDueDate);
+                    dto.RecurrenceTimes = maxRecurrenceTimes;
                 }
+                if (dto.RecurrenceTimes > maxRecurrenceTimes) dto.RecurrenceTimes = maxRecurrenceTimes;
 
                 if (dto.GenerateWithRecurring)
                 {
@@ -217,6 +219,14 @@ namespace Services.Services
         {
             return await _recurringPaymentRepository.deleteRecurringPaymentById(recurringPaymentId);
         }
+        public async Task<bool> DeactivePayment(int paymentId)
+        {
+            var paymentToDeactive = await _paymentRepository.GetPaymentById(paymentId);
+            if (paymentToDeactive == null) return false;
+            paymentToDeactive.Status = PaymentStatus.Cancelled;
+            await _paymentRepository.UpdateAsync(paymentToDeactive);
+            return true;
+        }
     }
     public interface IPaymentService
     {
@@ -226,5 +236,6 @@ namespace Services.Services
         Task<IEnumerable<PaymentDtoWithTenantName>> GetAllPaymentsForPropertyByActiveUserOffers(int propertyId);
         Task<IEnumerable<RecurringPaymentDto>> GetAllRecurringPaymentsWithPaymentByPropertyId(int propertyId);
         Task<bool> DeleteRecurringPaymentById(int recurringPaymentId);
+        Task<bool> DeactivePayment(int paymentId);
     }
 }

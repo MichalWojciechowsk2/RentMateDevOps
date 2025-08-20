@@ -115,8 +115,8 @@ namespace RentMateApi
             "generate-recurring-payments",
             service => service.GeneratePaymentsAsync(),
             //Cron.Daily(2, 0) // 02:00 w nocy
-            //"0 0 1 * *"
-            "* * * * *" //testy
+            "0 0 1 * *"
+            //"* * * * *" //testy
             );
 
 

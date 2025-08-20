@@ -74,5 +74,13 @@ namespace RentMateApi.Controllers
             var result = await _paymentService.DeleteRecurringPaymentById(recurringPaymentId);
             return result ? NoContent() : NotFound();
         }
+        [HttpPatch("deactivate/{paymentId}")]
+        public async Task<IActionResult> DeactivatePayment(int paymentId)
+        {
+            var result = await _paymentService.DeactivePayment(paymentId);
+            if (!result)
+                return NotFound(new { message = "Payment not found" });
+            return Ok(new { message = "Payment deactivated" });
+        }
     }
 }
