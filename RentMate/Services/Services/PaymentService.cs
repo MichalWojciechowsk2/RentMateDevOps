@@ -162,29 +162,31 @@ namespace Services.Services
             var now = DateTime.UtcNow;
             var updated = false;
 
-            foreach (var payment in payments)
-            {
-                if (payment.Status == PaymentStatus.Pending && payment.DueDate < now)
-                {
-                    payment.Status = PaymentStatus.Failed;
-                    updated = true;
-                }
-            }
-            if (updated)
-            {
-                await _paymentRepository.SaveChangesAsync();
-            }
+            //foreach (var payment in payments)
+            //{
+            //    if (payment.Status == PaymentStatus.Pending && payment.DueDate < now)
+            //    {
+            //        payment.Status = PaymentStatus.Failed;
+            //        updated = true;
+            //    }
+            //}
+            //if (updated)
+            //{
+            //    await _paymentRepository.SaveChangesAsync();
+            //}
+
             var result = new List<PaymentDtoWithTenantName>();
 
             foreach (var payment in payments)
             {
+
                 var dto = _mapper.Map<PaymentDtoWithTenantName>(payment);
 
                 var tenant = await _userService.GetUserById(payment.TenantId);
                 dto.TenantName = tenant.FirstName;
                 dto.TenantSurname = tenant.LastName;
 
-                result.Add(dto);
+                if (dto.Status != PaymentStatus.Cancelled) result.Add(dto);
             }
 
             return result;
