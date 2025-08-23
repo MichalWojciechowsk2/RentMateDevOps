@@ -12,17 +12,17 @@ namespace Infrastructure.Repositories
         {
             _context = context;
         }
-        public async Task<bool> CreateProperty(PropertyEntity entity)
+        public async Task<PropertyEntity> CreateProperty(PropertyEntity entity)
         {
             try
             {
                 await _context.Properties.AddAsync(entity);
                 await _context.SaveChangesAsync();
-                return true;
+                return entity;
             }
             catch(Exception ex)
             {
-                return false;
+                throw new Exception("Failed to create property", ex);
             }
         }
         public async Task UpdateAsync(PropertyEntity entity)
@@ -63,16 +63,42 @@ namespace Infrastructure.Repositories
             return _context.Properties.AsQueryable();
         }
 
+        public async Task<PropertyImageEntity> AddPropertyImage(PropertyImageEntity imageEntity)
+        {
+            await _context.PropertyImages.AddAsync(imageEntity);
+            await _context.SaveChangesAsync();
+            return imageEntity;
+        }
+
+        public async Task<PropertyImageEntity> GetPropertyImageById(int imageId)
+        {
+            return await _context.PropertyImages.FirstOrDefaultAsync(x => x.Id == imageId);
+        }
+
+        public async Task<bool> DeletePropertyImage(int imageId)
+        {
+            var image = await _context.PropertyImages.FirstOrDefaultAsync(x => x.Id == imageId);
+            if (image != null)
+            {
+                _context.PropertyImages.Remove(image);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            return false;
+        }
 
     }
     public interface IPropertyRepository
     {
-        Task<bool> CreateProperty(PropertyEntity entity);
+        Task<PropertyEntity> CreateProperty(PropertyEntity entity);
         Task UpdateAsync(PropertyEntity entity);
         Task<IEnumerable<PropertyEntity>> GetAllProperties();
         Task<PropertyEntity> GetPropertieById(int id);
         Task<bool> DeleteProperite(int id);
         IQueryable<PropertyEntity> GetPropertiesQueryable();
+        Task<PropertyImageEntity> AddPropertyImage(PropertyImageEntity imageEntity);
+        Task<PropertyImageEntity> GetPropertyImageById(int imageId);
+        Task<bool> DeletePropertyImage(int imageId);
     }
 }
 

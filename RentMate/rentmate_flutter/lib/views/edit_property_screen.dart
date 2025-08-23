@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:io';
 import '../models/property.dart';
+import '../models/property_image.dart';
 import '../services/property_service.dart';
 
 class EditPropertyScreen extends StatefulWidget {
@@ -17,7 +20,8 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
   final _imagePicker = ImagePicker();
   bool _isLoading = false;
   late Property _property;
-  List<String> _selectedImages = [];
+  List<PropertyImage> _currentImages = [];
+  List<XFile> _newImages = [];
 
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -48,27 +52,118 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
     _postalCodeController.text = _property.postalCode;
     _roomCountController.text = _property.roomCount.toString();
     _areaController.text = _property.area;
-    _selectedImages = List.from(_property.images);
+    _currentImages = List.from(_property.images);
   }
 
   Future<void> _pickImage() async {
     try {
-      final image = await _imagePicker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
+      final images = await _imagePicker.pickMultiImage();
+      if (images.isNotEmpty) {
         setState(() {
-          _selectedImages.add(image.path);
+          _newImages.addAll(images);
         });
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text('Error selecting images: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
       }
     }
+  }
+
+  Future<Widget> _buildImageWidget(XFile imageFile) async {
+    if (kIsWeb) {
+      // For web, use Image.memory with bytes from XFile
+      final bytes = await imageFile.readAsBytes();
+      return Image.memory(
+        bytes,
+        width: 100,
+        height: 100,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            width: 100,
+            height: 100,
+            color: Colors.grey[300],
+            child: const Icon(
+              Icons.error,
+              color: Colors.grey,
+            ),
+          );
+        },
+      );
+    } else {
+      // For mobile, use Image.file
+      return Image.file(
+        File(imageFile.path),
+        width: 100,
+        height: 100,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            width: 100,
+            height: 100,
+            color: Colors.grey[300],
+            child: const Icon(
+              Icons.error,
+              color: Colors.grey,
+            ),
+          );
+        },
+      );
+    }
+  }
+
+  Future<void> _deleteExistingImage(PropertyImage image) async {
+    if (await _showDeleteConfirmation()) {
+      try {
+        await _propertyService.deleteImage(image.id);
+        setState(() {
+          _currentImages.remove(image);
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Image deleted successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error deleting image: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<bool> _showDeleteConfirmation() async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Image'),
+        content: const Text('Are you sure you want to delete this image?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    ) ?? false;
   }
 
   Future<void> _submitForm() async {
@@ -89,7 +184,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
         postalCode: _postalCodeController.text,
         roomCount: int.parse(_roomCountController.text),
         area: _areaController.text,
-        images: _selectedImages,
+        images: _currentImages, // Używamy obecnych zdjęć
         isActive: _property.isActive,
         createdAt: _property.createdAt,
         updatedAt: DateTime.now(),
@@ -97,14 +192,26 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
       );
 
       await _propertyService.updateProperty(updatedProperty);
+      
+      // Jeśli są nowe zdjęcia, upload je
+      if (_newImages.isNotEmpty) {
+        await _propertyService.uploadImages(_property.id, _newImages);
+      }
+      
       if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Property updated successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
         Navigator.pop(context, updatedProperty);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text('Error: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -324,34 +431,113 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  if (_selectedImages.isNotEmpty)
+                  
+                  // Obecne zdjęcia z serwera
+                  if (_currentImages.isNotEmpty) ...[
+                    const Text('Current Images:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
                     SizedBox(
                       height: 100,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        itemCount: _selectedImages.length,
+                        itemCount: _currentImages.length,
+                        itemBuilder: (context, index) {
+                          final image = _currentImages[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: CachedNetworkImage(
+                                    imageUrl: 'https://localhost:7281${image.imageUrl}',
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) => Container(
+                                      color: Colors.grey[300],
+                                      child: const Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    ),
+                                    errorWidget: (context, url, error) => Container(
+                                      color: Colors.grey[300],
+                                      child: const Icon(
+                                        Icons.error,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (image.isMainImage)
+                                  Positioned(
+                                    top: 4,
+                                    left: 4,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: const Text(
+                                        'Main',
+                                        style: TextStyle(color: Colors.white, fontSize: 10),
+                                      ),
+                                    ),
+                                  ),
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: IconButton(
+                                    icon: const Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                      size: 20,
+                                    ),
+                                    onPressed: () => _deleteExistingImage(image),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  
+                  // Nowe wybrane zdjęcia (lokalne)
+                  if (_newImages.isNotEmpty) ...[
+                    const Text('New Images to Upload:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 100,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _newImages.length,
                         itemBuilder: (context, index) {
                           return Padding(
                             padding: const EdgeInsets.only(right: 8),
                             child: Stack(
                               children: [
-                                CachedNetworkImage(
-                                  imageUrl: _selectedImages[index],
-                                  width: 100,
-                                  height: 100,
-                                  fit: BoxFit.cover,
-                                  placeholder: (context, url) => Container(
-                                    color: Colors.grey[300],
-                                    child: const Center(
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                  ),
-                                  errorWidget: (context, url, error) => Container(
-                                    color: Colors.grey[300],
-                                    child: const Icon(
-                                      Icons.error,
-                                      color: Colors.grey,
-                                    ),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: FutureBuilder<Widget>(
+                                    future: _buildImageWidget(_newImages[index]),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.hasData) {
+                                        return snapshot.data!;
+                                      } else {
+                                        return Container(
+                                          width: 100,
+                                          height: 100,
+                                          color: Colors.grey[300],
+                                          child: const Center(
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                        );
+                                      }
+                                    },
                                   ),
                                 ),
                                 Positioned(
@@ -361,10 +547,11 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
                                     icon: const Icon(
                                       Icons.close,
                                       color: Colors.red,
+                                      size: 20,
                                     ),
                                     onPressed: () {
                                       setState(() {
-                                        _selectedImages.removeAt(index);
+                                        _newImages.removeAt(index);
                                       });
                                     },
                                   ),
@@ -375,6 +562,8 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
                         },
                       ),
                     ),
+                    const SizedBox(height: 16),
+                  ],
                   const SizedBox(height: 8),
                   ElevatedButton.icon(
                     onPressed: _pickImage,
