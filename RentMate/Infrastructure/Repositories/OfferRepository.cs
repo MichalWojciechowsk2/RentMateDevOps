@@ -37,10 +37,9 @@ namespace Infrastructure.Repositories
         {
             try
             {
-                return await _context.Offers
+                return await _context.Offers.Include(o => o.Tenant)
                     .Where(o => o.PropertyId == propertyId &&
-                    (o.Status == OfferStatus.Active || o.Status == OfferStatus.Accepted))
-                    .ToListAsync();
+                    (o.Status == OfferStatus.Active || o.Status == OfferStatus.Accepted)).ToListAsync();
             }
             catch(Exception ex)
             {
@@ -48,7 +47,11 @@ namespace Infrastructure.Repositories
                 return null;
             }
         }
-        public async Task<IEnumerable<OfferEntity>> getOfferByUserId(int userId)
+        public async Task<OfferEntity> getFirstActiveOfferByUserId(int userId)
+        {
+            return await _context.Offers.Where(o => o.TenantId == userId && o.Status == OfferStatus.Accepted).FirstOrDefaultAsync();
+        }
+        public async Task<IEnumerable<OfferEntity>> getOffersByUserId(int userId)
         {
             try
             {
@@ -61,9 +64,17 @@ namespace Infrastructure.Repositories
                 return null;
             }
         }
-        public async Task UpdateAsync(OfferEntity offer)
+        public async Task<OfferEntity> getOfferById(int offerId)
         {
-            _context.Set<OfferEntity>().Update(offer);
+            return await _context.Offers.FirstOrDefaultAsync(o => o.Id == offerId);
+        }
+        public async Task<OfferEntity> getOfferAndTenantByOfferId(int offerId)
+        {
+            return await _context.Offers.Include(o => o.Tenant).FirstOrDefaultAsync(o => o.Id == offerId);
+        }
+        public async Task updateAsync(OfferEntity offerEntity)
+        {
+            _context.Offers.Update(offerEntity);
             await _context.SaveChangesAsync();
         }
     }
@@ -72,7 +83,10 @@ namespace Infrastructure.Repositories
         Task<OfferEntity> getById(int id);
         Task<bool> CreateOffer(OfferEntity entity);
         Task<IEnumerable<OfferEntity>> getActiveAndAcceptedOffersByPropId(int propertyId);
-        Task<IEnumerable<OfferEntity>> getOfferByUserId(int userId);
-        Task UpdateAsync(OfferEntity offer);
+        Task<OfferEntity> getFirstActiveOfferByUserId(int userId);
+        Task<IEnumerable<OfferEntity>> getOffersByUserId(int userId);
+        Task<OfferEntity> getOfferById(int offerId);
+        Task<OfferEntity> getOfferAndTenantByOfferId(int offerId);
+        Task updateAsync(OfferEntity offerEntity);
     }
 }

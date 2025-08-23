@@ -4,6 +4,7 @@ using Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(RentMateDbContext))]
-    partial class RentMateDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250812203745_RecurringPaymentEntity")]
+    partial class RecurringPaymentEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -201,9 +204,6 @@ namespace Data.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime>("CreateDateTime")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -221,6 +221,9 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("RecurringPaymentId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -233,6 +236,8 @@ namespace Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OfferId");
+
+                    b.HasIndex("RecurringPaymentId");
 
                     b.HasIndex("TenantId");
 
@@ -315,11 +320,17 @@ namespace Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("ClosestDateTimeRun")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("PaymentId")
                         .HasColumnType("int");
 
                     b.Property<int>("RecurrenceTimes")
                         .HasColumnType("int");
+
+                    b.Property<bool>("isActive")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -508,6 +519,11 @@ namespace Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Data.Entities.RecurringPaymentEntity", "RecurringPayment")
+                        .WithMany()
+                        .HasForeignKey("RecurringPaymentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Data.Entities.UserEntity", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId")
@@ -515,6 +531,8 @@ namespace Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Offer");
+
+                    b.Navigation("RecurringPayment");
 
                     b.Navigation("Tenant");
                 });
@@ -535,7 +553,7 @@ namespace Data.Migrations
                     b.HasOne("Data.Entities.PaymentEntity", "Payment")
                         .WithMany()
                         .HasForeignKey("PaymentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Payment");

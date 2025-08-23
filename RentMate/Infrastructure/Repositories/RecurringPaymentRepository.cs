@@ -1,0 +1,82 @@
+﻿using Data;
+using Data.Entities;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Infrastructure.Repositories
+{
+    public class RecurringPaymentRepository : IRecurringPaymentRepository
+    {
+        private readonly RentMateDbContext _dbContext;
+        public RecurringPaymentRepository(RentMateDbContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+        public async Task<bool> CreateRecurringPayment(RecurringPaymentEntity entity)
+        {
+            try
+            {
+                await _dbContext.RecurringPayment.AddAsync(entity);
+                await _dbContext.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+        public async Task<IEnumerable<RecurringPaymentEntity>> getAllWithPayment()
+        {
+            return await _dbContext.RecurringPayment.Include(p => p.Payment).ToListAsync();
+        }
+        public async Task<RecurringPaymentEntity> getRecurringPaymentById(int id)
+        {
+            return await _dbContext.RecurringPayment.Where(rp => rp.Id == id).FirstOrDefaultAsync();
+        }
+
+        public async Task<IEnumerable<RecurringPaymentEntity>> getAllWithPaymentByPropertyId(int propertyId)
+        {
+            return await _dbContext.RecurringPayment.Include(rp=> rp.Payment).ThenInclude(p => p.Offer)
+                .Where(rp => rp.Payment.Offer.PropertyId == propertyId).ToListAsync();
+        }
+
+        public async Task<bool> updatePaymentId(int recurringPaymentId, int newPaymentId)
+        {
+            var recurringPayment = await _dbContext.RecurringPayment.FirstOrDefaultAsync(rp => rp.Id == recurringPaymentId);
+            if (recurringPayment == null)   return false;
+            recurringPayment.PaymentId = newPaymentId;
+            recurringPayment.RecurrenceTimes--;
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> deleteRecurringPaymentById(int recurringPaymentId)
+        {
+            var recurringPayment = await _dbContext.RecurringPayment.FirstOrDefaultAsync(rp => rp.Id == recurringPaymentId);
+            if(recurringPayment == null) return false;
+            _dbContext.RecurringPayment.Remove(recurringPayment);
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
+        public async Task<IEnumerable<RecurringPaymentEntity>> getAll()
+        {
+            var recurringPayments = await _dbContext.RecurringPayment.ToListAsync();
+            return recurringPayments;
+        }
+    }
+
+    public interface IRecurringPaymentRepository
+    {
+        Task<bool> CreateRecurringPayment(RecurringPaymentEntity entity);
+        Task<IEnumerable<RecurringPaymentEntity>> getAllWithPayment();
+        Task<RecurringPaymentEntity> getRecurringPaymentById(int id);
+        Task<IEnumerable<RecurringPaymentEntity>> getAllWithPaymentByPropertyId(int propertyId);
+        Task<bool> updatePaymentId(int recurringPaymentId, int newPaymentId);
+        Task<bool> deleteRecurringPaymentById(int recurringPaymentId);
+        Task<IEnumerable<RecurringPaymentEntity>> getAll();
+    }
+}
