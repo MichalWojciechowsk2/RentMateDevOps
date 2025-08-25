@@ -307,6 +307,35 @@ namespace Data.Migrations
                     b.ToTable("Properties");
                 });
 
+            modelBuilder.Entity("Data.Entities.PropertyImageEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsMainImage")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("PropertyId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PropertyId");
+
+                    b.ToTable("PropertyImageEntity", (string)null);
+                });
+
             modelBuilder.Entity("Data.Entities.RecurringPaymentEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -530,6 +559,17 @@ namespace Data.Migrations
                     b.Navigation("Owner");
                 });
 
+            modelBuilder.Entity("Data.Entities.PropertyImageEntity", b =>
+                {
+                    b.HasOne("Data.Entities.PropertyEntity", "Property")
+                        .WithMany("PropertyImages")
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Property");
+                });
+
             modelBuilder.Entity("Data.Entities.RecurringPaymentEntity", b =>
                 {
                     b.HasOne("Data.Entities.PaymentEntity", "Payment")
@@ -575,6 +615,8 @@ namespace Data.Migrations
                     b.Navigation("Issues");
 
                     b.Navigation("Offers");
+
+                    b.Navigation("PropertyImages");
 
                     b.Navigation("Reviews");
                 });

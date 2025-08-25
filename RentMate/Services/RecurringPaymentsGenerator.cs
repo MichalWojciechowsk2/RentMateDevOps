@@ -31,6 +31,7 @@ namespace Services
         public async Task GeneratePaymentsAsync()
         {
             var listToGenerate = await CheckIfGenerateAsync();
+            if (listToGenerate == null || !listToGenerate.Any()) return;
             foreach (var item in listToGenerate)
             {
                 var payment = _mapper.Map<PaymentEntity>(item.Payment);

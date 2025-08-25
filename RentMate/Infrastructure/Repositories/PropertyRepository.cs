@@ -86,6 +86,10 @@ namespace Infrastructure.Repositories
             }
             return false;
         }
+        public async Task<PropertyImageEntity> GetMainPropertyImageByPropertyId(int propertyId)
+        {
+            return await _context.PropertyImages.FirstOrDefaultAsync(x => x.PropertyId == propertyId && x.IsMainImage);
+        }
 
     }
     public interface IPropertyRepository
@@ -99,6 +103,7 @@ namespace Infrastructure.Repositories
         Task<PropertyImageEntity> AddPropertyImage(PropertyImageEntity imageEntity);
         Task<PropertyImageEntity> GetPropertyImageById(int imageId);
         Task<bool> DeletePropertyImage(int imageId);
+        Task<PropertyImageEntity> GetMainPropertyImageByPropertyId(int propertyId);
     }
 }
 

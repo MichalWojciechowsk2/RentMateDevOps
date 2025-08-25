@@ -186,6 +186,11 @@ namespace Services.Services
             await _propertyRepository.DeletePropertyImage(imageId);
         }
 
+        public async Task<PropertyImageEntity?> GetPropertyMainImageByPropertyId(int propertyId)
+        {
+            return await _propertyRepository.GetMainPropertyImageByPropertyId(propertyId);
+        }
+
         public interface IPropertyService
         {
             Task<PropertyDto> CreateProperty(PropertyDto dto, int ownerId);
@@ -199,6 +204,7 @@ namespace Services.Services
             Task<PropertyDto> UdpatePropertyById(int id, UpdatePropertyDto dto);
             Task<List<PropertyImageDto>> UploadPropertyImages(int propertyId, int userId, List<IFormFile> images);
             Task DeletePropertyImage(int imageId, int userId);
+            Task<PropertyImageEntity?> GetPropertyMainImageByPropertyId(int propertyId);
         }
     }
 }
