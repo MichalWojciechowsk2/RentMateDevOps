@@ -88,38 +88,42 @@ namespace RentMateApi
 
             builder.Services.AddAuthorization();
 
-            //Configure Hangfire Scheduler
-            builder.Services.AddHangfire(config =>
-            config.SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
-          .UseSimpleAssemblyNameTypeSerializer()
-          .UseRecommendedSerializerSettings()
-          .UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection"),
-                        new SqlServerStorageOptions
-                        {
-                            CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
-                            SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
-                            QueuePollInterval = TimeSpan.Zero,
-                            UseRecommendedIsolationLevel = true,
-                            DisableGlobalLocks = true
-                        }));
+            //Wy³¹czone na moment projektowania systemu !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-            builder.Services.AddHangfireServer();
+            //Configure Hangfire Scheduler
+          //  builder.Services.AddHangfire(config =>
+          //  config.SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+          //.UseSimpleAssemblyNameTypeSerializer()
+          //.UseRecommendedSerializerSettings()
+          //.UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection"),
+          //              new SqlServerStorageOptions
+          //              {
+          //                  CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+          //                  SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+          //                  QueuePollInterval = TimeSpan.Zero,
+          //                  UseRecommendedIsolationLevel = true,
+          //                  DisableGlobalLocks = true
+          //              }));
+            //Wy³¹czone na moment projektowania systemu !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            //builder.Services.AddHangfireServer();
 
             var app = builder.Build();
             //Free education Community MIT License
             QuestPDF.Settings.License = LicenseType.Community;
 
-            //Hangfire dashboard to see tasks
-            app.UseHangfireDashboard("/hangfire");
-            app.MapGet("/", () => "Hello World");
+            //Wy³¹czone podczas projektowania aplikacji, czasem wystêpuj¹ problemy przy po³¹czeniu HangFire - Baza danych !!!!!!!!
 
-            RecurringJob.AddOrUpdate<RecurringPaymentsGenerator>(
-            "generate-recurring-payments",
-            service => service.GeneratePaymentsAsync(),
-            //Cron.Daily(2, 0) // 02:00 w nocy
-            "0 0 1 * *"
-            //"* * * * *" //testy
-            );
+            //Hangfire dashboard to see tasks
+            //app.UseHangfireDashboard("/hangfire");
+            //app.MapGet("/", () => "Hello World");
+
+            //RecurringJob.AddOrUpdate<RecurringPaymentsGenerator>(
+            //"generate-recurring-payments",
+            //service => service.GeneratePaymentsAsync(),
+            ////Cron.Daily(2, 0) // 02:00 w nocy
+            //"0 0 1 * *"
+            ////"* * * * *" //testy
+            //);
 
 
             RentMateApi.Seed.SeedData.EnsureSeeded(app);

@@ -223,7 +223,7 @@ namespace RentMateApi.Controllers.Property
                 return StatusCode(500, new { message = "An error occurred while deleting the image.", error = ex.Message });
             }
         }
-        [HttpGet("mainImage/{proeprtyId}")]
+        [HttpGet("mainImageForProperty")]
         public async Task<IActionResult> GetMainPhotoByPropertyId(int propertyId)
         {
             var image = await _propertyService.GetPropertyMainImageByPropertyId(propertyId);
@@ -231,7 +231,9 @@ namespace RentMateApi.Controllers.Property
             {
                 return NotFound();
             }
-            return Ok(image);
+            var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+            var fullUrl = $"{baseUrl}{image.ImageUrl}";
+            return Ok(new { imageUrl = fullUrl });
         }
 
         //Trzeba zwrócić listę głównych zdjęć ofert które są puibliczne bo zwracanie tak jednego po drugim jest mega kosztowne.
