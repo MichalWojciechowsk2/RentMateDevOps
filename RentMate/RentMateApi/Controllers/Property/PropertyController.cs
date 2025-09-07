@@ -235,7 +235,21 @@ namespace RentMateApi.Controllers.Property
             var fullUrl = $"{baseUrl}{image.ImageUrl}";
             return Ok(new { imageUrl = fullUrl });
         }
-
         //Trzeba zwrócić listę głównych zdjęć ofert które są puibliczne bo zwracanie tak jednego po drugim jest mega kosztowne.
+        [HttpGet("allImagesForProperty")]
+        public async Task<IActionResult> GetImagesForProperty(int propertyId)
+        {
+            var listOfImages = await _propertyService.GetAllImages(propertyId);
+            if(listOfImages == null) return NotFound();
+            List<string> listOfImagesUrl = new List<string>();
+            var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+            var result = listOfImages.Select(img => new
+            {
+                imageUrl = $"{baseUrl}{img.ImageUrl}",
+                isMainImage = img.IsMainImage}).ToList();
+            return Ok(result);
+        }
+
+
     }
 }

@@ -190,6 +190,10 @@ namespace Services.Services
         {
             return await _propertyRepository.GetMainPropertyImageByPropertyId(propertyId);
         }
+        public async Task<IEnumerable<PropertyImageEntity>> GetAllImages(int propertyId)
+        {
+            return await _propertyRepository.GetPhotos(propertyId);
+        }
 
         public interface IPropertyService
         {
@@ -205,6 +209,7 @@ namespace Services.Services
             Task<List<PropertyImageDto>> UploadPropertyImages(int propertyId, int userId, List<IFormFile> images);
             Task DeletePropertyImage(int imageId, int userId);
             Task<PropertyImageEntity?> GetPropertyMainImageByPropertyId(int propertyId);
+            Task<IEnumerable<PropertyImageEntity>> GetAllImages(int propertyId);
         }
     }
 }
