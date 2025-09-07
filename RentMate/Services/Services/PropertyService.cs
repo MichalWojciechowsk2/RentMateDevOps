@@ -22,6 +22,7 @@ namespace Services.Services
             var dtoToEntity = _mapper.Map<PropertyEntity>(propertyDto);
             dtoToEntity.OwnerId = ownerId; // Assign the correct OwnerId
             dtoToEntity.CreatedAt = DateTime.UtcNow;
+            dtoToEntity.IsActive = true;
             var createdEntity = await _propertyRepository.CreateProperty(dtoToEntity);
             return _mapper.Map<PropertyDto>(createdEntity);
         }
