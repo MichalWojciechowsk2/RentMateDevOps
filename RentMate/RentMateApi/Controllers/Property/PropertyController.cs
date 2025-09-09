@@ -78,9 +78,9 @@ namespace RentMateApi.Controllers.Property
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllProperties()
+        public async Task<IActionResult> GetAllProperties([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
-            var result = await _propertyService.GetAllActiveProperties();
+            var result = await _propertyService.GetPagedAllActiveProperties(pageNumber, pageSize);
             return Ok(result);
         }
 

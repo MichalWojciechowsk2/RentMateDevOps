@@ -5,6 +5,7 @@ using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using static Services.Services.PropertyService;
 using Microsoft.AspNetCore.Http;
+using QuestPDF.Fluent;
 
 namespace Services.Services
 {
@@ -27,14 +28,27 @@ namespace Services.Services
             return _mapper.Map<PropertyDto>(createdEntity);
         }
 
-        public async Task<IEnumerable<PropertyDto>> GetAllActiveProperties()
+        public async Task<PagedResult<PropertyDto>> GetPagedAllActiveProperties(int pageNumber, int pageSize)
         {
-            var entities = await _propertyRepository.GetPropertiesQueryable()
-                .Include(p => p.Owner)
-                .Include(p => p.PropertyImages)
-                .Where(p => p.IsActive)
+            var query = _propertyRepository.GetPropertiesQueryable()
+        .Where(p => p.IsActive);
+
+            var totalItems = await query.CountAsync();
+
+            var items = await query
+                .OrderBy(p => p.Id)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
-            return _mapper.Map<IEnumerable<PropertyDto>>(entities);
+
+            return new PagedResult<PropertyDto>
+            {
+                TotalItems = totalItems,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize),
+                Items = _mapper.Map<IEnumerable<PropertyDto>>(items)
+            };
         }
         public async Task<PropertyDto> GetPropertyById(int id)
         {
@@ -199,7 +213,7 @@ namespace Services.Services
         public interface IPropertyService
         {
             Task<PropertyDto> CreateProperty(PropertyDto dto, int ownerId);
-            Task<IEnumerable<PropertyDto>> GetAllActiveProperties();
+            Task<PagedResult<PropertyDto>> GetPagedAllActiveProperties(int pageNumber, int pageSize);
             Task<IEnumerable<PropertyDto>> SearchProperties(PropertyFilterDto filters);
             Task<IEnumerable<PropertyDto>> GetPropertiesByOwnerId(int ownerId);
             Task<PropertyDto> GetPropertyDetails(int id);
