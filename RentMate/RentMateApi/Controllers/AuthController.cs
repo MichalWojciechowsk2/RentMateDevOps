@@ -102,7 +102,9 @@ namespace RentMateApi.Controllers
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 PhoneNumber = user.PhoneNumber,
-                Role = user.Role
+                Role = user.Role,
+                AboutMe = user.AboutMe,
+                PhotoUrl = user.PhotoUrl
             };
         }
     }

@@ -13,5 +13,7 @@ namespace ApplicationCore.Dto.User
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string PhoneNumber { get; set; }
+        public string PhotoUrl { get; set; }
+        public string AboutMe { get; set; }
     }
 }

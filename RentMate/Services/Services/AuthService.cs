@@ -3,6 +3,7 @@ using Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using ApplicationCore.Dto.Auth;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Services.Services
 {
@@ -58,7 +59,9 @@ namespace Services.Services
                 FirstName = userEntity.FirstName,
                 LastName = userEntity.LastName,
                 PhoneNumber = userEntity.PhoneNumber,
-                Role = userEntity.Role.ToString()
+                Role = userEntity.Role.ToString(),
+                AboutMe = userEntity.AboutMe,
+                PhotoUrl = userEntity.PhotoUrl
             };
         }
 
@@ -81,7 +84,10 @@ namespace Services.Services
                 FirstName = userEntity.FirstName,
                 LastName = userEntity.LastName,
                 PhoneNumber = userEntity.PhoneNumber,
-                Role = userEntity.Role.ToString()
+                Role = userEntity.Role.ToString(),
+                AboutMe = userEntity.AboutMe,
+                PhotoUrl = string.IsNullOrEmpty(userEntity.PhotoUrl)
+                    ? "https://localhost:7281/uploads/UserPhoto/defaultPersonPhoto.png" : userEntity.PhotoUrl,
             };
         }
 
@@ -97,7 +103,10 @@ namespace Services.Services
                 FirstName = userEntity.FirstName,
                 LastName = userEntity.LastName,
                 PhoneNumber = userEntity.PhoneNumber,
-                Role = userEntity.Role.ToString()
+                Role = userEntity.Role.ToString(),
+                AboutMe = userEntity.AboutMe,
+                PhotoUrl = string.IsNullOrEmpty(userEntity.PhotoUrl)
+                    ? "https://localhost:7281/uploads/UserPhoto/defaultPersonPhoto.png" : userEntity.PhotoUrl,
             };
         }
     }
@@ -112,5 +121,7 @@ namespace Services.Services
         public string LastName { get; set; }
         public string PhoneNumber { get; set; }
         public string Role { get; set; }
+        public string AboutMe {  get; set; }
+        public string PhotoUrl {  get; set; }
     }
 } 
