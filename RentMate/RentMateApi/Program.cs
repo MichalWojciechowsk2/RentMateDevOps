@@ -12,6 +12,7 @@ using QuestPDF.Infrastructure;
 using Hangfire;
 using Hangfire.SqlServer;
 using Services;
+using RentMateApi.Hubs;
 
 
 namespace RentMateApi
@@ -23,15 +24,25 @@ namespace RentMateApi
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            //builder.Services.AddCors(options =>
+            //{
+            //    options.AddPolicy("AllowAll",
+            //        builder =>
+            //        {
+            //            builder.AllowAnyOrigin()
+            //                   .AllowAnyMethod()
+            //                   .AllowAnyHeader();
+            //        });
+            //});
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowAll",
-                    builder =>
-                    {
-                        builder.AllowAnyOrigin()
-                               .AllowAnyMethod()
-                               .AllowAnyHeader();
-                    });
+                options.AddPolicy("AllowFrontend", policy =>
+                {
+                    policy.WithOrigins("http://localhost:5173")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+                });
             });
 
             builder.Services.AddControllers();
@@ -87,6 +98,10 @@ namespace RentMateApi
                 });
 
             builder.Services.AddAuthorization();
+
+            //SignalR
+            builder.Services.AddSignalR();
+
 
             //Wy³¹czone na moment projektowania systemu !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -151,12 +166,16 @@ namespace RentMateApi
                 }
             });
 
-            app.UseCors("AllowAll");
+            //app.UseCors("AllowAll");
+            app.UseCors("AllowFrontend");
 
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
+
+            app.MapHub<NotificationHub>("/hubs/notifications")
+                .RequireCors("AllowFrontend");
 
             app.Run();
         }

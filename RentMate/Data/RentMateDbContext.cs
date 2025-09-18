@@ -30,6 +30,7 @@ namespace Data
         public DbSet<IssueEntity> Issues { get; set; }
         public DbSet<ReviewEntity> Reviews { get; set; }
         public DbSet<MessageEntity> Messages { get; set; }
+        public DbSet<NotificationEntity> Notifications { get; set; }
         public DbSet<InvitationEntity> Invitation { get; set; }
         public DbSet<PropertyImageEntity> PropertyImages { get; set; }
 
@@ -120,6 +121,19 @@ namespace Data
                 .HasOne(m => m.Issue)
                 .WithMany(i => i.Messages)
                 .HasForeignKey(m => m.IssueId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // konfiguracja notification
+            modelBuilder.Entity<NotificationEntity>()
+                .HasOne(n => n.Sender)
+                .WithMany()
+                .HasForeignKey(m => m.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<NotificationEntity>()
+                .HasOne(n => n.Receiver)
+                .WithMany()
+                .HasForeignKey(m => m.ReceiverId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             //konfiguracja invitation
