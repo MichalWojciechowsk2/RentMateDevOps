@@ -49,5 +49,6 @@ namespace Data.Entities
         public ICollection<OfferEntity> Offers { get; set; }
         public ICollection<IssueEntity> Issues { get; set; }
         public ICollection<ReviewEntity> Reviews { get; set; }
+        public ICollection<PropertyImageEntity> PropertyImages { get; set; }
     }
 }

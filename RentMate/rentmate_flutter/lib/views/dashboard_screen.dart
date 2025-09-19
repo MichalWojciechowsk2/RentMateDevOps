@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/property.dart';
 import '../services/property_service.dart';
+import '../services/auth_service.dart';
+import '../models/user.dart';
+import '../views/my_chats_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -12,8 +15,10 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   final _propertyService = PropertyService();
+  final AuthService _authService = AuthService();
   List<Property> _properties = [];
   bool _isLoading = false;
+  User? _currentUser;
 
   // Filtry
   List<String> _cities = [];
@@ -27,6 +32,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     _fetchCities();
     _loadProperties();
+    _loadCurrentUser();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    _currentUser = await _authService.getCurrentUser();
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> _fetchCities() async {
@@ -43,7 +56,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _loadProperties() async {
     setState(() => _isLoading = true);
     try {
-      final properties = await _propertyService.getMyProperties();
+      final properties = await _propertyService.getAllProperties();
       setState(() {
         _properties = properties;
         _isLoading = false;
@@ -112,13 +125,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Properties'),
+        title: Text(
+          _currentUser != null
+              ? 'Hello, ${_currentUser!.firstName}'
+              : 'My Properties',
+        ),
         actions: [
+          if (_currentUser?.role == 'Owner' || _currentUser?.role == 'Tenant')
+            IconButton(
+              icon: const Icon(Icons.message),
+              tooltip: 'My Messages',
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MyChatsScreen()),
+                );
+              },
+            ),
+          if (_currentUser?.role == 'Owner')
+            IconButton(
+              icon: const Icon(Icons.home_work),
+              onPressed: () async {
+                await Navigator.pushNamed(context, '/my-properties');
+                _loadProperties();
+              },
+            ),
+          if (_currentUser?.role == 'Owner')
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () async {
+                await Navigator.pushNamed(context, '/add-property');
+                _loadProperties();
+              },
+            ),
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(Icons.logout),
             onPressed: () async {
-              await Navigator.pushNamed(context, '/add-property');
-              _loadProperties();
+              await _authService.logout();
+              if (mounted) {
+                Navigator.pushReplacementNamed(context, '/');
+              }
             },
           ),
         ],
@@ -210,18 +256,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   Navigator.pushNamed(
                                     context,
                                     '/property-details',
-                                    arguments: property,
+                                    arguments: property.id,
                                   );
                                 },
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (property.images.isNotEmpty)
+                                    if (property.mainImageUrl != null)
                                       SizedBox(
                                         height: 200,
                                         width: double.infinity,
                                         child: CachedNetworkImage(
-                                          imageUrl: property.images.first,
+                                          imageUrl: 'https://localhost:7281${property.mainImageUrl}',
                                           fit: BoxFit.cover,
                                           placeholder: (context, url) => Container(
                                             color: Colors.grey[300],

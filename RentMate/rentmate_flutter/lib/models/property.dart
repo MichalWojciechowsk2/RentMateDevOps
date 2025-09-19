@@ -1,3 +1,5 @@
+import 'property_image.dart';
+
 class Property {
   final int id;
   final int ownerId;
@@ -7,13 +9,15 @@ class Property {
   final double baseDeposit;
   final String address;
   final String city;
+  final String district;
   final String postalCode;
   final int roomCount;
   final String area;
-  final List<String> images;
+  final List<PropertyImage> images;
   final bool isActive;
   final DateTime createdAt;
   final DateTime? updatedAt;
+  final String? ownerUsername;
 
   Property({
     required this.id,
@@ -24,6 +28,7 @@ class Property {
     required this.baseDeposit,
     required this.address,
     required this.city,
+    required this.district,
     required this.postalCode,
     required this.roomCount,
     required this.area,
@@ -31,6 +36,7 @@ class Property {
     required this.isActive,
     required this.createdAt,
     this.updatedAt,
+    this.ownerUsername,
   });
 
   factory Property.fromJson(Map<String, dynamic> json) {
@@ -43,13 +49,15 @@ class Property {
       baseDeposit: json['baseDeposit'] != null ? (json['baseDeposit'] as num).toDouble() : 0.0,
       address: json['address']?.toString() ?? '',
       city: json['city']?.toString() ?? '',
+      district: json['district']?.toString() ?? '',
       postalCode: json['postalCode']?.toString() ?? '',
       roomCount: json['roomCount'] is int ? json['roomCount'] ?? 0 : int.tryParse(json['roomCount']?.toString() ?? '') ?? 0,
       area: json['area']?.toString() ?? '',
-      images: (json['images'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      images: (json['images'] as List?)?.map((e) => PropertyImage.fromJson(e)).toList() ?? [],
       isActive: json['isActive'] is bool ? json['isActive'] ?? false : (json['isActive']?.toString() == 'true'),
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
+      ownerUsername: json['ownerUsername']?.toString(),
     );
   }
 
@@ -63,13 +71,15 @@ class Property {
       'baseDeposit': baseDeposit,
       'address': address,
       'city': city,
+      'district': district,
       'postalCode': postalCode,
       'roomCount': roomCount,
       'area': area,
-      'images': images,
+      'images': images.map((e) => e.toJson()).toList(),
       'isActive': isActive,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
+      'ownerUsername': ownerUsername,
     };
   }
 
@@ -81,10 +91,12 @@ class Property {
     required double baseDeposit,
     required String address,
     required String city,
+    required String district,
     required String postalCode,
     required int roomCount,
     required String area,
-    List<String> images = const [],
+    required String ownerUsername,
+    List<PropertyImage> images = const [],
     bool isActive = true,
   }) {
     return Property(
@@ -96,12 +108,25 @@ class Property {
       baseDeposit: baseDeposit,
       address: address,
       city: city,
+      district: district,
       postalCode: postalCode,
       roomCount: roomCount,
       area: area,
       images: images,
       isActive: isActive,
       createdAt: DateTime.now(),
+      ownerUsername: ownerUsername,
     );
+  }
+  
+  // Metoda pomocnicza do pobierania głównego zdjęcia
+  String? get mainImageUrl {
+    final mainImage = images.where((img) => img.isMainImage).firstOrNull;
+    return mainImage?.imageUrl ?? images.firstOrNull?.imageUrl;
+  }
+  
+  // Metoda pomocnicza do pobierania wszystkich URL zdjęć
+  List<String> get imageUrls {
+    return images.map((img) => img.imageUrl).toList();
   }
 } 

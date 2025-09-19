@@ -17,7 +17,8 @@ namespace Data
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
 
-         optionsBuilder.UseSqlServer("Data Source=DESKTOP-GI765C2;Initial Catalog=RentMate;Integrated Security=True;Trust Server Certificate=True");
+            optionsBuilder.UseSqlServer("Data Source=DESKTOP-GI765C2;Initial Catalog=RentMate;Integrated Security=True;Encrypt=True;Trust Server Certificate=True");
+            //optionsBuilder.UseSqlServer("Data Source=HP;Initial Catalog=RentMate;Integrated Security=True;Encrypt=True;Trust Server Certificate=True");
 
         }
 
@@ -25,9 +26,13 @@ namespace Data
         public DbSet<PropertyEntity> Properties { get; set; }
         public DbSet<OfferEntity> Offers { get; set; }
         public DbSet<PaymentEntity> Payments { get; set; }
+        public DbSet<RecurringPaymentEntity> RecurringPayment { get; set; }
         public DbSet<IssueEntity> Issues { get; set; }
         public DbSet<ReviewEntity> Reviews { get; set; }
         public DbSet<MessageEntity> Messages { get; set; }
+        public DbSet<NotificationEntity> Notifications { get; set; }
+        public DbSet<InvitationEntity> Invitation { get; set; }
+        public DbSet<PropertyImageEntity> PropertyImages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -65,6 +70,13 @@ namespace Data
                 .WithMany()
                 .HasForeignKey(p => p.TenantId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            //konfiguracja RecurringPaymentEntity
+            modelBuilder.Entity<RecurringPaymentEntity>()
+            .HasOne(rp => rp.Payment)
+            .WithMany()
+            .HasForeignKey(rp => rp.PaymentId)
+            .OnDelete(DeleteBehavior.Restrict);
 
             // konfiguracja issue
             modelBuilder.Entity<IssueEntity>()
@@ -110,6 +122,46 @@ namespace Data
                 .WithMany(i => i.Messages)
                 .HasForeignKey(m => m.IssueId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // konfiguracja notification
+            modelBuilder.Entity<NotificationEntity>()
+                .HasOne(n => n.Sender)
+                .WithMany()
+                .HasForeignKey(m => m.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<NotificationEntity>()
+                .HasOne(n => n.Receiver)
+                .WithMany()
+                .HasForeignKey(m => m.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            //konfiguracja invitation
+            modelBuilder.Entity<InvitationEntity>()
+                .HasOne(i => i.Sender)
+                .WithMany()
+                .HasForeignKey(i => i.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<InvitationEntity>()
+                .HasOne(i => i.Receiver)
+                .WithMany()
+                .HasForeignKey(i => i.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<InvitationEntity>()
+                .HasOne(i => i.Offer)
+                .WithMany()
+                .HasForeignKey(i => i.OfferId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // konfiguracja PropertyImage
+            modelBuilder.Entity<PropertyImageEntity>()
+                .ToTable("PropertyImageEntity")
+                .HasOne(pi => pi.Property)
+                .WithMany(p => p.PropertyImages)
+                .HasForeignKey(pi => pi.PropertyId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

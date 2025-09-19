@@ -2,7 +2,18 @@ using Data;
 using Infrastructure.Repositories;
 using Services.AutoMapper;
 using Services.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using static Services.Services.PropertyService;
+using ApplicationCore.Interfaces;
+using Microsoft.Extensions.FileProviders;
+using QuestPDF.Infrastructure;
+using Hangfire;
+using Hangfire.SqlServer;
+using Services;
+using RentMateApi.Hubs;
+
 
 namespace RentMateApi
 {
@@ -13,6 +24,26 @@ namespace RentMateApi
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            //builder.Services.AddCors(options =>
+            //{
+            //    options.AddPolicy("AllowAll",
+            //        builder =>
+            //        {
+            //            builder.AllowAnyOrigin()
+            //                   .AllowAnyMethod()
+            //                   .AllowAnyHeader();
+            //        });
+            //});
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowFrontend", policy =>
+                {
+                    policy.WithOrigins("http://localhost:5173")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+                });
+            });
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -21,39 +52,130 @@ namespace RentMateApi
             builder.Services.AddDbContext<RentMateDbContext>();
             //repositories and services
             builder.Services.AddScoped<IPropertyRepository, PropertyReporitory>();
-            builder.Services.AddScoped<IPropertyService , PropertyService>();
+            builder.Services.AddScoped<IPropertyService, PropertyService>();
+
+            builder.Services.AddScoped<AuthService>();
+
+            builder.Services.AddScoped<MessageRepository>();
+            builder.Services.AddScoped<IMessageService, MessageService>();
+
+            builder.Services.AddScoped<IOfferService, OfferService>();
+            builder.Services.AddScoped<IOfferRepository, OfferRepository>();
+
             builder.Services.AddScoped<IUserRepository , UserRepository>();
             builder.Services.AddScoped<IUserService , UserService>();
+
+            builder.Services.AddScoped<IPaymentService, PaymentService>();
+            builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+
+            builder.Services.AddScoped<IRecurringPaymentRepository,RecurringPaymentRepository>();
+
+
             //mapper
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
-            builder.Services.AddCors(options =>
+
+            /*builder.Services.AddControllers().AddJsonOptions(options =>
             {
-                options.AddPolicy("AllowFrontend", policy =>
+                options.JsonSerializerOptions.PropertyNamingPolicy = null; // lub JsonNamingPolicy.CamelCase
+                options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+            });*/
+
+            // Configure JWT Authentication
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
                 {
-                    policy
-                        .WithOrigins("http://localhost:5173")
-                        .AllowAnyHeader()
-                        .AllowAnyMethod();
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                        ValidAudience = builder.Configuration["Jwt:Audience"],
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                    };
                 });
-            });
+
+            builder.Services.AddAuthorization();
+
+            //SignalR
+            builder.Services.AddSignalR();
+
+
+            //Wy³¹czone na moment projektowania systemu !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+            //Configure Hangfire Scheduler
+          //  builder.Services.AddHangfire(config =>
+          //  config.SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+          //.UseSimpleAssemblyNameTypeSerializer()
+          //.UseRecommendedSerializerSettings()
+          //.UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection"),
+          //              new SqlServerStorageOptions
+          //              {
+          //                  CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+          //                  SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+          //                  QueuePollInterval = TimeSpan.Zero,
+          //                  UseRecommendedIsolationLevel = true,
+          //                  DisableGlobalLocks = true
+          //              }));
+            //Wy³¹czone na moment projektowania systemu !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            //builder.Services.AddHangfireServer();
+
             var app = builder.Build();
+            //Free education Community MIT License
+            QuestPDF.Settings.License = LicenseType.Community;
+
+            //Wy³¹czone podczas projektowania aplikacji, czasem wystêpuj¹ problemy przy po³¹czeniu HangFire - Baza danych !!!!!!!!
+
+            //Hangfire dashboard to see tasks
+            //app.UseHangfireDashboard("/hangfire");
+            //app.MapGet("/", () => "Hello World");
+
+            //RecurringJob.AddOrUpdate<RecurringPaymentsGenerator>(
+            //"generate-recurring-payments",
+            //service => service.GeneratePaymentsAsync(),
+            ////Cron.Daily(2, 0) // 02:00 w nocy
+            //"0 0 1 * *"
+            ////"* * * * *" //testy
+            //);
+
+
             RentMateApi.Seed.SeedData.EnsureSeeded(app);
-            
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-            builder.Services.AddCors();
-            //app.UseCors(builder => builder.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:5173"));
-            app.UseCors("AllowFrontend");
+
             app.UseHttpsRedirection();
 
+            app.UseStaticFiles();
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(
+                    Path.Combine(Directory.GetCurrentDirectory(), "uploads")),
+                RequestPath = "/uploads",
+                OnPrepareResponse = context =>
+                {
+                    context.Context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+                    context.Context.Response.Headers.Add("Access-Control-Allow-Methods", "GET");
+                    context.Context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+                }
+            });
+
+            //app.UseCors("AllowAll");
+            app.UseCors("AllowFrontend");
+
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
+
+            app.MapHub<NotificationHub>("/hubs/notifications")
+                .RequireCors("AllowFrontend");
 
             app.Run();
         }

@@ -12,40 +12,32 @@ namespace Infrastructure.Repositories
         {
             _context = context;
         }
-        public async Task<bool> CreateProperty(PropertyEntity entity)
+        public async Task<PropertyEntity> CreateProperty(PropertyEntity entity)
         {
             try
             {
                 await _context.Properties.AddAsync(entity);
                 await _context.SaveChangesAsync();
-                return true;
+                return entity;
             }
             catch(Exception ex)
             {
-                return false;
+                throw new Exception("Failed to create property", ex);
             }
+        }
+        public async Task UpdateAsync(PropertyEntity entity)
+        {
+            _context.Properties.Update(entity);
+            await _context.SaveChangesAsync();
         }
         public async Task<IEnumerable<PropertyEntity>> GetAllProperties()
         {
-            return await _context.Properties.ToListAsync();
+
+            return await _context.Properties.Include(p => p.Owner).ToListAsync();
         }
         public async Task<PropertyEntity> GetPropertieById(int id)
         {
             return await _context.Properties.FirstOrDefaultAsync(x => x.Id == id);
-        }
-        public async Task<bool> UpdatePropertie(int id, PropertyEntity entity)
-        {
-            try
-            {
-                _context.ChangeTracker.Clear();
-                _context.Entry(entity).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                return false;
-            }
         }
         public async Task<bool> DeleteProperite(int id)
         {
@@ -71,15 +63,52 @@ namespace Infrastructure.Repositories
             return _context.Properties.AsQueryable();
         }
 
+        public async Task<PropertyImageEntity> AddPropertyImage(PropertyImageEntity imageEntity)
+        {
+            await _context.PropertyImages.AddAsync(imageEntity);
+            await _context.SaveChangesAsync();
+            return imageEntity;
+        }
+
+        public async Task<PropertyImageEntity> GetPropertyImageById(int imageId)
+        {
+            return await _context.PropertyImages.FirstOrDefaultAsync(x => x.Id == imageId);
+        }
+
+        public async Task<bool> DeletePropertyImage(int imageId)
+        {
+            var image = await _context.PropertyImages.FirstOrDefaultAsync(x => x.Id == imageId);
+            if (image != null)
+            {
+                _context.PropertyImages.Remove(image);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            return false;
+        }
+        public async Task<PropertyImageEntity> GetMainPropertyImageByPropertyId(int propertyId)
+        {
+            return await _context.PropertyImages.FirstOrDefaultAsync(x => x.PropertyId == propertyId && x.IsMainImage);
+        }
+        public async Task<IEnumerable<PropertyImageEntity>> GetPhotos(int propertyId)
+        {
+            return await _context.PropertyImages.Where(i => i.PropertyId == propertyId).ToListAsync();
+        }
+
     }
     public interface IPropertyRepository
     {
-        Task<bool> CreateProperty(PropertyEntity entity);
+        Task<PropertyEntity> CreateProperty(PropertyEntity entity);
+        Task UpdateAsync(PropertyEntity entity);
         Task<IEnumerable<PropertyEntity>> GetAllProperties();
         Task<PropertyEntity> GetPropertieById(int id);
-        Task<bool> UpdatePropertie(int id, PropertyEntity entity);
         Task<bool> DeleteProperite(int id);
         IQueryable<PropertyEntity> GetPropertiesQueryable();
+        Task<PropertyImageEntity> AddPropertyImage(PropertyImageEntity imageEntity);
+        Task<PropertyImageEntity> GetPropertyImageById(int imageId);
+        Task<bool> DeletePropertyImage(int imageId);
+        Task<PropertyImageEntity> GetMainPropertyImageByPropertyId(int propertyId);
+        Task<IEnumerable<PropertyImageEntity>> GetPhotos(int propertyId);
     }
 }
 

@@ -10,7 +10,8 @@ namespace ApplicationCore.Dto.Property
 {
     public class PropertyDto
     {
-        public string OwnerId {  get; set; }
+        public string? Id { get; set; }
+        public string? OwnerId { get; set; }
         [Required]
         [StringLength(150)]
         public string Title { get; set; }
@@ -39,5 +40,10 @@ namespace ApplicationCore.Dto.Property
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal BaseDeposit { get; set; } //kaucja
+        public bool isActive { get; set; }
+
+        public string? OwnerUsername { get; set; }
+        
+        public List<PropertyImageDto>? Images { get; set; }
     }
 }
