@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using RentMateApi.Hubs;
+using Services.Services;
+using System.Security.Claims;
 
 namespace RentMateApi.Controllers
 {
@@ -10,20 +12,28 @@ namespace RentMateApi.Controllers
     public class NotificationController : ControllerBase
     {
         private readonly IHubContext<NotificationHub> _hubContext;
-        public NotificationController(IHubContext<NotificationHub> hubContext)
+        private readonly INotificationService _notificationService;
+        private readonly IUserService _userService;
+        public NotificationController(IHubContext<NotificationHub> hubContext, INotificationService notificationService, IUserService userService)
         {
             _hubContext = hubContext;
+            _notificationService = notificationService;
+            _userService = userService;
         }
         [HttpPost]
-        public async Task<IActionResult> PostNotification([FromBody] NotificationDto dto)
+        public async Task<IActionResult> CreateNotification([FromBody] NotificationDto dto,
+        [FromServices] IHubContext<NotificationHub> hubContext)
         {
-            await _hubContext.Clients.All.SendAsync("ReceiveNotification", new
+            var senderIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (senderIdClaim == null || !int.TryParse(senderIdClaim.Value, out int senderId))
             {
-                dto.Title,
-                dto.Message,
-                TimeStamp = DateTime.UtcNow,
-            });
-            return Ok(new { Status = "Sent" });
+                return Unauthorized(new { message = "User not authenticated or invalid user ID." });
+            }
+            var sender = await _userService.GetUserById(senderId);
+            var senderName = $"{sender.FirstName} {sender.LastName}";
+
+            var notification = await _notificationService.CreateNotification(senderId, dto.ReceiverId, senderName, dto.Type);
+            return Ok(notification);
         }
     }
 }

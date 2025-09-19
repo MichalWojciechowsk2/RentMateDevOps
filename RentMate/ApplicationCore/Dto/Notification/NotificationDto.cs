@@ -8,7 +8,7 @@ namespace ApplicationCore.Dto.Notification
 {
     public class NotificationDto
     {
-        public string Title { get; set; }
-        public string Message { get; set; }
+        public int ReceiverId { get; set; }
+        public NotificationType Type { get; set; }
     }
 }
