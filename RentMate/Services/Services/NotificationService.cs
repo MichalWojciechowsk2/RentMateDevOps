@@ -1,5 +1,7 @@
 ﻿using Data.Entities;
 using Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore.Metadata;
+using System.ComponentModel;
 
 
 
@@ -27,9 +29,27 @@ namespace Services.Services
             await _notificationRepository.createNotification(notification);
             return notification;
         }
+
+        public async Task<IEnumerable<NotificationEntity>> GetListOfReceiverNotifications(int receiverId)
+        {
+            var notifications = await _notificationRepository.GetNotificationsByReceiverId(receiverId);
+            return notifications;
+        }
+
+        public async Task<int> CountHowMuchNotRead(int receirverId)
+        {
+            var notifications = await _notificationRepository.GetNotificationsByReceiverId(receirverId);
+            int unreadNoti = 0;
+            foreach(var notification in notifications)
+            {
+                if (notification.IsRead == false) unreadNoti++;
+            }
+            return unreadNoti;
+        }
     }
     public interface INotificationService
     {
         Task<NotificationEntity> CreateNotification(int senderId, int receiverId, string senderName, NotificationType type);
+        Task<IEnumerable<NotificationEntity>> GetListOfReceiverNotifications(int receiverId);
     }
 }
