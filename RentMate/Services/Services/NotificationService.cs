@@ -27,9 +27,16 @@ namespace Services.Services
             await _notificationRepository.createNotification(notification);
             return notification;
         }
+
+        public async Task<IEnumerable<NotificationEntity>> GetListOfReceiverNotifications(int receiverId)
+        {
+            var notifications = await _notificationRepository.GetNotificationsByReceiverId(receiverId);
+            return notifications;
+        }
     }
     public interface INotificationService
     {
         Task<NotificationEntity> CreateNotification(int senderId, int receiverId, string senderName, NotificationType type);
+        Task<IEnumerable<NotificationEntity>> GetListOfReceiverNotifications(int receiverId);
     }
 }

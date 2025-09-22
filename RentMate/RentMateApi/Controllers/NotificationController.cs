@@ -20,6 +20,7 @@ namespace RentMateApi.Controllers
             _notificationService = notificationService;
             _userService = userService;
         }
+        
         [HttpPost]
         public async Task<IActionResult> CreateNotification([FromBody] NotificationDto dto,
         [FromServices] IHubContext<NotificationHub> hubContext)
@@ -34,6 +35,17 @@ namespace RentMateApi.Controllers
 
             var notification = await _notificationService.CreateNotification(senderId, dto.ReceiverId, senderName, dto.Type);
             return Ok(notification);
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetListOfNotifications()
+        {
+            var receiverIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (receiverIdClaim == null || !int.TryParse(receiverIdClaim.Value, out int receiverId))
+            {
+                return Unauthorized(new { message = "User not authenticated or invalid user ID." });
+            }
+            var listOfNotifications = _notificationService.GetListOfReceiverNotifications(receiverId);
+            return Ok(listOfNotifications);
         }
     }
 }

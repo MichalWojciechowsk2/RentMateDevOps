@@ -38,11 +38,18 @@ namespace Infrastructure.Repositories
             _context.SaveChangesAsync();
             return notification;
         }
+        public async Task<IEnumerable<NotificationEntity>> GetNotificationsByReceiverId(int receiverId)
+        {
+            var notifications = await _context.Notifications.Where(n=>n.ReceiverId == receiverId).ToListAsync();
+            if(notifications == null) return null;
+            return notifications;
+        }
     }
     public interface INotificationRepository
     {
         Task<IEnumerable<NotificationEntity>> GetNotificationsForReceiver(int receiverId);
         Task<NotificationEntity> createNotification(NotificationEntity notificationEntity);
         Task<NotificationEntity> SetReadNotificationTrue(int notificationId);
+        Task<IEnumerable<NotificationEntity>> GetNotificationsByReceiverId(int receiverId);
     }
 }
