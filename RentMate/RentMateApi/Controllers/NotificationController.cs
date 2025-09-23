@@ -34,6 +34,9 @@ namespace RentMateApi.Controllers
             var senderName = $"{sender.FirstName} {sender.LastName}";
 
             var notification = await _notificationService.CreateNotification(senderId, dto.ReceiverId, senderName, dto.Type);
+            var receiverUnreadNoti = await _notificationService.CountHowMuchNotRead(dto.ReceiverId);
+            await _hubContext.Clients.User(dto.ReceiverId.ToString()).SendAsync("ReceiveUnreadCount", receiverUnreadNoti);
+
             return Ok(notification);
         }
         [HttpGet]

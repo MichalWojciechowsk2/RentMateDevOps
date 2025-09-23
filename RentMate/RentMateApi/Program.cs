@@ -70,6 +70,10 @@ namespace RentMateApi
 
             builder.Services.AddScoped<IRecurringPaymentRepository,RecurringPaymentRepository>();
 
+            builder.Services.AddScoped<INotificationService, NotificationService>();
+            builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+
+
 
             //mapper
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
