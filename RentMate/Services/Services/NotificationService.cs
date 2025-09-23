@@ -2,6 +2,7 @@
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore.Metadata;
 using System.ComponentModel;
+using System.Threading.Tasks;
 
 
 
@@ -14,6 +15,7 @@ namespace Services.Services
         public NotificationService(INotificationRepository notificationRepository)
         {
             _notificationRepository = notificationRepository;
+
         }
         public async Task<NotificationEntity> CreateNotification(int senderId, int receiverId, string senderName, NotificationType type)
         {
@@ -27,6 +29,7 @@ namespace Services.Services
             };
             notification.SetContent(senderName);
             await _notificationRepository.createNotification(notification);
+            
             return notification;
         }
 
@@ -51,5 +54,6 @@ namespace Services.Services
     {
         Task<NotificationEntity> CreateNotification(int senderId, int receiverId, string senderName, NotificationType type);
         Task<IEnumerable<NotificationEntity>> GetListOfReceiverNotifications(int receiverId);
+        Task<int> CountHowMuchNotRead(int receirverId);
     }
 }

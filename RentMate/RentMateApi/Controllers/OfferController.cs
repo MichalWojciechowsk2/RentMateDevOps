@@ -2,6 +2,8 @@
 using ApplicationCore.Dto.Property.Offer;
 using Data.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using RentMateApi.Hubs;
 using Services.Services;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
@@ -16,11 +18,15 @@ namespace RentMateApi.Controllers
         private readonly IOfferService _offerService;
         private readonly IPropertyService _propertyService;
         private readonly IUserService _userService;
-        public OfferController(IOfferService offerService, IPropertyService propertyService,IUserService userService)
+        private readonly INotificationService _notificationService;
+        private readonly IHubContext<NotificationHub> _hubContext;
+        public OfferController(IOfferService offerService, IPropertyService propertyService,IUserService userService, INotificationService notificationService, IHubContext<NotificationHub> hubContext)
         {
             _offerService = offerService;
             _propertyService = propertyService;
             _userService = userService;
+            _notificationService = notificationService;
+            _hubContext = hubContext;
         }
         [HttpPost]
         public async Task<IActionResult> CreateOffer(CreateOfferDto createOfferDto)
@@ -31,7 +37,7 @@ namespace RentMateApi.Controllers
                 return Conflict(new { message = "Użytkownik ma już aktywną ofertę." });
             }
             var result = await _offerService.CreateOffer(createOfferDto);
-            
+
             var offerContract = await _offerService.GetOfferAndTenantByOfferId(result.Id);
             var property = await _propertyService.GetPropertyById(offerContract.PropertyId);
             var propertyCity = property.City;
@@ -61,6 +67,19 @@ namespace RentMateApi.Controllers
             var contract = _offerService.GenerateOfferContract(data);
             await _offerService.AddOfferContractToOffer(offerContract.Id, contract);
 
+            //Powiadomienia
+            var senderName = $"{owner.FirstName} {owner.LastName}";
+            if (offerContract.TenantId != null)
+            {
+                await _notificationService.CreateNotification(
+                    ownerId,
+                    offerContract.TenantId.Value,
+                    senderName,
+                    NotificationType.SendOffer
+                );
+                var receiverUnreadNoti = await _notificationService.CountHowMuchNotRead(offerContract.TenantId.Value);
+                await _hubContext.Clients.User(offerContract.TenantId.Value.ToString()).SendAsync("ReceiveUnreadCount", receiverUnreadNoti);
+            }
             return Ok(new { message = "Offer and contract generated successfully" });
         }
         [HttpGet("{offerId}/offerContract/pdf")]

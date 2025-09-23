@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Repositories
 {
-    public class NotificationRepository
+    public class NotificationRepository : INotificationRepository
     {
         private readonly RentMateDbContext _context;
         public NotificationRepository (RentMateDbContext context)
@@ -27,7 +27,7 @@ namespace Infrastructure.Repositories
         public async Task<NotificationEntity> createNotification(NotificationEntity notificationEntity)
         {
             _context.Notifications.Add(notificationEntity);
-            _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
             return notificationEntity;
         }
         public async Task<NotificationEntity> SetReadNotificationTrue(int notificationId)
@@ -35,7 +35,7 @@ namespace Infrastructure.Repositories
             var notification = await _context.Notifications.FirstOrDefaultAsync(n=> n.Id == notificationId);
             if (notification == null) return null;
             notification.IsRead = true;
-            _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
             return notification;
         }
         public async Task<IEnumerable<NotificationEntity>> GetNotificationsByReceiverId(int receiverId)

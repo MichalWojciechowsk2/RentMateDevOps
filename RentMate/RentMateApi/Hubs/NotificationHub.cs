@@ -1,16 +1,20 @@
-﻿using Data.Entities;
+﻿using ApplicationCore.Dto.Notification;
+using Data.Entities;
 using Microsoft.AspNetCore.SignalR;
 
 namespace RentMateApi.Hubs
 {
+    //public class NotificationHub : Hub<INotificationHub>
+    //{
+
+    //}
+    //public interface INotificationHub
+    //{
+    //    Task ReceiveUnreadCount(int count);
+    //    Task ReceiveNotification(NotificationEntity notification);
+    //}
     public class NotificationHub : Hub
     {
-        public async Task SendNotificationToUser(int userId)
-        {
-            await Clients.User("ReceiveNotificationCounter", new
-            {
-                //metoda do liczenia ile nie przeczytanych wiadomości ma user
-            })
-        }
+
     }
 }
