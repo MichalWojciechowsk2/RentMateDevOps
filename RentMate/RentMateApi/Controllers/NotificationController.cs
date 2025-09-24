@@ -3,7 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using RentMateApi.Hubs;
 using Services.Services;
+using System.Net.Http;
 using System.Security.Claims;
+using System.Text;
+using System.Text.Json;
 
 namespace RentMateApi.Controllers
 {
@@ -14,11 +17,13 @@ namespace RentMateApi.Controllers
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly INotificationService _notificationService;
         private readonly IUserService _userService;
-        public NotificationController(IHubContext<NotificationHub> hubContext, INotificationService notificationService, IUserService userService)
+        private readonly HttpClient _http;
+        public NotificationController(IHubContext<NotificationHub> hubContext, INotificationService notificationService, IUserService userService, HttpClient http)
         {
             _hubContext = hubContext;
             _notificationService = notificationService;
             _userService = userService;
+            _http = http;
         }
         
         [HttpPost]
@@ -35,7 +40,23 @@ namespace RentMateApi.Controllers
 
             var notification = await _notificationService.CreateNotification(senderId, dto.ReceiverId, senderName, dto.Type);
             var receiverUnreadNoti = await _notificationService.CountHowMuchNotRead(dto.ReceiverId);
-            await _hubContext.Clients.User(dto.ReceiverId.ToString()).SendAsync("ReceiveUnreadCount", receiverUnreadNoti);
+
+            //var payload = new
+            //{
+            //    eventType = "SignalRTest",
+            //    message = "test",
+            //    timestamp = DateTime.UtcNow
+            //};
+
+
+            //var json = JsonSerializer.Serialize(payload);
+            //var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            //var response = await _http.PostAsync("https://eob08tjba1fgk4q.m.pipedream.net", content);
+            //response.EnsureSuccessStatusCode();
+
+            //await _hubContext.Clients.User(dto.ReceiverId.ToString()).SendAsync("ReceiveUnreadCount", receiverUnreadNoti);
+            await _hubContext.Clients.All.SendAsync("ReceiveUnreadCount", receiverUnreadNoti);
 
             return Ok(notification);
         }
