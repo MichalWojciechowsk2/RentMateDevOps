@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace RentMateApi.Hubs
 {
+    [Authorize]
     public class NotificationHub : Hub
     {
         

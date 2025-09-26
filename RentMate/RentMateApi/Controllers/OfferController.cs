@@ -78,7 +78,7 @@ namespace RentMateApi.Controllers
                     NotificationType.SendOffer
                 );
                 var receiverUnreadNoti = await _notificationService.CountHowMuchNotRead(offerContract.TenantId.Value);
-                //await _hubContext.Clients.User(offerContract.TenantId.Value.ToString()).SendAsync("ReceiveUnreadCount", receiverUnreadNoti);
+                //  await _hubContext.Clients.User(offerContract.TenantId.Value.ToString()).SendAsync("ReceiveUnreadCount", receiverUnreadNoti);
                 await _hubContext.Clients.All.SendAsync("ReceiveUnreadCount", receiverUnreadNoti);
             }
             return Ok(new { message = "Offer and contract generated successfully" });

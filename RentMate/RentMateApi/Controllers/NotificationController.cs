@@ -55,8 +55,8 @@ namespace RentMateApi.Controllers
             //var response = await _http.PostAsync("https://eob08tjba1fgk4q.m.pipedream.net", content);
             //response.EnsureSuccessStatusCode();
 
-            //await _hubContext.Clients.User(dto.ReceiverId.ToString()).SendAsync("ReceiveUnreadCount", receiverUnreadNoti);
-            await _hubContext.Clients.All.SendAsync("ReceiveUnreadCount", receiverUnreadNoti);
+            await _hubContext.Clients.User(dto.ReceiverId.ToString()).SendAsync("ReceiveUnreadCount", receiverUnreadNoti);
+            //await _hubContext.Clients.All.SendAsync("ReceiveUnreadCount", receiverUnreadNoti);
 
             return Ok(notification);
         }
