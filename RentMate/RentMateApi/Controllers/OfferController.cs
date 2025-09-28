@@ -20,7 +20,10 @@ namespace RentMateApi.Controllers
         private readonly IUserService _userService;
         private readonly INotificationService _notificationService;
         private readonly IHubContext<NotificationHub> _hubContext;
-        public OfferController(IOfferService offerService, IPropertyService propertyService,IUserService userService, INotificationService notificationService, IHubContext<NotificationHub> hubContext)
+        public OfferController(IOfferService offerService,
+            IPropertyService propertyService,
+            IUserService userService,
+            INotificationService notificationService, IHubContext<NotificationHub> hubContext)
         {
             _offerService = offerService;
             _propertyService = propertyService;
@@ -78,8 +81,7 @@ namespace RentMateApi.Controllers
                     NotificationType.SendOffer
                 );
                 var receiverUnreadNoti = await _notificationService.CountHowMuchNotRead(offerContract.TenantId.Value);
-                //  await _hubContext.Clients.User(offerContract.TenantId.Value.ToString()).SendAsync("ReceiveUnreadCount", receiverUnreadNoti);
-                await _hubContext.Clients.All.SendAsync("ReceiveUnreadCount", receiverUnreadNoti);
+                await _hubContext.Clients.User(offerContract.TenantId.Value.ToString()).SendAsync("ReceiveUnreadCount", receiverUnreadNoti);
             }
             return Ok(new { message = "Offer and contract generated successfully" });
         }
@@ -130,6 +132,27 @@ namespace RentMateApi.Controllers
             try
             {
                 var updatedOffer = await _offerService.UpdateOfferStatus(offerId, status);
+                var propertyOwnerId = await _offerService.GetOwnerByOfferPropertyId(updatedOffer.PropertyId);
+                var sender = await _userService.GetUserById(tenantId);
+                var senderNamameSurname = sender.FirstName + " " + sender.LastName;
+                NotificationType type;
+                if (status == OfferStatus.Accepted)
+                    type = NotificationType.AcceptOffer;
+                else if (status == OfferStatus.Cancelled)
+                    type = NotificationType.DeclineOffer;
+                else
+                    type = NotificationType.Other;
+
+                await _notificationService.CreateNotification(
+                    tenantId,
+                    propertyOwnerId,
+                    senderNamameSurname,
+                    type);
+
+                var receiverUnreadNoti = await _notificationService.CountHowMuchNotRead(propertyOwnerId);
+                await _hubContext.Clients.User(propertyOwnerId.ToString()).SendAsync("ReceiveUnreadCount", receiverUnreadNoti);
+
+
                 return Ok(updatedOffer);
             }
             catch (KeyNotFoundException)
@@ -141,5 +164,6 @@ namespace RentMateApi.Controllers
                 return StatusCode(500, "Wystąpił błąd podczas aktualizacji statusu.");
             }
         }
+
     }
 }

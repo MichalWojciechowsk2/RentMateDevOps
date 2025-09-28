@@ -5,6 +5,7 @@ using Infrastructure.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -56,6 +57,14 @@ namespace Services.Services
             if (offer == null) return null;
             return _mapper.Map<OfferDto>(offer);
         }
+        public async Task<int> GetOwnerByOfferPropertyId(int propertId)
+        {
+            return await _offerRepository.GetOwnerIdByPropertyId(propertId);
+        }
+        public async Task<int> GetTenantByOfferId(int offerId)
+        {
+            return await _offerRepository.GetTenantIdByOfferId(offerId);
+        }
         public async Task<bool> CheckIfUserCanAcceptNewOffer(int userId)
         {
             var activeOffer = await _offerRepository.getFirstActiveOfferByUserId(userId);
@@ -102,6 +111,8 @@ namespace Services.Services
         Task<IEnumerable<OfferEntity>> GetOfferByUserId(int userId);
         Task<OfferDto> GetOfferById(int offerId);
         Task<OfferDto> GetOfferAndTenantByOfferId(int offerId);
+        Task<int> GetOwnerByOfferPropertyId(int propertId);
+        Task<int> GetTenantByOfferId(int OfferId);
         Task<bool> CheckIfUserCanAcceptNewOffer(int userId);
         Task<OfferEntity> UpdateOfferStatus(int offerId, OfferStatus newStatus);
         public string GenerateOfferContract(Dictionary<string, string> data);
