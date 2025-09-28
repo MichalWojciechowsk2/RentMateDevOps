@@ -27,7 +27,19 @@ namespace Data.Entities
                         Title = "Nowa oferta";
                         Message = $"{senderName} wysłał Ci zaproszenie.";
                         break;
-                    case NotificationType.PaymentDue:
+                    case NotificationType.AcceptOffer:
+                        Title = "Zaakceptowana oferta";
+                        Message = $"{senderName} zaakceptował twoją ofertę umowy najmu.";
+                        break;
+                    case NotificationType.DeclineOffer:
+                        Title = "Odrzucona oferta";
+                        Message = $"{senderName} odrzucił twoją ofertę umowy najmu.";
+                        break;
+                    case NotificationType.CreatePayment:
+                        Title = "Nowa płatność";
+                        Message = $"{senderName} utowrzył nową płatność.";
+                        break;
+                case NotificationType.PaymentDue:
                         Title = "Przypomnienie o płatności";
                         Message = "Twoja płatność wkrótce minie.";
                         break;
@@ -47,6 +59,9 @@ namespace Data.Entities
 public enum NotificationType
     {
         SendOffer,
+        AcceptOffer,
+        DeclineOffer,
+        CreatePayment,
         PaymentDue,
         InvitationAccepted,
         Other,

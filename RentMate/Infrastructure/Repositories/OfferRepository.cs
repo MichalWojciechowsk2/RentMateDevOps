@@ -1,6 +1,7 @@
 ﻿using Data;
 using Data.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -68,6 +69,16 @@ namespace Infrastructure.Repositories
         {
             return await _context.Offers.FirstOrDefaultAsync(o => o.Id == offerId);
         }
+        public async Task<int> GetOwnerIdByPropertyId(int propertyId)
+        {
+            var ownerId =  await _context.Properties.Where(p => p.Id == propertyId).Select(p => p.OwnerId).FirstOrDefaultAsync();
+            return ownerId;
+        }
+        public async Task<int> GetTenantIdByOfferId(int offerId)
+        {
+            var tenantId = await _context.Offers.Where(o => o.Id == offerId).Select(o => o.TenantId).FirstOrDefaultAsync();
+            return tenantId.Value;
+        }
         public async Task<OfferEntity> getOfferAndTenantByOfferId(int offerId)
         {
             return await _context.Offers.Include(o => o.Tenant).FirstOrDefaultAsync(o => o.Id == offerId);
@@ -86,6 +97,8 @@ namespace Infrastructure.Repositories
         Task<OfferEntity> getFirstActiveOfferByUserId(int userId);
         Task<IEnumerable<OfferEntity>> getOffersByUserId(int userId);
         Task<OfferEntity> getOfferById(int offerId);
+        Task<int> GetOwnerIdByPropertyId(int propertyId);
+        Task<int> GetTenantIdByOfferId(int offerId);
         Task<OfferEntity> getOfferAndTenantByOfferId(int offerId);
         Task updateAsync(OfferEntity offerEntity);
     }

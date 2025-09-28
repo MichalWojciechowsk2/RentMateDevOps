@@ -99,6 +99,19 @@ namespace RentMateApi
                         ValidAudience = builder.Configuration["Jwt:Audience"],
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
                     };
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+                            var path = context.HttpContext.Request.Path;
+                            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/notifications"))
+                            {
+                                context.Token = accessToken;
+                            }
+                            return Task.CompletedTask;
+                        }
+                    };
                 });
 
             builder.Services.AddAuthorization();

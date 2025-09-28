@@ -2,6 +2,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using RentMateApi.Hubs;
 using Services.Services;
 using System.Security.Claims;
 
@@ -12,9 +15,21 @@ namespace RentMateApi.Controllers
     public class PaymentController : ControllerBase
     {
         private readonly IPaymentService _paymentService;
-        public PaymentController(IPaymentService paymentService)
+        private readonly INotificationService _notificationService;
+        private readonly IOfferService _offerService;
+        private readonly IUserService _userService;
+        private readonly IHubContext<NotificationHub> _hubContext;
+        public PaymentController(IPaymentService paymentService, 
+            INotificationService notificationService, 
+            IOfferService offerService, 
+            IUserService userService,
+            IHubContext<NotificationHub> hubContext)
         {
             _paymentService = paymentService;
+            _notificationService = notificationService;
+            _offerService = offerService;
+            _userService = userService;
+            _hubContext = hubContext;
         }
 
         [HttpPost]
@@ -27,6 +42,13 @@ namespace RentMateApi.Controllers
                 return Unauthorized(new { message = "User not authenticated or invalid user ID." });
             }
             var result = await _paymentService.CreatePayment(createPaymentDto, ownerId);
+            //TenantIdByOfferId
+            var tenantId = await _offerService.GetTenantByOfferId(createPaymentDto.OfferId);
+            var owner = await _userService.GetUserById(ownerId);
+            var ownerNameSurname = owner.FirstName + " " + owner.LastName;
+            await _notificationService.CreateNotification(ownerId, tenantId, ownerNameSurname, NotificationType.CreatePayment);
+            var receiverUnreadNoti = await _notificationService.CountHowMuchNotRead(tenantId);
+            await _hubContext.Clients.User(tenantId.ToString()).SendAsync("ReceiveUnreadCount", receiverUnreadNoti);
             return result == true ? StatusCode(201) : Conflict();
         }
         [HttpGet]
