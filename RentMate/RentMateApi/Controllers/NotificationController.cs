@@ -1,4 +1,5 @@
 ﻿using ApplicationCore.Dto.Notification;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using RentMateApi.Hubs;
@@ -17,13 +18,11 @@ namespace RentMateApi.Controllers
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly INotificationService _notificationService;
         private readonly IUserService _userService;
-        private readonly HttpClient _http;
-        public NotificationController(IHubContext<NotificationHub> hubContext, INotificationService notificationService, IUserService userService, HttpClient http)
+        public NotificationController(IHubContext<NotificationHub> hubContext, INotificationService notificationService, IUserService userService)
         {
             _hubContext = hubContext;
             _notificationService = notificationService;
             _userService = userService;
-            _http = http;
         }
         
         [HttpPost]
@@ -60,6 +59,7 @@ namespace RentMateApi.Controllers
 
             return Ok(notification);
         }
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetListOfNotifications()
         {
@@ -68,8 +68,21 @@ namespace RentMateApi.Controllers
             {
                 return Unauthorized(new { message = "User not authenticated or invalid user ID." });
             }
-            var listOfNotifications = _notificationService.GetListOfReceiverNotifications(receiverId);
+            var listOfNotifications = await _notificationService.GetListOfReceiverNotifications(receiverId);
             return Ok(listOfNotifications);
+        }
+        [Authorize]
+        [HttpGet("countUnreadNotification")]
+        public async Task<IActionResult> CountUnreadNotification()
+        {
+            var receiverIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (receiverIdClaim == null || !int.TryParse(receiverIdClaim.Value, out int receiverId))
+            {
+                return Unauthorized(new { message = "User not authenticated or invalid user ID." });
+            }
+
+            var unreadNoti = await _notificationService.CountHowMuchNotRead(receiverId);
+            return Ok(unreadNoti);
         }
     }
 }
