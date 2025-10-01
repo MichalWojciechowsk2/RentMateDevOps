@@ -17,6 +17,15 @@ namespace Services.Services
             _notificationRepository = notificationRepository;
 
         }
+
+        public async Task MarkAsReadIfNot(int notiId)
+        {
+            var noti = await _notificationRepository.GetNotificationById(notiId);
+            if (noti != null && !noti.IsRead)
+            {
+                await _notificationRepository.SetReadNotiTrue(notiId);
+            }
+        }
         public async Task<NotificationEntity> CreateNotification(int senderId, int receiverId, string senderName, NotificationType type)
         {
             var notification = new NotificationEntity
@@ -52,6 +61,7 @@ namespace Services.Services
     }
     public interface INotificationService
     {
+        Task MarkAsReadIfNot(int notiId);
         Task<NotificationEntity> CreateNotification(int senderId, int receiverId, string senderName, NotificationType type);
         Task<IEnumerable<NotificationEntity>> GetListOfReceiverNotifications(int receiverId);
         Task<int> CountHowMuchNotRead(int receirverId);
