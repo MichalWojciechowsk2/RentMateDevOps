@@ -24,7 +24,15 @@ namespace RentMateApi.Controllers
             _notificationService = notificationService;
             _userService = userService;
         }
-        
+
+        [HttpPut("{id}/read")]
+        public async Task<IActionResult> ReadNotification(int id)
+        {
+            //dodać aktualizacje ile jest unread do fronta dla usera ktory korzysta z tego endpointa
+            await _notificationService.MarkAsReadIfNot(id);
+            return NoContent();
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateNotification([FromBody] NotificationDto dto,
         [FromServices] IHubContext<NotificationHub> hubContext)
@@ -40,23 +48,7 @@ namespace RentMateApi.Controllers
             var notification = await _notificationService.CreateNotification(senderId, dto.ReceiverId, senderName, dto.Type);
             var receiverUnreadNoti = await _notificationService.CountHowMuchNotRead(dto.ReceiverId);
 
-            //var payload = new
-            //{
-            //    eventType = "SignalRTest",
-            //    message = "test",
-            //    timestamp = DateTime.UtcNow
-            //};
-
-
-            //var json = JsonSerializer.Serialize(payload);
-            //var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            //var response = await _http.PostAsync("https://eob08tjba1fgk4q.m.pipedream.net", content);
-            //response.EnsureSuccessStatusCode();
-
             await _hubContext.Clients.User(dto.ReceiverId.ToString()).SendAsync("ReceiveUnreadCount", receiverUnreadNoti);
-            //await _hubContext.Clients.All.SendAsync("ReceiveUnreadCount", receiverUnreadNoti);
-
             return Ok(notification);
         }
         [Authorize]
