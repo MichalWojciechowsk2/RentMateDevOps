@@ -54,6 +54,24 @@ namespace Infrastructure.Repositories
             if(notifications == null) return null;
             return notifications;
         }
+        public async Task<bool> DeleteNotification(int notificationId)
+        {
+            try
+            {
+                var entity = await _context.Notifications.AsNoTracking().FirstOrDefaultAsync(x => x.Id == notificationId);
+                if(entity != null)
+                {
+                    _context.Notifications.Remove(entity);
+                    await _context.SaveChangesAsync();
+                    return true;
+                }
+                return false;
+            }
+            catch(Exception ex)
+            {
+                return false;
+            }
+        }
     }
     public interface INotificationRepository
     {
@@ -63,5 +81,6 @@ namespace Infrastructure.Repositories
         Task<NotificationEntity> createNotification(NotificationEntity notificationEntity);
         Task<NotificationEntity> SetReadNotiTrue(int notificationId);
         Task<IEnumerable<NotificationEntity>> GetNotificationsByReceiverId(int receiverId);
+        Task<bool> DeleteNotification(int notificationId);
     }
 }
