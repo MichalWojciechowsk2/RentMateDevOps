@@ -76,5 +76,12 @@ namespace RentMateApi.Controllers
             var unreadNoti = await _notificationService.CountHowMuchNotRead(receiverId);
             return Ok(unreadNoti);
         }
+        [Authorize]
+        [HttpDelete("{notificationId}")]
+        public async Task<IActionResult> DeleteNotificationById(int notificationId)
+        {
+            var deleteNoti = await _notificationService.DeleteNotification(notificationId);
+            return Ok(deleteNoti);
+        }
     }
 }

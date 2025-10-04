@@ -1,6 +1,7 @@
 ﻿using Data.Entities;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.Identity.Client;
 using System.ComponentModel;
 using System.Threading.Tasks;
 
@@ -58,6 +59,18 @@ namespace Services.Services
             }
             return unreadNoti;
         }
+        public async Task<bool> DeleteNotification(int notificationId)
+        {
+            try
+            {
+                var result = await _notificationRepository.DeleteNotification(notificationId);
+                return result;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
     }
     public interface INotificationService
     {
@@ -65,5 +78,6 @@ namespace Services.Services
         Task<NotificationEntity> CreateNotification(int senderId, int receiverId, string senderName, NotificationType type);
         Task<IEnumerable<NotificationEntity>> GetListOfReceiverNotifications(int receiverId);
         Task<int> CountHowMuchNotRead(int receirverId);
+        Task<bool> DeleteNotification(int notificationId);
     }
 }
