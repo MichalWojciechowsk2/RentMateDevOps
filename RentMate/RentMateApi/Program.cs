@@ -73,6 +73,9 @@ namespace RentMateApi
             builder.Services.AddScoped<INotificationService, NotificationService>();
             builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
+            builder.Services.AddScoped<IChatService, ChatService>();
+            builder.Services.AddScoped<IChatRepository, ChatRepository>();
+
 
 
             //mapper

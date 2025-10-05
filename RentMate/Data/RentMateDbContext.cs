@@ -30,6 +30,8 @@ namespace Data
         public DbSet<IssueEntity> Issues { get; set; }
         public DbSet<ReviewEntity> Reviews { get; set; }
         public DbSet<MessageEntity> Messages { get; set; }
+        public DbSet<ChatEntity> Chats { get; set; }
+        public DbSet<ChatUsersEntity> ChatUsers { get; set; }
         public DbSet<NotificationEntity> Notifications { get; set; }
         public DbSet<InvitationEntity> Invitation { get; set; }
         public DbSet<PropertyImageEntity> PropertyImages { get; set; }
@@ -122,6 +124,25 @@ namespace Data
                 .WithMany(i => i.Messages)
                 .HasForeignKey(m => m.IssueId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            //konfiguracja chat
+            modelBuilder.Entity<ChatEntity>()
+            .HasMany(c => c.Messages)
+            .WithOne(m => m.Chat)
+            .HasForeignKey(m => m.ChatId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ChatEntity>()
+                .HasMany(c => c.ChatUsers)
+                .WithOne(cu => cu.Chat)
+                .HasForeignKey(cu => cu.ChatId)
+                .OnDelete(DeleteBehavior.Cascade);
+            //konfiguracja chatusers
+            modelBuilder.Entity<ChatUsersEntity>()
+            .HasOne(cu => cu.User)
+            .WithMany()
+            .HasForeignKey(cu => cu.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
             // konfiguracja notification
             modelBuilder.Entity<NotificationEntity>()

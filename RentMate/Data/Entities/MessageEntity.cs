@@ -18,9 +18,11 @@ namespace Data.Entities
         public string Content { get; set; }
         public bool IsRead { get; set; }
         public DateTime CreatedAt { get; set; }
+        public int? ChatId { get; set; }
 
         public UserEntity Sender { get; set; }
         public UserEntity Receiver { get; set; }
         public IssueEntity Issue { get; set; }
+        public ChatEntity Chat { get; set; }
     }
 }
