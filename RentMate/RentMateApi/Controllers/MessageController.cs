@@ -37,7 +37,8 @@ namespace RentMateApi.Controllers
         }
 
         [HttpPost("send")]
-        public async Task<IActionResult> SendMessage([FromBody] CreateMessageDto createMessageDto)
+        //public async Task<IActionResult> SendMessage([FromBody] CreateMessageDto createMessageDto)
+        public async Task<IActionResult> SendMessage([FromBody] ChatCreateMessageDto createMessageDto)
         {
             try
             {
@@ -70,6 +71,12 @@ namespace RentMateApi.Controllers
             {
                 return BadRequest(ex.Message);
             }
+        }
+        [HttpGet("messageById/{messageId}")]
+        public async Task<IActionResult> GetMessageById([FromQuery]int messageId)
+        {
+            var message = _messageService.GetMessageById(messageId);
+            return Ok(message);
         }
     }
 } 

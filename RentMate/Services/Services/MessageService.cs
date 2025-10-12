@@ -23,15 +23,17 @@ namespace Services.Services
             return _mapper.Map<IEnumerable<MessageDto>>(messages);
         }
 
-        public async Task<MessageDto> SendMessage(int senderId, CreateMessageDto createMessageDto)
+        //public async Task<MessageDto> SendMessage(int senderId, CreateMessageDto createMessageDto)
+        public async Task<MessageDto> SendMessage(int senderId, ChatCreateMessageDto createMessageDto)
         {
             var message = new MessageEntity
             {
                 SenderId = senderId,
-                ReceiverId = createMessageDto.ReceiverId,
+                //ReceiverId = createMessageDto.ReceiverId,
                 Content = createMessageDto.Content,
+                IsRead = false,
                 CreatedAt = DateTime.UtcNow,
-                IsRead = false
+                ChatId = createMessageDto.ChatId,
             };
 
             var savedMessage = await _messageRepository.AddMessage(message);
@@ -43,6 +45,11 @@ namespace Services.Services
         {
             var messages = await _messageRepository.GetUserMessages(userId);
             return _mapper.Map<IEnumerable<MessageDto>>(messages);
+        }
+        public async Task<string> GetMessageById(int messageId)
+        {
+            var message = await _messageRepository.GetMessageById(messageId);
+            return message.Content;
         }
     }
 } 

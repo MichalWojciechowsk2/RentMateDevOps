@@ -34,6 +34,20 @@ namespace RentMateApi.Controllers
             var chats = await _chatService.GetAllPrivateChatsForUser(activeUserId);
             return Ok(chats);
         }
+        [HttpGet("activeUserChatsFirstMessage")]
+        public async Task<IActionResult> SendFirstPrivateMessage(int chatIdToOpen)
+        
+        {
+            var activeUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (activeUserIdClaim == null || !int.TryParse(activeUserIdClaim.Value, out int activeUserId))
+            {
+
+                return Unauthorized(new { message = "User not authenticated or invalid user ID." });
+            }
+
+            var chats = await _chatService.GetAllPrivateChatsForUser(activeUserId, chatIdToOpen);
+            return Ok(chats);
+        }
         [HttpPost("privateChat")]
         public async Task<IActionResult> CreatePrivateChat([FromQuery]int otherUserId)
         {
@@ -42,9 +56,9 @@ namespace RentMateApi.Controllers
             {
                 return Unauthorized(new { message = "User not authenticated or invalid user ID." });
             }
+            if (activeUserId == otherUserId) return BadRequest();
             var chat = await _chatService.CreateChat(activeUserId, otherUserId);
             return Ok(chat);
         }
-        
     }
 }

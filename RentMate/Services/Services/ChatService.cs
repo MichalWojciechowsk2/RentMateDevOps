@@ -18,9 +18,16 @@ namespace Services.Services
             _chatRepository = chatRepository;
         }
 
-        public async Task<IEnumerable<UserPrivateChats>> GetAllPrivateChatsForUser(int userId)
+        public async Task<IEnumerable<UserPrivateChats>> GetAllPrivateChatsForUser(int userId, int? chatIdToOpen = null)
         {
             var chats = await _chatRepository.GetUserAllPrivateChats(userId);
+            if (chatIdToOpen == null)
+            {
+                foreach (var chat in chats)
+                {
+                    if (chat.LastMessageId == 0) await _chatRepository.DeleteChat(chat.Id);
+                }
+            }
 
             var result = chats.Select(chat =>
             {
@@ -31,8 +38,8 @@ namespace Services.Services
                 {
                     ChatId = chat.Id,
                     ChatName = chat.Name,
-                    LastMessageContent = lastMessage?.Content ?? "",
-                    LastMessageCreatedAt = lastMessage.CreatedAt,
+                    LastMessageContent = lastMessage?.Content,
+                    LastMessageCreatedAt = lastMessage?.CreatedAt,
                     OtherUserPhotoUrl = otherUser.PhotoUrl,
                 };
             }).ToList();
@@ -40,11 +47,12 @@ namespace Services.Services
         }
         public async Task<ChatEntity> CreateChat(int firstUserId, int secondUserId)
         {
-            var existingChat = await _chatRepository.GetUserAllPrivateChats(firstUserId);
+            var existingChat = await _chatRepository.
+                GetUserAllPrivateChats(firstUserId) ?? Enumerable.Empty<ChatEntity>();
+
             var chat = existingChat.FirstOrDefault(c =>
-            !c.IsGroup &&
-            c.ChatUsers != null &&
-            c.ChatUsers.Any(u => u.UserId == secondUserId));
+                !c.IsGroup &&
+                (c.ChatUsers?.Any(u => u.UserId == secondUserId) ?? false));
 
             if (chat != null)
             {
@@ -55,7 +63,7 @@ namespace Services.Services
     }
     public interface IChatService
     {
-        Task<IEnumerable<UserPrivateChats>> GetAllPrivateChatsForUser(int userId);
+        Task<IEnumerable<UserPrivateChats>> GetAllPrivateChatsForUser(int userId, int? sendToUserId = null);
         Task<ChatEntity> CreateChat(int firstUserId, int secondUserId);
     }
     
