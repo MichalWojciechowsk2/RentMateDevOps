@@ -56,11 +56,30 @@ namespace Infrastructure.Repositories
             chat.ChatUsers = chatUsers;
             return chat;
         }
+        public async Task<bool> DeleteChat(int chatId)
+        {
+            try
+            {
+                var chat = await _context.Chats.AsNoTracking().FirstOrDefaultAsync(c => c.Id == chatId);
+                if (chat != null)
+                {
+                    _context.Chats.Remove(chat);
+                    await _context.SaveChangesAsync();
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
     }
     public interface IChatRepository
     {
         Task<IEnumerable<ChatEntity>> GetUserAllPrivateChats(int userId);
         Task<IEnumerable<ChatEntity>> GetAllChats();
         Task<ChatEntity> CreateChat(int firstUserId, int secondUserId);
+        Task<bool> DeleteChat(int chatId);
     }
 }

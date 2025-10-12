@@ -11,8 +11,8 @@ namespace ApplicationCore.Dto.Message
     {
         public int ChatId { get; set; }
         public string ChatName { get; set; }
-        public string LastMessageContent { get; set; }
-        public DateTime LastMessageCreatedAt { get; set; }
+        public string? LastMessageContent { get; set; }
+        public DateTime? LastMessageCreatedAt { get; set; }
         public string OtherUserPhotoUrl { get; set; }
     }
 }
