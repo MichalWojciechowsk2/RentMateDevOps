@@ -11,7 +11,8 @@ namespace Data.Entities
     {
         public int Id { get; set; }
         public int SenderId { get; set; }
-        public int ReceiverId { get; set; }
+        //Pomyśleć czy tego nie usunąć skoro tworzymy chaty
+        //public int? ReceiverId { get; set; }
         public int? IssueId { get; set; }
         [Required]
         [StringLength(4000)]
@@ -21,7 +22,7 @@ namespace Data.Entities
         public int? ChatId { get; set; }
 
         public UserEntity Sender { get; set; }
-        public UserEntity Receiver { get; set; }
+        //public UserEntity Receiver { get; set; }
         public IssueEntity Issue { get; set; }
         public ChatEntity Chat { get; set; }
     }

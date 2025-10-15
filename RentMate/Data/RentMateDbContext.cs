@@ -113,11 +113,11 @@ namespace Data
                 .HasForeignKey(m => m.SenderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<MessageEntity>()
-                .HasOne(m => m.Receiver)
-                .WithMany()
-                .HasForeignKey(m => m.ReceiverId)
-                .OnDelete(DeleteBehavior.Restrict);
+            //modelBuilder.Entity<MessageEntity>()
+            //    .HasOne(m => m.Receiver)
+            //    .WithMany()
+            //    .HasForeignKey(m => m.ReceiverId)
+            //    .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<MessageEntity>()
                 .HasOne(m => m.Issue)
