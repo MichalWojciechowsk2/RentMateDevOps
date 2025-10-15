@@ -74,6 +74,14 @@ namespace Infrastructure.Repositories
                 return false;
             }
         }
+        public async Task<IEnumerable<UserEntity>> GetChatUsers(int chatId)
+        {
+            return await _context.ChatUsers
+                .Where(cu => cu.ChatId == chatId)
+                .Include(cu => cu.User)
+                .Select(cu => cu.User)
+                .ToListAsync();
+        }
     }
     public interface IChatRepository
     {
@@ -81,5 +89,6 @@ namespace Infrastructure.Repositories
         Task<IEnumerable<ChatEntity>> GetAllChats();
         Task<ChatEntity> CreateChat(int firstUserId, int secondUserId);
         Task<bool> DeleteChat(int chatId);
+        Task<IEnumerable<UserEntity>> GetChatUsers(int chatId);
     }
 }

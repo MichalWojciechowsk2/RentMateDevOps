@@ -13,23 +13,29 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<MessageEntity>> GetConversation(int userId, int otherUserId)
+        //public async Task<IEnumerable<MessageEntity>> GetConversation(int userId, int otherUserId)
+        //{
+        //    return await _context.Messages
+        //        .Where(m => (m.SenderId == userId && m.ReceiverId == otherUserId) ||
+        //                   (m.SenderId == otherUserId && m.ReceiverId == userId))
+        //        .Include(m => m.Sender)
+        //        .Include(m => m.Receiver)
+        //        .OrderBy(m => m.CreatedAt)
+        //        .ToListAsync();
+        //}
+        public async Task<IEnumerable<MessageEntity>> GetConversationByChatId(int chatId)
         {
-            return await _context.Messages
-                .Where(m => (m.SenderId == userId && m.ReceiverId == otherUserId) ||
-                           (m.SenderId == otherUserId && m.ReceiverId == userId))
-                .Include(m => m.Sender)
-                .Include(m => m.Receiver)
-                .OrderBy(m => m.CreatedAt)
+            return await _context.Messages.Where(m=> (m.ChatId == chatId))
+                .OrderBy(m=> m.CreatedAt)
                 .ToListAsync();
         }
 
         public async Task<IEnumerable<MessageEntity>> GetUserMessages(int userId)
         {
             return await _context.Messages
-                .Where(m => m.SenderId == userId || m.ReceiverId == userId)
+                .Where(m => m.SenderId == userId)/* || m.ReceiverId == userId)*/
                 .Include(m => m.Sender)
-                .Include(m => m.Receiver)
+                //.Include(m => m.Receiver)
                 .OrderByDescending(m => m.CreatedAt)
                 .ToListAsync();
         }
@@ -45,7 +51,7 @@ namespace Infrastructure.Repositories
         {
             return await _context.Messages
                 .Include(m => m.Sender)
-                .Include(m => m.Receiver)
+                //.Include(m => m.Receiver)
                 .FirstOrDefaultAsync(m => m.Id == id);
         }
     }

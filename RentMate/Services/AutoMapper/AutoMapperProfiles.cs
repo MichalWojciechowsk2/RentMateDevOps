@@ -30,8 +30,8 @@ namespace Services.AutoMapper
 
             //Message
             CreateMap<MessageEntity, MessageDto>()
-                .ForMember(dest => dest.SenderUsername, opt => opt.MapFrom(src => $"{src.Sender.FirstName} {src.Sender.LastName}"))
-                .ForMember(dest => dest.ReceiverUsername, opt => opt.MapFrom(src => $"{src.Receiver.FirstName} {src.Receiver.LastName}"));
+                .ForMember(dest => dest.SenderUsername, opt => opt.MapFrom(src => $"{src.Sender.FirstName} {src.Sender.LastName}"));
+                //.ForMember(dest => dest.ReceiverUsername, opt => opt.MapFrom(src => $"{src.Receiver.FirstName} {src.Receiver.LastName}"));
 
             //Users
             CreateMap<UserDto, UserEntity>();
@@ -54,6 +54,12 @@ namespace Services.AutoMapper
 
             CreateMap<RecurringPaymentEntity, RecurringPaymentDto>()
             .ForMember(dest => dest.Payment, opt => opt.MapFrom(src => src.Payment));
+
+            //Chat
+            CreateMap<MessageEntity, MessageDto>()
+            .ForMember(dest => dest.SenderId, opt => opt.MapFrom(src => src.SenderId));
+
+            CreateMap<UserEntity, UserDto>();
         }
     }
 }

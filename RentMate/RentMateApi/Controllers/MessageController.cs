@@ -1,7 +1,7 @@
 using ApplicationCore.Dto.Message;
-using ApplicationCore.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Services.Services;
 using System.Security.Claims;
 
 namespace RentMateApi.Controllers
@@ -18,8 +18,27 @@ namespace RentMateApi.Controllers
             _messageService = messageService;
         }
 
-        [HttpGet("conversation")]
-        public async Task<IActionResult> GetConversation([FromQuery] int otherUserId)
+
+        //rozwa¿yæ czy bêdzie do usuniêcia skoro korzystamy z chatów
+        //[HttpGet("conversation")]
+        //public async Task<IActionResult> GetConversation([FromQuery] int otherUserId)
+        //{
+        //    try
+        //    {
+        //        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        //        if (userId == 0)
+        //            return Unauthorized();
+
+        //        var messages = await _messageService.GetConversation(userId, otherUserId);
+        //        return Ok(messages);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ex.Message);
+        //    }
+        //}
+        [HttpGet("chat")]
+        public async Task<IActionResult> GetChatWithMessages([FromQuery] int chatId)
         {
             try
             {
@@ -27,7 +46,7 @@ namespace RentMateApi.Controllers
                 if (userId == 0)
                     return Unauthorized();
 
-                var messages = await _messageService.GetConversation(userId, otherUserId);
+                var messages = await _messageService.GetChatWithContent(chatId);
                 return Ok(messages);
             }
             catch (Exception ex)

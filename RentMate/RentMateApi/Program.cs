@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using static Services.Services.PropertyService;
-using ApplicationCore.Interfaces;
+//using ApplicationCore.Interfaces;
 using Microsoft.Extensions.FileProviders;
 using QuestPDF.Infrastructure;
 using Hangfire;
