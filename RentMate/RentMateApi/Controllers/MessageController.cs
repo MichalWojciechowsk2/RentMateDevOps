@@ -12,10 +12,12 @@ namespace RentMateApi.Controllers
     public class MessageController : ControllerBase
     {
         private readonly IMessageService _messageService;
+        private readonly IChatService _chatService;
 
-        public MessageController(IMessageService messageService)
+        public MessageController(IMessageService messageService, IChatService chatService)
         {
             _messageService = messageService;
+            _chatService = chatService;
         }
 
 
@@ -66,6 +68,7 @@ namespace RentMateApi.Controllers
                     return Unauthorized();
 
                 var message = await _messageService.SendMessage(senderId, createMessageDto);
+                await _chatService.SetLastMessageId(message.Id, createMessageDto.ChatId);
                 return Ok(message);
             }
             catch (Exception ex)

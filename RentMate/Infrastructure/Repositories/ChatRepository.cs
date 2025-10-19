@@ -1,6 +1,7 @@
 ﻿using Data;
 using Data.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.SqlServer.Query.Internal;
 using Microsoft.Identity.Client;
 using System;
 using System.Collections.Generic;
@@ -82,6 +83,16 @@ namespace Infrastructure.Repositories
                 .Select(cu => cu.User)
                 .ToListAsync();
         }
+
+        public async Task<ChatEntity> GetChatById(int chatId)
+        {
+            return await _context.Chats.Where(c => c.Id == chatId).FirstOrDefaultAsync();
+        }
+        public async Task UpdateAsync(ChatEntity entity)
+        {
+            _context.Chats.Update(entity);
+            await _context.SaveChangesAsync();
+        }
     }
     public interface IChatRepository
     {
@@ -90,5 +101,7 @@ namespace Infrastructure.Repositories
         Task<ChatEntity> CreateChat(int firstUserId, int secondUserId);
         Task<bool> DeleteChat(int chatId);
         Task<IEnumerable<UserEntity>> GetChatUsers(int chatId);
+        Task<ChatEntity> GetChatById(int chatId);
+        Task UpdateAsync(ChatEntity entity);
     }
 }

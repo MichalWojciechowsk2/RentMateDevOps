@@ -41,6 +41,7 @@ namespace Services.Services
                     LastMessageContent = lastMessage?.Content,
                     LastMessageCreatedAt = lastMessage?.CreatedAt,
                     OtherUserPhotoUrl = otherUser.PhotoUrl,
+                    OtherUserName = otherUser.FirstName + " " + otherUser.LastName,
                 };
             }).ToList();
             return result;
@@ -60,11 +61,20 @@ namespace Services.Services
             }
             return await _chatRepository.CreateChat(firstUserId, secondUserId);
         }
+        public async Task<bool> SetLastMessageId(int messageId, int chatId)
+        {
+            var chat = await _chatRepository.GetChatById(chatId);
+            if (chat == null) throw new KeyNotFoundException($"Chat z id: {chatId} nie został znaleziony");
+            chat.LastMessageId = messageId;
+            await _chatRepository.UpdateAsync(chat);
+            return true;
+        }
     }
     public interface IChatService
     {
         Task<IEnumerable<UserPrivateChats>> GetAllPrivateChatsForUser(int userId, int? sendToUserId = null);
         Task<ChatEntity> CreateChat(int firstUserId, int secondUserId);
+        Task <bool> SetLastMessageId(int messageId, int chatId);
     }
     
 }
