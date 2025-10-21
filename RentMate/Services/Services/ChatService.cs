@@ -69,12 +69,25 @@ namespace Services.Services
             await _chatRepository.UpdateAsync(chat);
             return true;
         }
+        public async Task<int?> CheckIfPrivateChatExists(int firstUserId, int secondUserId)
+        {
+            var chats = await _chatRepository.GetAllChats();
+
+            var existingChat = chats
+                .Where(c => !c.IsGroup)
+                .FirstOrDefault(c =>
+            c.ChatUsers.Any(u => u.UserId == firstUserId) &&
+            c.ChatUsers.Any(u => u.UserId == secondUserId));
+
+            return existingChat?.Id;
+        }
     }
     public interface IChatService
     {
         Task<IEnumerable<UserPrivateChats>> GetAllPrivateChatsForUser(int userId, int? sendToUserId = null);
         Task<ChatEntity> CreateChat(int firstUserId, int secondUserId);
         Task <bool> SetLastMessageId(int messageId, int chatId);
+        Task<int?> CheckIfPrivateChatExist(int firstUserId, int secondUserId);
     }
     
 }
