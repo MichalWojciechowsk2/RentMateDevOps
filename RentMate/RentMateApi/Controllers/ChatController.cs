@@ -57,8 +57,18 @@ namespace RentMateApi.Controllers
                 return Unauthorized(new { message = "User not authenticated or invalid user ID." });
             }
             if (activeUserId == otherUserId) return BadRequest();
-            var chat = await _chatService.CreateChat(activeUserId, otherUserId);
-            return Ok(chat);
+            var existingChat = _chatService.CheckIfPrivateChatExist(activeUserId, otherUserId);
+            if (existingChat == null)
+            {
+                var chat = await _chatService.CreateChat(activeUserId, otherUserId);
+                return Ok(chat);
+            }
+            else return Ok(existingChat);
+        }
+        [HttpPost("groupChat")]
+        public async Task<IActionResult> CreateGroupChatForProperty()
+        {
+            await _chatService.CreateChat
         }
     }
 }
