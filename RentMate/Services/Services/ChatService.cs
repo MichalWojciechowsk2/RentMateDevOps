@@ -59,7 +59,19 @@ namespace Services.Services
             {
                 return chat;
             }
-            return await _chatRepository.CreateChat(firstUserId, secondUserId);
+            return await _chatRepository.CreatePrivateChat(firstUserId, secondUserId);
+        }
+        public async Task<ChatEntity> CreateChatForProperty(int propertyOwnerId)
+        {
+            return await _chatRepository.CreatePropertyChat(propertyOwnerId);
+        }
+        public async Task<ChatUsersEntity> AddUserToChat(int chatId, int userId)
+        {
+            return await _chatRepository.AddUserToChat(chatId, userId);
+        }
+        public async Task<bool> DeleteUserFromChat(int chatId, int userId)
+        {
+            return await _chatRepository.DeleteUserFromChat(chatId, userId);
         }
         // TODO: Dodać chat który tworzyć się będzie podczas tworzenia mieszkania tj. Mieszkanie -> Chat z jedną osobą (właścicielem mieszkania) -> podczas tworzenia oferty automatycznie do chatu dodawany jest user -> podczas zmiany statusu oferty na expired 
         // usuwa się user z chatu. Zamieścić w widoku: dla najemcy i wynajmującego ale nie tym chat. To będzie taka dynamiczna grupa gdzie zmieniać się będzie w zależności od najemców.
@@ -103,8 +115,11 @@ namespace Services.Services
     {
         Task<IEnumerable<UserPrivateChats>> GetAllPrivateChatsForUser(int userId, int? sendToUserId = null);
         Task<ChatEntity> CreateChat(int firstUserId, int secondUserId);
+        Task<ChatEntity> CreateChatForProperty(int propertyOwnerId);
+        Task<ChatUsersEntity> AddUserToChat(int chatId, int userId);
+        Task<bool> DeleteUserFromChat(int chatId, int userId);
         Task <bool> SetLastMessageId(int messageId, int chatId);
-        Task<int?> CheckIfPrivateChatExist(int firstUserId, int secondUserId);
+        Task<int?> CheckIfPrivateChatExists(int firstUserId, int secondUserId);
     }
     
 }

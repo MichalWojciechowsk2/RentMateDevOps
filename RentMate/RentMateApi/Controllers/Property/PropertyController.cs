@@ -7,6 +7,7 @@ using static Services.Services.PropertyService;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using System.Linq.Expressions;
+using Data.Entities;
 
 namespace RentMateApi.Controllers.Property
 {
@@ -15,9 +16,11 @@ namespace RentMateApi.Controllers.Property
     public class PropertyController : ControllerBase
     {
         private readonly IPropertyService _propertyService;
-        public PropertyController(IPropertyService propertyService)
+        private readonly IChatService _chatService;
+        public PropertyController(IPropertyService propertyService, IChatService chatService)
         {
             _propertyService = propertyService;
+            _chatService = chatService; 
         }
 
         [HttpPost]
@@ -34,7 +37,8 @@ namespace RentMateApi.Controllers.Property
 
             try
             {
-                var result = await _propertyService.CreateProperty(createPropertyDto, ownerId);
+                var chat = await _chatService.CreateChatForProperty(ownerId);
+                var result = await _propertyService.CreateProperty(createPropertyDto, ownerId, chat.Id);
                 return CreatedAtAction(nameof(GetPropertyDetails), new { id = result.Id }, result);
             }
             catch (Exception ex)
