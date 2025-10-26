@@ -19,6 +19,7 @@ namespace RentMateApi.Controllers
         private readonly IPropertyService _propertyService;
         private readonly IUserService _userService;
         private readonly INotificationService _notificationService;
+        private readonly IChatService _chatService;
         private readonly IHubContext<NotificationHub> _hubContext;
         public OfferController(IOfferService offerService,
             IPropertyService propertyService,
@@ -133,6 +134,10 @@ namespace RentMateApi.Controllers
             {
                 var updatedOffer = await _offerService.UpdateOfferStatus(offerId, status);
                 var propertyOwnerId = await _offerService.GetOwnerByOfferPropertyId(updatedOffer.PropertyId);
+                if(status == OfferStatus.Accepted) await _chatService.AddUserToChat(updatedOffer.Id, tenantId);
+                if (status == OfferStatus.Cancelled || status == OfferStatus.Completed) 
+                        await _chatService.DeleteUserFromChat(updatedOffer.Id, tenantId);
+
                 var sender = await _userService.GetUserById(tenantId);
                 var senderNamameSurname = sender.FirstName + " " + sender.LastName;
                 NotificationType type;
@@ -164,6 +169,12 @@ namespace RentMateApi.Controllers
                 return StatusCode(500, "Wystąpił błąd podczas aktualizacji statusu.");
             }
         }
-
+        [HttpGet]
+        [Route("getAcceptedUserOffer")]
+        public async Task<IActionResult> getAcceptedUserOffer(int userId)
+        {
+            var offer = await _offerService.GetAcceptedOfferByUserId(userId);
+            return Ok(offer);
+        }
     }
 }

@@ -42,6 +42,7 @@ namespace Data.Entities
         [Column(TypeName = "decimal(18,2)")]
         public decimal BaseDeposit { get; set; } //kaucja
         public bool IsActive { get; set; }
+        public int ChatGroupId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 

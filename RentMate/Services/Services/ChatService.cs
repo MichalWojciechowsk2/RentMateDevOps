@@ -59,7 +59,19 @@ namespace Services.Services
             {
                 return chat;
             }
-            return await _chatRepository.CreateChat(firstUserId, secondUserId);
+            return await _chatRepository.CreatePrivateChat(firstUserId, secondUserId);
+        }
+        public async Task<ChatEntity> CreateChatForProperty(int propertyOwnerId)
+        {
+            return await _chatRepository.CreatePropertyChat(propertyOwnerId);
+        }
+        public async Task<ChatUsersEntity> AddUserToChat(int chatId, int userId)
+        {
+            return await _chatRepository.AddUserToChat(chatId, userId);
+        }
+        public async Task<bool> DeleteUserFromChat(int chatId, int userId)
+        {
+            return await _chatRepository.DeleteUserFromChat(chatId, userId);
         }
         public async Task<bool> SetLastMessageId(int messageId, int chatId)
         {
@@ -86,8 +98,11 @@ namespace Services.Services
     {
         Task<IEnumerable<UserPrivateChats>> GetAllPrivateChatsForUser(int userId, int? sendToUserId = null);
         Task<ChatEntity> CreateChat(int firstUserId, int secondUserId);
+        Task<ChatEntity> CreateChatForProperty(int propertyOwnerId);
+        Task<ChatUsersEntity> AddUserToChat(int chatId, int userId);
+        Task<bool> DeleteUserFromChat(int chatId, int userId);
         Task <bool> SetLastMessageId(int messageId, int chatId);
-        Task<int?> CheckIfPrivateChatExist(int firstUserId, int secondUserId);
+        Task<int?> CheckIfPrivateChatExists(int firstUserId, int secondUserId);
     }
     
 }

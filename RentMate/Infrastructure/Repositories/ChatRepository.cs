@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -33,7 +34,7 @@ namespace Infrastructure.Repositories
         {
             return await _context.Chats.ToListAsync();
         }
-        public async Task<ChatEntity> CreateChat(int firstUserId, int secondUserId)
+        public async Task<ChatEntity> CreatePrivateChat(int firstUserId, int secondUserId)
         {
             var chat = new ChatEntity
             {
@@ -56,6 +57,44 @@ namespace Infrastructure.Repositories
 
             chat.ChatUsers = chatUsers;
             return chat;
+        }
+        public async Task<ChatUsersEntity> AddUserToChat(int chatId, int userId)
+        {
+            var chatUser = new ChatUsersEntity { ChatId = chatId, UserId = userId };
+            _context.ChatUsers.Add(chatUser);
+            await _context.SaveChangesAsync();
+            return chatUser;
+        }
+        public async Task<bool> DeleteUserFromChat(int chatId, int userId)
+        {
+            var chatUser = await _context.ChatUsers
+                .FirstOrDefaultAsync(cu => cu.ChatId == chatId && cu.UserId == userId);
+
+            if (chatUser == null)
+                return false;
+
+            _context.ChatUsers.Remove(chatUser);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<ChatEntity> CreatePropertyChat(int propertyOwnerId)
+        {
+            var chat = new ChatEntity
+            {
+                Name = "Czat mieszkania",
+                IsGroup = true,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Chats.Add(chat);
+            await _context.SaveChangesAsync();
+            var chatUser = new ChatUsersEntity { ChatId = chat.Id, UserId = propertyOwnerId };
+
+            _context.ChatUsers.Add(chatUser);
+            await _context.SaveChangesAsync();
+            return chat;
+
         }
         public async Task<bool> DeleteChat(int chatId)
         {
@@ -98,7 +137,10 @@ namespace Infrastructure.Repositories
     {
         Task<IEnumerable<ChatEntity>> GetUserAllPrivateChats(int userId);
         Task<IEnumerable<ChatEntity>> GetAllChats();
-        Task<ChatEntity> CreateChat(int firstUserId, int secondUserId);
+        Task<ChatEntity> CreatePrivateChat(int firstUserId, int secondUserId);
+        Task<ChatUsersEntity> AddUserToChat(int chatId, int userId);
+        Task<bool> DeleteUserFromChat(int chatId, int userId);
+        Task<ChatEntity> CreatePropertyChat(int propertyId);
         Task<bool> DeleteChat(int chatId);
         Task<IEnumerable<UserEntity>> GetChatUsers(int chatId);
         Task<ChatEntity> GetChatById(int chatId);

@@ -18,12 +18,13 @@ namespace Services.Services
             _propertyRepository = propertyRepository;
             _mapper = mapper;
         }
-        public async Task<PropertyDto> CreateProperty(PropertyDto propertyDto, int ownerId)
+        public async Task<PropertyDto> CreateProperty(PropertyDto propertyDto, int ownerId, int chatId)
         {
             var dtoToEntity = _mapper.Map<PropertyEntity>(propertyDto);
             dtoToEntity.OwnerId = ownerId; // Assign the correct OwnerId
             dtoToEntity.CreatedAt = DateTime.UtcNow;
             dtoToEntity.IsActive = true;
+            dtoToEntity.ChatGroupId = chatId;
             var createdEntity = await _propertyRepository.CreateProperty(dtoToEntity);
             return _mapper.Map<PropertyDto>(createdEntity);
         }
@@ -212,7 +213,7 @@ namespace Services.Services
 
         public interface IPropertyService
         {
-            Task<PropertyDto> CreateProperty(PropertyDto dto, int ownerId);
+            Task<PropertyDto> CreateProperty(PropertyDto dto, int ownerId, int chatId);
             Task<PagedResult<PropertyDto>> GetPagedAllActiveProperties(int pageNumber, int pageSize);
             Task<IEnumerable<PropertyDto>> SearchProperties(PropertyFilterDto filters);
             Task<IEnumerable<PropertyDto>> GetPropertiesByOwnerId(int ownerId);
