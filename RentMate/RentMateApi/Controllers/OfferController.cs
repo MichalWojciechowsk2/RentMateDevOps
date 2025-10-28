@@ -24,12 +24,13 @@ namespace RentMateApi.Controllers
         public OfferController(IOfferService offerService,
             IPropertyService propertyService,
             IUserService userService,
-            INotificationService notificationService, IHubContext<NotificationHub> hubContext)
+            INotificationService notificationService, IChatService chatService, IHubContext<NotificationHub> hubContext)
         {
             _offerService = offerService;
             _propertyService = propertyService;
             _userService = userService;
             _notificationService = notificationService;
+            _chatService = chatService;
             _hubContext = hubContext;
         }
         [HttpPost]
@@ -116,6 +117,7 @@ namespace RentMateApi.Controllers
         [HttpPatch("{offerId}/status")]
         public async Task<IActionResult> UpdateStatus(int offerId, [FromBody] OfferStatus status)
         {
+            Console.WriteLine($"✅ _chatService == null? {_chatService == null}");
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int tenantId))
             {
@@ -134,9 +136,14 @@ namespace RentMateApi.Controllers
             {
                 var updatedOffer = await _offerService.UpdateOfferStatus(offerId, status);
                 var propertyOwnerId = await _offerService.GetOwnerByOfferPropertyId(updatedOffer.PropertyId);
-                if(status == OfferStatus.Accepted) await _chatService.AddUserToChat(updatedOffer.Id, tenantId);
-                if (status == OfferStatus.Cancelled || status == OfferStatus.Completed) 
-                        await _chatService.DeleteUserFromChat(updatedOffer.Id, tenantId);
+                if (status == OfferStatus.Accepted)
+                {
+                    await _chatService.AddUserToChat(updatedOffer.Property.ChatGroupId, tenantId);
+                }
+                if (status == OfferStatus.Cancelled || status == OfferStatus.Completed)
+                {
+                        await _chatService.DeleteUserFromChat(updatedOffer.Property.ChatGroupId, tenantId);
+                }
 
                 var sender = await _userService.GetUserById(tenantId);
                 var senderNamameSurname = sender.FirstName + " " + sender.LastName;

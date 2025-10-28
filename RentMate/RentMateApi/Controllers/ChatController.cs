@@ -65,15 +65,10 @@ namespace RentMateApi.Controllers
             }
             else return Ok(existingChat);
         }
-        [HttpPost("groupChat")]
-        public async Task<IActionResult> CreateGroupChatForProperty()
-        {
-            await _chatService.CreateChat
-        }
-        [HttpPost("groupChat")]
-        public async Task<IActionResult> CreateGroupChatForProperty()
-        {
-            await _chatService.CreateChat
-        }
+        //[HttpPost("groupChat")]
+        //public async Task<IActionResult> CreateGroupChatForProperty()
+        //{
+        //    await _chatService.CreateChat;
+        //}
     }
 }

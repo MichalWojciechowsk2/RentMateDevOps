@@ -78,7 +78,7 @@ namespace Services.Services
         }
         public async Task<OfferEntity> UpdateOfferStatus(int offerId, OfferStatus newStatus)
         {
-            var offer = await _offerRepository.getById(offerId);
+            var offer = await _offerRepository.GetOfferWithPropertyById(offerId);
             if (offer == null) throw new KeyNotFoundException($"Oferta o ID {offerId} nie istnieje");
             offer.Status = newStatus;
             offer.AcceptedAt = DateTime.Now;
