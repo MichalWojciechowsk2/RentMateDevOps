@@ -58,6 +58,7 @@ namespace RentMateApi.Controllers
             }
             if (activeUserId == otherUserId) return BadRequest();
             var existingChat = _chatService.CheckIfPrivateChatExists(activeUserId, otherUserId);
+
             if (existingChat == null)
             {
                 var chat = await _chatService.CreateChat(activeUserId, otherUserId);
