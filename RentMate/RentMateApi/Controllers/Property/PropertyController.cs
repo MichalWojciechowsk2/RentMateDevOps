@@ -254,6 +254,34 @@ namespace RentMateApi.Controllers.Property
             return Ok(result);
         }
 
+        [HttpPatch("images/{imageId}/set-main")]
+        [Authorize]
+        public async Task<IActionResult> SetMainImage(int imageId)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    return Unauthorized(new { message = "User not authenticated or invalid user ID." });
+                }
+                await _propertyService.SetMainPropertyImageAsync(imageId, userId);
+                return Ok();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch
+            {
+                return StatusCode(500, "Wystąpił błąd podczas zmiany głównego zdjęcia.");
+            }
+        }
+
 
     }
 }

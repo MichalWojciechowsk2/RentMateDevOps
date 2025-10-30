@@ -95,6 +95,16 @@ namespace Infrastructure.Repositories
             return await _context.PropertyImages.Where(i => i.PropertyId == propertyId).ToListAsync();
         }
 
+        public async Task SetMainImageAsync(int propertyId, int imageId)
+        {
+            var images = await _context.PropertyImages.Where(i => i.PropertyId == propertyId).ToListAsync();
+            foreach (var img in images)
+            {
+                img.IsMainImage = img.Id == imageId;
+            }
+            await _context.SaveChangesAsync();
+        }
+
     }
     public interface IPropertyRepository
     {
@@ -109,6 +119,7 @@ namespace Infrastructure.Repositories
         Task<bool> DeletePropertyImage(int imageId);
         Task<PropertyImageEntity> GetMainPropertyImageByPropertyId(int propertyId);
         Task<IEnumerable<PropertyImageEntity>> GetPhotos(int propertyId);
+        Task SetMainImageAsync(int propertyId, int imageId);
     }
 }
 

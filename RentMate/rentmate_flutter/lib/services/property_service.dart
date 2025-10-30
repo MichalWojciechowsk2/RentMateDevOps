@@ -98,13 +98,26 @@ class PropertyService {
 
   Future<Property> updateProperty(Property property) async {
     try {
-      final response = await http.put(
-        Uri.parse('$_baseUrl/Property/${property.id}'),
+      final body = {
+        'title': property.title,
+        'description': property.description,
+        'address': property.address,
+        'area': double.tryParse(property.area.toString()) ?? 0,
+        'district': property.district,
+        'roomCount': property.roomCount,
+        'city': property.city,
+        'postalCode': property.postalCode,
+        'basePrice': property.basePrice,
+        'baseDeposit': property.baseDeposit,
+      };
+
+      final response = await http.patch(
+        Uri.parse('$_baseUrl/Property/${property.id}/updateProperty'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ${await _authService.getToken()}',
         },
-        body: json.encode(property.toJson()),
+        body: json.encode(body),
       );
 
       if (response.statusCode == 200) {
@@ -213,6 +226,23 @@ class PropertyService {
     }
   }
 
+  Future<void> setMainImage(int imageId) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$_baseUrl/Property/images/$imageId/set-main'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${await _authService.getToken()}',
+        },
+      );
+      if (response.statusCode != 200) {
+        throw Exception('Failed to set main image: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Failed to set main image: $e');
+    }
+  }
+
   Future<List<String>> getCities() async {
     final response = await http.get(
       Uri.parse('$_baseUrl/Property/cities'),
@@ -303,6 +333,26 @@ class PropertyService {
       }
     } catch (e) {
       throw Exception('Failed to load all properties: $e');
+    }
+  }
+
+  Future<bool> updatePropertyIsActive(int propertyId, bool newIsActive) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$_baseUrl/Property/$propertyId/isActive'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${await _authService.getToken()}',
+        },
+        body: json.encode(newIsActive),
+      );
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        throw Exception('Failed to update isActive: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Failed to update isActive: $e');
     }
   }
 } 

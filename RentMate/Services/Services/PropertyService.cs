@@ -144,6 +144,10 @@ namespace Services.Services
                 Directory.CreateDirectory(uploadsPath);
             }
 
+            // Determine if property already has a main image
+            var existingImages = (await _propertyRepository.GetPhotos(propertyId)).ToList();
+            var hasMainAlready = existingImages.Any(i => i.IsMainImage);
+
             foreach (var image in images)
             {
                 if (image.Length > 0)
@@ -171,7 +175,8 @@ namespace Services.Services
                     {
                         PropertyId = propertyId,
                         ImageUrl = $"/uploads/images/{fileName}",
-                        IsMainImage = uploadedImages.Count == 0,
+                        // Only set main when none exists at all
+                        IsMainImage = !hasMainAlready && uploadedImages.Count == 0,
                         CreatedAt = DateTime.UtcNow
                     };
 
@@ -213,6 +218,17 @@ namespace Services.Services
             return await _propertyRepository.GetPhotos(propertyId);
         }
 
+        public async Task SetMainPropertyImageAsync(int imageId, int userId)
+        {
+            var image = await _propertyRepository.GetPropertyImageById(imageId);
+            if (image == null) throw new ArgumentException($"Image with id {imageId} not found");
+            var property = await _propertyRepository.GetPropertieById(image.PropertyId);
+            if (property == null) throw new ArgumentException("Property not found");
+            if (property.OwnerId != userId) throw new UnauthorizedAccessException("You don't have permission to update images for this property");
+
+            await _propertyRepository.SetMainImageAsync(image.PropertyId, imageId);
+        }
+
         public interface IPropertyService
         {
             Task<PropertyDto> CreateProperty(PropertyDto dto, int ownerId, int chatId);
@@ -228,6 +244,7 @@ namespace Services.Services
             Task DeletePropertyImage(int imageId, int userId);
             Task<PropertyImageEntity?> GetPropertyMainImageByPropertyId(int propertyId);
             Task<IEnumerable<PropertyImageEntity>> GetAllImages(int propertyId);
+            Task SetMainPropertyImageAsync(int imageId, int userId);
         }
     }
 }

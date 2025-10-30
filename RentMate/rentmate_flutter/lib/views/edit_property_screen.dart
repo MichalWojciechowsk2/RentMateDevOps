@@ -6,6 +6,7 @@ import 'dart:io';
 import '../models/property.dart';
 import '../models/property_image.dart';
 import '../services/property_service.dart';
+import 'package:flutter/material.dart';
 
 class EditPropertyScreen extends StatefulWidget {
   const EditPropertyScreen({super.key});
@@ -53,6 +54,49 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
     _roomCountController.text = _property.roomCount.toString();
     _areaController.text = _property.area;
     _currentImages = List.from(_property.images);
+  }
+
+  Future<void> _togglePublish() async {
+    setState(() => _isLoading = true);
+    try {
+      final updated = await _propertyService.updatePropertyIsActive(_property.id, !_property.isActive);
+      if (updated) {
+        setState(() {
+          _property = Property(
+            id: _property.id,
+            ownerId: _property.ownerId,
+            title: _property.title,
+            description: _property.description,
+            basePrice: _property.basePrice,
+            baseDeposit: _property.baseDeposit,
+            address: _property.address,
+            city: _property.city,
+            district: _property.district,
+            postalCode: _property.postalCode,
+            roomCount: _property.roomCount,
+            area: _property.area,
+            images: _property.images,
+            isActive: !_property.isActive,
+            createdAt: _property.createdAt,
+            updatedAt: DateTime.now(),
+            ownerUsername: _property.ownerUsername,
+          );
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(_property.isActive ? 'Property published' : 'Property unpublished')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update property: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _pickImage() async {
@@ -243,6 +287,13 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Property'),
+        actions: [
+          TextButton.icon(
+            onPressed: _isLoading ? null : _togglePublish,
+            icon: Icon(_property.isActive ? Icons.visibility_off : Icons.publish),
+            label: Text(_property.isActive ? 'Unpublish' : 'Publish'),
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -251,6 +302,26 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
+                Row(
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        // placeholder for rental contracts section
+                      },
+                      icon: const Icon(Icons.description),
+                      label: const Text('Umowy wynajmu'),
+                    ),
+                    const SizedBox(width: 12),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        // placeholder for bills section
+                      },
+                      icon: const Icon(Icons.receipt_long),
+                      label: const Text('Rachunki'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
                   TextFormField(
                     controller: _titleController,
                     decoration: const InputDecoration(
@@ -485,6 +556,46 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
                                       ),
                                     ),
                                   ),
+                                Positioned(
+                                  top: 0,
+                                  left: 0,
+                                  child: IconButton(
+                                    tooltip: image.isMainImage ? 'Main image' : 'Set as main',
+                                    icon: Icon(
+                                      image.isMainImage ? Icons.star : Icons.star_border,
+                                      color: image.isMainImage ? Colors.amber : Colors.white,
+                                    ),
+                                    onPressed: image.isMainImage
+                                        ? null
+                                        : () async {
+                                            try {
+                                              await _propertyService.setMainImage(image.id);
+                                              setState(() {
+                                                _currentImages = _currentImages
+                                                    .map((img) => PropertyImage(
+                                                          id: img.id,
+                                                          propertyId: img.propertyId,
+                                                          imageUrl: img.imageUrl,
+                                                          isMainImage: img.id == image.id,
+                                                          createdAt: img.createdAt,
+                                                        ))
+                                                    .toList();
+                                              });
+                                              if (mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(content: Text('Main image updated')),
+                                                );
+                                              }
+                                            } catch (e) {
+                                              if (mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text('Error: ${e.toString()}')),
+                                                );
+                                              }
+                                            }
+                                          },
+                                  ),
+                                ),
                                 Positioned(
                                   top: 0,
                                   right: 0,
