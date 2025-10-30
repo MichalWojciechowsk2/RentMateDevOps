@@ -32,7 +32,9 @@ namespace Services.Services
         public async Task<PagedResult<PropertyDto>> GetPagedAllActiveProperties(int pageNumber, int pageSize)
         {
             var query = _propertyRepository.GetPropertiesQueryable()
-        .Where(p => p.IsActive);
+        .Where(p => p.IsActive)
+        .Include(p => p.Owner)
+        .Include(p => p.PropertyImages);
 
             var totalItems = await query.CountAsync();
 

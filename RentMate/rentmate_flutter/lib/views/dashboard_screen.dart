@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import '../models/property.dart';
 import '../services/property_service.dart';
 import '../services/auth_service.dart';
@@ -19,6 +20,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<Property> _properties = [];
   bool _isLoading = false;
   User? _currentUser;
+  int _currentPage = 1;
+  int _totalPages = 1;
+  int _totalItems = 0;
 
   // Filtry
   List<String> _cities = [];
@@ -56,9 +60,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _loadProperties() async {
     setState(() => _isLoading = true);
     try {
-      final properties = await _propertyService.getAllProperties();
+      final result = await _propertyService.getAllProperties(
+        pageNumber: _currentPage,
+        pageSize: 10,
+      );
       setState(() {
-        _properties = properties;
+        _properties = result['properties'] as List<Property>;
+        _currentPage = result['pageNumber'] as int;
+        _totalPages = result['totalPages'] as int;
+        _totalItems = result['totalItems'] as int;
         _isLoading = false;
       });
     } catch (e) {
@@ -109,8 +119,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _minPriceController.clear();
       _maxPriceController.clear();
       _roomsController.clear();
+      _currentPage = 1;
     });
     _loadProperties();
+  }
+
+  void _goToPage(int page) {
+    setState(() {
+      _currentPage = page;
+    });
+    _loadProperties();
+  }
+
+  void _nextPage() {
+    if (_currentPage < _totalPages) {
+      _goToPage(_currentPage + 1);
+    }
+  }
+
+  void _previousPage() {
+    if (_currentPage > 1) {
+      _goToPage(_currentPage - 1);
+    }
   }
 
   @override
@@ -125,11 +155,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          _currentUser != null
-              ? 'Hello, ${_currentUser!.firstName}'
-              : 'My Properties',
-        ),
+        title: _currentUser != null
+            ? GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(context, '/profile');
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundImage: _currentUser!.photoUrl != null && _currentUser!.photoUrl!.isNotEmpty
+                          ? NetworkImage('https://localhost:7281${_currentUser!.photoUrl}')
+                          : null,
+                      child: _currentUser!.photoUrl == null || _currentUser!.photoUrl!.isEmpty
+                          ? const Icon(Icons.person)
+                          : null,
+                    ),
+                    const SizedBox(width: 12),
+                    Text('Hello, ${_currentUser!.firstName}'),
+                  ],
+                ),
+              )
+            : const Text('My Properties'),
         actions: [
           if (_currentUser?.role == 'Owner' || _currentUser?.role == 'Tenant')
             IconButton(
@@ -242,108 +290,154 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           style: TextStyle(fontSize: 16),
                         ),
                       )
-                    : RefreshIndicator(
-                        onRefresh: _loadProperties,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _properties.length,
-                          itemBuilder: (context, index) {
-                            final property = _properties[index];
-                            return Card(
-                              margin: const EdgeInsets.only(bottom: 16),
-                              child: InkWell(
-                                onTap: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    '/property-details',
-                                    arguments: property.id,
-                                  );
-                                },
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (property.mainImageUrl != null)
-                                      SizedBox(
-                                        height: 200,
-                                        width: double.infinity,
-                                        child: CachedNetworkImage(
-                                          imageUrl: 'https://localhost:7281${property.mainImageUrl}',
-                                          fit: BoxFit.cover,
-                                          placeholder: (context, url) => Container(
-                                            color: Colors.grey[300],
-                                            child: const Center(
-                                              child: CircularProgressIndicator(),
-                                            ),
-                                          ),
-                                          errorWidget: (context, url, error) => Container(
-                                            color: Colors.grey[300],
-                                            child: const Icon(
-                                              Icons.error,
-                                              color: Colors.grey,
-                                              size: 50,
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                    else
-                                      Container(
-                                        height: 200,
-                                        color: Colors.grey[300],
-                                        child: const Center(
-                                          child: Icon(
-                                            Icons.home,
-                                            size: 100,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(16),
+                    : Column(
+                        children: [
+                          Expanded(
+                            child: RefreshIndicator(
+                              onRefresh: _loadProperties,
+                              child: ListView.builder(
+                                padding: const EdgeInsets.all(16),
+                                itemCount: _properties.length,
+                                itemBuilder: (context, index) {
+                                  final property = _properties[index];
+                                  return Card(
+                                    margin: const EdgeInsets.only(bottom: 16),
+                                    child: InkWell(
+                                      onTap: () {
+                                        Navigator.pushNamed(
+                                          context,
+                                          '/property-details',
+                                          arguments: property.id,
+                                        );
+                                      },
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Text(
-                                            property.title,
-                                            style: Theme.of(context).textTheme.titleLarge,
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            '\$${property.basePrice.toStringAsFixed(2)} per month',
-                                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                                  color: Theme.of(context).primaryColor,
-                                                ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            '${property.address}, ${property.city}',
-                                            style: Theme.of(context).textTheme.bodyLarge,
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: _buildDetailItem(
-                                                  Icons.door_front_door,
-                                                  '${property.roomCount} Rooms',
+                                          if (property.mainImageUrl != null)
+                                            Builder(
+                                              builder: (context) {
+                                                final imageUrl = 'https://localhost:7281${property.mainImageUrl}';
+                                                print('Loading property image from: $imageUrl');
+                                                return SizedBox(
+                                                  height: 200,
+                                                  width: double.infinity,
+                                                  child: Image.network(
+                                                    imageUrl,
+                                                    fit: BoxFit.cover,
+                                                    loadingBuilder: (context, child, loadingProgress) {
+                                                      if (loadingProgress == null) return child;
+                                                      return Container(
+                                                        color: Colors.grey[300],
+                                                        child: const Center(
+                                                          child: CircularProgressIndicator(),
+                                                        ),
+                                                      );
+                                                    },
+                                                    errorBuilder: (context, error, stackTrace) {
+                                                      print('Error loading image: $error for URL: $imageUrl');
+                                                      return Container(
+                                                        color: Colors.grey[300],
+                                                        child: const Center(
+                                                          child: Icon(
+                                                            Icons.error,
+                                                            color: Colors.grey,
+                                                            size: 50,
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
+                                                );
+                                              },
+                                            )
+                                          else
+                                            Container(
+                                              height: 200,
+                                              color: Colors.grey[300],
+                                              child: const Center(
+                                                child: Icon(
+                                                  Icons.home,
+                                                  size: 100,
+                                                  color: Colors.grey,
                                                 ),
                                               ),
-                                              Expanded(
-                                                child: _buildDetailItem(
-                                                  Icons.square_foot,
-                                                  '${property.area} m²',
+                                            ),
+                                          Padding(
+                                            padding: const EdgeInsets.all(16),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  property.title,
+                                                  style: Theme.of(context).textTheme.titleLarge,
                                                 ),
-                                              ),
-                                            ],
+                                                const SizedBox(height: 8),
+                                                Text(
+                                                  '\$${property.basePrice.toStringAsFixed(2)} per month',
+                                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                                        color: Theme.of(context).primaryColor,
+                                                      ),
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Text(
+                                                  '${property.address}, ${property.city}',
+                                                  style: Theme.of(context).textTheme.bodyLarge,
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: _buildDetailItem(
+                                                        Icons.door_front_door,
+                                                        '${property.roomCount} Rooms',
+                                                      ),
+                                                    ),
+                                                    Expanded(
+                                                      child: _buildDetailItem(
+                                                        Icons.square_foot,
+                                                        '${property.area} m²',
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ],
-                                ),
+                                  );
+                                },
                               ),
-                            );
-                          },
-                        ),
+                            ),
+                          ),
+                          // Pagination controls
+                          if (_totalPages > 1)
+                            Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  ElevatedButton.icon(
+                                    onPressed: _currentPage > 1 ? _previousPage : null,
+                                    icon: const Icon(Icons.chevron_left),
+                                    label: const Text('Poprzednia'),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Text(
+                                    'Strona $_currentPage z $_totalPages',
+                                    style: Theme.of(context).textTheme.bodyLarge,
+                                  ),
+                                  const SizedBox(width: 16),
+                                  ElevatedButton.icon(
+                                    onPressed: _currentPage < _totalPages ? _nextPage : null,
+                                    icon: const Icon(Icons.chevron_right),
+                                    label: const Text('Następna'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
                       ),
           ),
         ],

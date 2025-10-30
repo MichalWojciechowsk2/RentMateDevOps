@@ -75,7 +75,7 @@ namespace Services.Services
         }
         // TODO: Dodać chat który tworzyć się będzie podczas tworzenia mieszkania tj. Mieszkanie -> Chat z jedną osobą (właścicielem mieszkania) -> podczas tworzenia oferty automatycznie do chatu dodawany jest user -> podczas zmiany statusu oferty na expired 
         // usuwa się user z chatu. Zamieścić w widoku: dla najemcy i wynajmującego ale nie tym chat. To będzie taka dynamiczna grupa gdzie zmieniać się będzie w zależności od najemców.
-        public async Task<ChatEntity> CreateChatBeforeProperty(int firstUserId,)
+        public async Task<ChatEntity> CreateChatBeforeProperty(int firstUserId, int secondUserId)
         {
             var existingChat = await _chatRepository.
                 GetUserAllPrivateChats(firstUserId) ?? Enumerable.Empty<ChatEntity>();
@@ -88,7 +88,7 @@ namespace Services.Services
             {
                 return chat;
             }
-            return await _chatRepository.CreateChat(firstUserId, secondUserId);
+            return await _chatRepository.CreatePrivateChat(firstUserId, secondUserId);
         }
         public async Task<bool> SetLastMessageId(int messageId, int chatId)
         {

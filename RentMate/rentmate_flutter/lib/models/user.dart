@@ -6,6 +6,8 @@ class User {
   final String phoneNumber;
   final String role;
   final String? profilePictureUrl;
+  final String? photoUrl;
+  final String? aboutMe;
 
   User({
     required this.id,
@@ -15,6 +17,8 @@ class User {
     required this.phoneNumber,
     required this.role,
     this.profilePictureUrl,
+    this.photoUrl,
+    this.aboutMe,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -26,6 +30,8 @@ class User {
       phoneNumber: json['phoneNumber'] as String,
       role: json['role'] as String,
       profilePictureUrl: json['profilePictureUrl'] as String?,
+      photoUrl: json['photoUrl'] as String?,
+      aboutMe: json['aboutMe'] as String?,
     );
   }
 
@@ -38,6 +44,8 @@ class User {
       'phoneNumber': phoneNumber,
       'role': role,
       'profilePictureUrl': profilePictureUrl,
+      'photoUrl': photoUrl,
+      'aboutMe': aboutMe,
     };
   }
 

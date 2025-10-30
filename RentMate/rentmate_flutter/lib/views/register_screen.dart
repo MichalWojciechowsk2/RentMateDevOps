@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -16,8 +20,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _phoneNumberController = TextEditingController();
+  final _aboutMeController = TextEditingController();
   final _authService = AuthService();
   bool _isLoading = false;
+  File? _selectedImage;
+  Uint8List? _selectedImageBytes;
+  final ImagePicker _picker = ImagePicker();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   String? _selectedRole;
@@ -30,7 +38,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _firstNameController.dispose();
     _lastNameController.dispose();
     _phoneNumberController.dispose();
+    _aboutMeController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        setState(() {
+          _selectedImage = File(image.path);
+          _selectedImageBytes = bytes;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking image: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _register() async {
@@ -51,6 +79,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           lastName: _lastNameController.text,
           phoneNumber: _phoneNumberController.text,
           role: _selectedRole!,
+          aboutMe: _aboutMeController.text.isEmpty ? null : _aboutMeController.text,
+          photoUrl: _selectedImage?.path, // Use selected image path
         );
         if (mounted) {
           Navigator.pushReplacementNamed(context, '/home');
@@ -229,6 +259,62 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _aboutMeController,
+                  decoration: const InputDecoration(
+                    labelText: 'About Me (Optional)',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.info),
+                  ),
+                  keyboardType: TextInputType.multiline,
+                  maxLines: 3,
+                  minLines: 1,
+                ),
+                const SizedBox(height: 16),
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.image),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            _selectedImage == null 
+                                ? 'Select Profile Photo (Optional)' 
+                                : 'Photo selected: ${_selectedImage!.path.split('/').last}',
+                          ),
+                        ),
+                        if (_selectedImage != null)
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () {
+                              setState(() {
+                                _selectedImage = null;
+                                _selectedImageBytes = null;
+                              });
+                            },
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (_selectedImageBytes != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: SizedBox(
+                      height: 100,
+                      child: kIsWeb 
+                          ? Image.memory(_selectedImageBytes!, fit: BoxFit.cover)
+                          : Image.file(_selectedImage!, fit: BoxFit.cover),
+                    ),
+                  ),
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,

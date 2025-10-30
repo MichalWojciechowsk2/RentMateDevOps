@@ -33,9 +33,22 @@ namespace RentMateApi.Controllers
                 var token = GenerateJwtToken(user);
                 return StatusCode(201, new AuthResponseDto { User = MapUserToUserDto(user), Token = token });
             }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException dbEx)
+            {
+                // Log the inner exception for debugging
+                var innerException = dbEx.InnerException?.Message ?? "Unknown database error";
+                return BadRequest(new { 
+                    message = "An error occurred while saving the entity changes. See the inner exception for details.",
+                    details = innerException,
+                    fullError = dbEx.ToString()
+                });
+            }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new { 
+                    message = ex.Message,
+                    innerException = ex.InnerException?.Message
+                });
             }
         }
 

@@ -249,10 +249,10 @@ class PropertyService {
     }
   }
 
-  Future<List<Property>> getAllProperties() async {
+  Future<Map<String, dynamic>> getAllProperties({int pageNumber = 1, int pageSize = 10}) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/Property'),
+        Uri.parse('$_baseUrl/Property?pageNumber=$pageNumber&pageSize=$pageSize'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ${await _authService.getToken()}',
@@ -260,8 +260,44 @@ class PropertyService {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        return data.map((json) => Property.fromJson(json)).toList();
+        final decodedData = json.decode(response.body);
+        
+        // Debug: print the response structure
+        print('Response data: $decodedData');
+        
+        // Check if response is a PagedResult object with Items property (API uses uppercase 'Items')
+        List<dynamic> data;
+        if (decodedData is Map) {
+          // Check for 'Items' (C# uses PascalCase)
+          if (decodedData.containsKey('Items')) {
+            data = List<dynamic>.from(decodedData['Items']);
+          } else if (decodedData.containsKey('items')) {
+            data = List<dynamic>.from(decodedData['items']);
+          } else {
+            // If it's a Map but doesn't have Items/items, throw error
+            throw Exception('Response is a Map but missing Items field. Keys: ${decodedData.keys.toList()}');
+          }
+        } else if (decodedData is List) {
+          data = decodedData;
+        } else {
+          throw Exception('Unexpected response format: ${decodedData.runtimeType}');
+        }
+        
+        print('Parsing ${data.length} properties');
+        final properties = data.map((json) => Property.fromJson(json)).toList();
+        print('Successfully parsed ${properties.length} properties');
+        
+        // Return both properties and pagination info
+        int totalItems = decodedData['TotalItems'] ?? decodedData['totalItems'] ?? properties.length;
+        int totalPages = decodedData['TotalPages'] ?? decodedData['totalPages'] ?? 1;
+        
+        return {
+          'properties': properties,
+          'pageNumber': decodedData['PageNumber'] ?? decodedData['pageNumber'] ?? pageNumber,
+          'pageSize': decodedData['PageSize'] ?? decodedData['pageSize'] ?? pageSize,
+          'totalItems': totalItems,
+          'totalPages': totalPages,
+        };
       } else {
         throw Exception('Failed to load all properties: ${response.body}');
       }
