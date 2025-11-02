@@ -66,6 +66,7 @@ namespace Services.Services
             if (property == null) return null;
             return property;
         }
+
         public async Task<IEnumerable<PropertyDto>> SearchProperties(PropertyFilterDto filters)
         {
             var query = _propertyRepository.GetPropertiesQueryable();
@@ -220,6 +221,7 @@ namespace Services.Services
             Task<PropertyDto> GetPropertyDetails(int id);
             Task<PropertyDto> GetPropertyById(int id);
             Task<PropertyEntity> GetOwnerPropertyById(int id);
+
             Task<PropertyDto> UdpatePropertyIsActiveById(int id, bool updateIsActive);
             Task<PropertyDto> UdpatePropertyById(int id, UpdatePropertyDto dto);
             Task<List<PropertyImageDto>> UploadPropertyImages(int propertyId, int userId, List<IFormFile> images);

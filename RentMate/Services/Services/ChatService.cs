@@ -75,21 +75,21 @@ namespace Services.Services
         }
         // TODO: Dodać chat który tworzyć się będzie podczas tworzenia mieszkania tj. Mieszkanie -> Chat z jedną osobą (właścicielem mieszkania) -> podczas tworzenia oferty automatycznie do chatu dodawany jest user -> podczas zmiany statusu oferty na expired 
         // usuwa się user z chatu. Zamieścić w widoku: dla najemcy i wynajmującego ale nie tym chat. To będzie taka dynamiczna grupa gdzie zmieniać się będzie w zależności od najemców.
-        public async Task<ChatEntity> CreateChatBeforeProperty(int firstUserId,)
-        {
-            var existingChat = await _chatRepository.
-                GetUserAllPrivateChats(firstUserId) ?? Enumerable.Empty<ChatEntity>();
+        //public async Task<ChatEntity> CreateChatBeforeProperty(int firstUserId,)
+        //{
+        //    var existingChat = await _chatRepository.
+        //        GetUserAllPrivateChats(firstUserId) ?? Enumerable.Empty<ChatEntity>();
 
-            var chat = existingChat.FirstOrDefault(c =>
-                !c.IsGroup &&
-                (c.ChatUsers?.Any(u => u.UserId == secondUserId) ?? false));
+        //    var chat = existingChat.FirstOrDefault(c =>
+        //        !c.IsGroup &&
+        //        (c.ChatUsers?.Any(u => u.UserId == secondUserId) ?? false));
 
-            if (chat != null)
-            {
-                return chat;
-            }
-            return await _chatRepository.CreateChat(firstUserId, secondUserId);
-        }
+        //    if (chat != null)
+        //    {
+        //        return chat;
+        //    }
+        //    return await _chatRepository.CreateChat(firstUserId, secondUserId);
+        //}
         public async Task<bool> SetLastMessageId(int messageId, int chatId)
         {
             var chat = await _chatRepository.GetChatById(chatId);
@@ -121,5 +121,4 @@ namespace Services.Services
         Task <bool> SetLastMessageId(int messageId, int chatId);
         Task<int?> CheckIfPrivateChatExists(int firstUserId, int secondUserId);
     }
-    
 }

@@ -183,5 +183,18 @@ namespace RentMateApi.Controllers
             var offer = await _offerService.GetAcceptedOfferByUserId(userId);
             return Ok(offer);
         }
+        [HttpGet("getPropertyChatIdByOfferId")]
+        public async Task<IActionResult> getPropertyChatIdByOfferId(int offerId)
+        {
+            try
+            {
+                var property = await _offerService.GetPropertyChatIdByOfferId(offerId);
+                return Ok(property);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
     }
 }
