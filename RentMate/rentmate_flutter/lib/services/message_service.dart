@@ -84,4 +84,91 @@ class MessageService {
       throw Exception('Error getting messages: $e');
     }
   }
+
+  // Pobierz wiadomości z czatu grupowego oraz listę użytkowników
+  Future<Map<String, dynamic>> getChatMessagesWithUsers(int chatId) async {
+    try {
+      final token = await _authService.getToken();
+      if (token == null) throw Exception('No authentication token');
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/Message/chat?chatId=$chatId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        // ChatWithContentDto zawiera Messages i Users
+        List<Message> messages = [];
+        List<dynamic> users = [];
+        
+        if (data is Map) {
+          // Pobierz wiadomości
+          if (data.containsKey('messages')) {
+            messages = (data['messages'] as List).map((json) => Message.fromJson(json)).toList();
+          } else if (data.containsKey('Messages')) {
+            messages = (data['Messages'] as List).map((json) => Message.fromJson(json)).toList();
+          }
+          
+          // Pobierz użytkowników
+          if (data.containsKey('users')) {
+            users = data['users'] as List;
+          } else if (data.containsKey('Users')) {
+            users = data['Users'] as List;
+          }
+        }
+        
+        return {
+          'messages': messages,
+          'users': users,
+        };
+      } else {
+        throw Exception('Failed to load chat messages: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error getting chat messages: $e');
+    }
+  }
+
+  // Pobierz wiadomości z czatu grupowego (tylko dla kompatybilności wstecznej)
+  Future<List<Message>> getChatMessages(int chatId) async {
+    try {
+      final result = await getChatMessagesWithUsers(chatId);
+      return result['messages'] as List<Message>;
+    } catch (e) {
+      throw Exception('Error getting chat messages: $e');
+    }
+  }
+
+  // Wyślij wiadomość do czatu grupowego
+  Future<Message> sendGroupMessage(int chatId, String content) async {
+    try {
+      final token = await _authService.getToken();
+      if (token == null) throw Exception('No authentication token');
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/Message/send'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'chatId': chatId,
+          'content': content,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return Message.fromJson(data);
+      } else {
+        throw Exception('Failed to send message: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error sending group message: $e');
+    }
+  }
 } 

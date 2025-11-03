@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import '../models/property.dart';
+import '../models/offer.dart';
 import '../services/property_service.dart';
 import '../services/auth_service.dart';
+import '../services/offer_service.dart';
 import '../models/user.dart';
 import '../views/my_chats_screen.dart';
+import '../views/my_apartment_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -16,10 +19,12 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   final _propertyService = PropertyService();
+  final _offerService = OfferService();
   final AuthService _authService = AuthService();
   List<Property> _properties = [];
   bool _isLoading = false;
   User? _currentUser;
+  Offer? _acceptedOffer; // Zaakceptowana oferta najemcy
   int _currentPage = 1;
   int _totalPages = 1;
   int _totalItems = 0;
@@ -41,6 +46,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadCurrentUser() async {
     _currentUser = await _authService.getCurrentUser();
+    // Jeśli użytkownik jest najemcą, sprawdź czy ma zaakceptowaną ofertę
+    if (_currentUser?.role == 'Tenant') {
+      try {
+        final userId = int.tryParse(_currentUser!.id) ?? 0;
+        if (userId > 0) {
+          final offer = await _offerService.getAcceptedOffer(userId);
+          setState(() {
+            _acceptedOffer = offer;
+          });
+        }
+      } catch (e) {
+        print('Failed to load accepted offer: $e');
+        setState(() {
+          _acceptedOffer = null;
+        });
+      }
+    }
     if (mounted) {
       setState(() {});
     }
@@ -166,12 +188,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
               )
             : const Text('My Properties'),
         actions: [
+          if (_currentUser?.role == 'Tenant' && _acceptedOffer != null)
+            IconButton(
+              icon: const Icon(Icons.home),
+              tooltip: 'Moje mieszkanie',
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MyApartmentScreen(acceptedOffer: _acceptedOffer!),
+                  ),
+                );
+              },
+            ),
           if (_currentUser?.role == 'Tenant')
             IconButton(
               icon: const Icon(Icons.notifications),
               tooltip: 'Powiadomienia',
               onPressed: () async {
                 await Navigator.pushNamed(context, '/notifications');
+                // Odśwież dane po powrocie z powiadomień
+                _loadCurrentUser();
               },
             ),
           if (_currentUser?.role == 'Owner' || _currentUser?.role == 'Tenant')

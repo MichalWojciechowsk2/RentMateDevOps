@@ -4,6 +4,7 @@ class Message {
   final int id;
   final int senderId;
   final int receiverId;
+  final int? chatId;
   final int? issueId;
   final String content;
   final bool isRead;
@@ -14,7 +15,8 @@ class Message {
   Message({
     required this.id,
     required this.senderId,
-    required this.receiverId,
+    this.receiverId = 0,
+    this.chatId,
     this.issueId,
     required this.content,
     required this.isRead,
@@ -25,15 +27,16 @@ class Message {
 
   factory Message.fromJson(Map<String, dynamic> json) {
     return Message(
-      id: json['id'],
-      senderId: json['senderId'],
-      receiverId: json['receiverId'],
-      issueId: json['issueId'],
-      content: json['content'],
-      isRead: json['isRead'],
-      createdAt: DateTime.parse(json['createdAt']),
-      senderUsername: json['senderUsername'] ?? 'Unknown',
-      receiverUsername: json['receiverUsername'] ?? 'Unknown',
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      senderId: json['senderId'] is int ? json['senderId'] : int.tryParse(json['senderId']?.toString() ?? '') ?? 0,
+      receiverId: json['receiverId'] is int ? json['receiverId'] : int.tryParse(json['receiverId']?.toString() ?? '0') ?? 0,
+      chatId: json['chatId'] is int ? json['chatId'] : int.tryParse(json['chatId']?.toString() ?? ''),
+      issueId: json['issueId'] is int ? json['issueId'] : int.tryParse(json['issueId']?.toString() ?? ''),
+      content: json['content']?.toString() ?? '',
+      isRead: json['isRead'] is bool ? json['isRead'] : (json['isRead']?.toString() == 'true'),
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt'].toString()) : DateTime.now(),
+      senderUsername: json['senderUsername']?.toString() ?? 'Unknown',
+      receiverUsername: json['receiverUsername']?.toString() ?? 'Unknown',
     );
   }
 

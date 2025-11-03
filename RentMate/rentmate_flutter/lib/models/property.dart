@@ -15,6 +15,7 @@ class Property {
   final String area;
   final List<PropertyImage> images;
   final bool isActive;
+  final int? chatGroupId;
   final DateTime createdAt;
   final DateTime? updatedAt;
   final String? ownerUsername;
@@ -34,6 +35,7 @@ class Property {
     required this.area,
     required this.images,
     required this.isActive,
+    this.chatGroupId,
     required this.createdAt,
     this.updatedAt,
     this.ownerUsername,
@@ -55,6 +57,7 @@ class Property {
       area: json['area']?.toString() ?? '',
       images: (json['images'] as List?)?.map((e) => PropertyImage.fromJson(e)).toList() ?? [],
       isActive: json['isActive'] is bool ? json['isActive'] ?? false : (json['isActive']?.toString() == 'true'),
+      chatGroupId: json['chatGroupId'] is int ? json['chatGroupId'] : int.tryParse(json['chatGroupId']?.toString() ?? ''),
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
       ownerUsername: json['ownerUsername']?.toString(),

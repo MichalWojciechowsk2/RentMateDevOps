@@ -116,6 +116,21 @@ namespace RentMateApi.Controllers
             var offer = await _offerService.GetOfferByUserId(userId);
             return Ok(offer);
         }
+        
+        [HttpGet]
+        [Route("getAcceptedOfferByUserId")]
+        public async Task<IActionResult> GetAcceptedOfferByUserId(int userId)
+        {
+            var offerEntity = await _offerService.GetAcceptedOfferByUserId(userId);
+            if (offerEntity == null)
+                return NotFound(new { message = "Brak zaakceptowanej oferty dla użytkownika." });
+            
+            // Użyj GetOfferById aby uzyskać DTO
+            var offerDto = await _offerService.GetOfferById(offerEntity.Id);
+            if (offerDto == null)
+                return NotFound(new { message = "Brak zaakceptowanej oferty dla użytkownika." });
+            return Ok(offerDto);
+        }
         [HttpPatch("{offerId}/status")]
         public async Task<IActionResult> UpdateStatus(int offerId, [FromBody] OfferStatus status)
         {
