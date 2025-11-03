@@ -60,9 +60,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _loadProperties() async {
     setState(() => _isLoading = true);
     try {
+      final minPrice = _minPriceController.text.isNotEmpty ? double.tryParse(_minPriceController.text) : null;
+      final maxPrice = _maxPriceController.text.isNotEmpty ? double.tryParse(_maxPriceController.text) : null;
+      final rooms = _roomsController.text.isNotEmpty ? int.tryParse(_roomsController.text) : null;
+      
       final result = await _propertyService.getAllProperties(
         pageNumber: _currentPage,
         pageSize: 10,
+        city: _selectedCity,
+        priceFrom: minPrice,
+        priceTo: maxPrice,
+        rooms: rooms,
       );
       setState(() {
         _properties = result['properties'] as List<Property>;
@@ -85,32 +93,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _filterProperties() async {
-    setState(() => _isLoading = true);
-    try {
-      final minPrice = _minPriceController.text.isNotEmpty ? double.tryParse(_minPriceController.text) : null;
-      final maxPrice = _maxPriceController.text.isNotEmpty ? double.tryParse(_maxPriceController.text) : null;
-      final rooms = _roomsController.text.isNotEmpty ? int.tryParse(_roomsController.text) : null;
-      final properties = await _propertyService.searchProperties(
-        city: _selectedCity,
-        priceFrom: minPrice,
-        priceTo: maxPrice,
-        rooms: rooms,
-      );
-      setState(() {
-        _properties = properties;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
+    // Reset to page 1 when filtering
+    setState(() {
+      _currentPage = 1;
+    });
+    await _loadProperties();
   }
 
   void _resetFilters() {

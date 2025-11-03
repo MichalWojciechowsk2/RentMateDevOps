@@ -279,10 +279,37 @@ class PropertyService {
     }
   }
 
-  Future<Map<String, dynamic>> getAllProperties({int pageNumber = 1, int pageSize = 10}) async {
+  Future<Map<String, dynamic>> getAllProperties({
+    int pageNumber = 1,
+    int pageSize = 10,
+    String? city,
+    double? priceFrom,
+    double? priceTo,
+    int? rooms,
+  }) async {
     try {
+      final queryParams = <String, String>{
+        'pageNumber': pageNumber.toString(),
+        'pageSize': pageSize.toString(),
+      };
+      
+      // Add filter parameters if provided
+      if (city != null && city.isNotEmpty) {
+        queryParams['city'] = city;
+      }
+      if (priceFrom != null) {
+        queryParams['priceFrom'] = priceFrom.toString();
+      }
+      if (priceTo != null) {
+        queryParams['priceTo'] = priceTo.toString();
+      }
+      if (rooms != null) {
+        queryParams['rooms'] = rooms.toString();
+      }
+      
+      final uri = Uri.parse('$_baseUrl/Property').replace(queryParameters: queryParams);
       final response = await http.get(
-        Uri.parse('$_baseUrl/Property?pageNumber=$pageNumber&pageSize=$pageSize'),
+        uri,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ${await _authService.getToken()}',

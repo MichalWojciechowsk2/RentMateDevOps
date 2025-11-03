@@ -29,16 +29,31 @@ namespace Services.Services
             return _mapper.Map<PropertyDto>(createdEntity);
         }
 
-        public async Task<PagedResult<PropertyDto>> GetPagedAllActiveProperties(int pageNumber, int pageSize)
+        public async Task<PagedResult<PropertyDto>> GetPagedAllActiveProperties(int pageNumber, int pageSize, PropertyFilterDto? filters = null)
         {
             var query = _propertyRepository.GetPropertiesQueryable()
-        .Where(p => p.IsActive)
-        .Include(p => p.Owner)
-        .Include(p => p.PropertyImages);
+                .Where(p => p.IsActive);
+
+            // Apply filters if provided
+            if (filters != null)
+            {
+                if (!string.IsNullOrEmpty(filters.City))
+                    query = query.Where(p => p.City == filters.City);
+                if (!string.IsNullOrEmpty(filters.District))
+                    query = query.Where(p => p.District == filters.District);
+                if (filters.PriceFrom.HasValue)
+                    query = query.Where(p => p.BasePrice >= filters.PriceFrom.Value);
+                if (filters.PriceTo.HasValue)
+                    query = query.Where(p => p.BasePrice <= filters.PriceTo.Value);
+                if (filters.Rooms.HasValue)
+                    query = query.Where(p => p.RoomCount == filters.Rooms.Value);
+            }
 
             var totalItems = await query.CountAsync();
 
             var items = await query
+                .Include(p => p.Owner)
+                .Include(p => p.PropertyImages)
                 .OrderBy(p => p.Id)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
@@ -232,7 +247,7 @@ namespace Services.Services
         public interface IPropertyService
         {
             Task<PropertyDto> CreateProperty(PropertyDto dto, int ownerId, int chatId);
-            Task<PagedResult<PropertyDto>> GetPagedAllActiveProperties(int pageNumber, int pageSize);
+            Task<PagedResult<PropertyDto>> GetPagedAllActiveProperties(int pageNumber, int pageSize, PropertyFilterDto? filters = null);
             Task<IEnumerable<PropertyDto>> SearchProperties(PropertyFilterDto filters);
             Task<IEnumerable<PropertyDto>> GetPropertiesByOwnerId(int ownerId);
             Task<PropertyDto> GetPropertyDetails(int id);
