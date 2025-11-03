@@ -6,7 +6,7 @@ import 'dart:io';
 import '../models/property.dart';
 import '../models/property_image.dart';
 import '../services/property_service.dart';
-import 'package:flutter/material.dart';
+import 'rental_agreements_tab.dart';
 
 class EditPropertyScreen extends StatefulWidget {
   const EditPropertyScreen({super.key});
@@ -15,7 +15,7 @@ class EditPropertyScreen extends StatefulWidget {
   State<EditPropertyScreen> createState() => _EditPropertyScreenState();
 }
 
-class _EditPropertyScreenState extends State<EditPropertyScreen> {
+class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _propertyService = PropertyService();
   final _imagePicker = ImagePicker();
@@ -23,6 +23,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
   late Property _property;
   List<PropertyImage> _currentImages = [];
   List<XFile> _newImages = [];
+  late TabController _tabController;
 
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -34,6 +35,12 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
   final _postalCodeController = TextEditingController();
   final _roomCountController = TextEditingController();
   final _areaController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
 
   @override
   void didChangeDependencies() {
@@ -279,49 +286,18 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
     _postalCodeController.dispose();
     _roomCountController.dispose();
     _areaController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Property'),
-        actions: [
-          TextButton.icon(
-            onPressed: _isLoading ? null : _togglePublish,
-            icon: Icon(_property.isActive ? Icons.visibility_off : Icons.publish),
-            label: Text(_property.isActive ? 'Unpublish' : 'Publish'),
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                Row(
-                  children: [
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        // placeholder for rental contracts section
-                      },
-                      icon: const Icon(Icons.description),
-                      label: const Text('Umowy wynajmu'),
-                    ),
-                    const SizedBox(width: 12),
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        // placeholder for bills section
-                      },
-                      icon: const Icon(Icons.receipt_long),
-                      label: const Text('Rachunki'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
+  Widget _buildPropertyEditTab() {
+    return _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
                   TextFormField(
                     controller: _titleController,
                     decoration: const InputDecoration(
@@ -682,13 +658,53 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
                     label: const Text('Add Images'),
                   ),
                   const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: _submitForm,
-                    child: const Text('Save Changes'),
-                  ),
-                ],
-              ),
+                ElevatedButton(
+                  onPressed: _submitForm,
+                  child: const Text('Save Changes'),
+                ),
+              ],
             ),
+          );
+  }
+
+  Widget _buildBillsTab() {
+    return const Center(
+      child: Text(
+        'Zakładka rachunków będzie dostępna wkrótce',
+        style: TextStyle(fontSize: 16, color: Colors.grey),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Edit Property'),
+        actions: [
+          TextButton.icon(
+            onPressed: _isLoading ? null : _togglePublish,
+            icon: Icon(_property.isActive ? Icons.visibility_off : Icons.publish),
+            label: Text(_property.isActive ? 'Unpublish' : 'Publish'),
+          ),
+        ],
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'Mieszkanie'),
+            Tab(text: 'Umowy wynajmu'),
+            Tab(text: 'Rachunki'),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildPropertyEditTab(),
+          RentalAgreementsTab(property: _property),
+          _buildBillsTab(),
+        ],
+      ),
     );
   }
 } 

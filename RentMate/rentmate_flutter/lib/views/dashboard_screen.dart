@@ -166,6 +166,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               )
             : const Text('My Properties'),
         actions: [
+          if (_currentUser?.role == 'Tenant')
+            IconButton(
+              icon: const Icon(Icons.notifications),
+              tooltip: 'Powiadomienia',
+              onPressed: () async {
+                await Navigator.pushNamed(context, '/notifications');
+              },
+            ),
           if (_currentUser?.role == 'Owner' || _currentUser?.role == 'Tenant')
             IconButton(
               icon: const Icon(Icons.message),
