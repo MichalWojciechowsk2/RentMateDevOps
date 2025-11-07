@@ -9,6 +9,7 @@ import '../services/offer_service.dart';
 import '../models/user.dart';
 import '../views/my_chats_screen.dart';
 import '../views/my_apartment_screen.dart';
+import '../services/message_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -21,6 +22,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final _propertyService = PropertyService();
   final _offerService = OfferService();
   final AuthService _authService = AuthService();
+  final MessageService _messageService = MessageService();
   List<Property> _properties = [];
   bool _isLoading = false;
   User? _currentUser;
@@ -28,6 +30,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _currentPage = 1;
   int _totalPages = 1;
   int _totalItems = 0;
+  int _unreadMessagesCount = 0; // Liczba nieprzeczytanych wiadomości
 
   // Filtry
   List<String> _cities = [];
@@ -42,6 +45,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _fetchCities();
     _loadProperties();
     _loadCurrentUser();
+    _loadUnreadMessagesCount();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Odśwież licznik nieprzeczytanych wiadomości gdy ekran staje się widoczny
+    _loadUnreadMessagesCount();
+  }
+
+  Future<void> _loadUnreadMessagesCount() async {
+    try {
+      final count = await _messageService.getUnreadMessagesCount();
+      if (mounted) {
+        setState(() {
+          _unreadMessagesCount = count;
+        });
+      }
+    } catch (e) {
+      // Ignoruj błędy przy ładowaniu liczby nieprzeczytanych wiadomości
+    }
   }
 
   Future<void> _loadCurrentUser() async {
@@ -212,15 +236,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
               },
             ),
           if (_currentUser?.role == 'Owner' || _currentUser?.role == 'Tenant')
-            IconButton(
-              icon: const Icon(Icons.message),
-              tooltip: 'My Messages',
-              onPressed: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => MyChatsScreen()),
-                );
-              },
+            Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.message),
+                  tooltip: 'My Messages',
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => MyChatsScreen()),
+                    );
+                    // Odśwież licznik nieprzeczytanych wiadomości po powrocie
+                    _loadUnreadMessagesCount();
+                  },
+                ),
+                if (_unreadMessagesCount > 0)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        _unreadMessagesCount > 99 ? '99+' : '$_unreadMessagesCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           if (_currentUser?.role == 'Owner')
             IconButton(

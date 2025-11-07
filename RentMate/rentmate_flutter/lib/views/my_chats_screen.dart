@@ -15,7 +15,7 @@ class MyChatsScreen extends StatefulWidget {
 class _MyChatsScreenState extends State<MyChatsScreen> {
   final MessageService _messageService = MessageService();
   final AuthService _authService = AuthService();
-  List<Message> _messages = [];
+  List<Map<String, dynamic>> _chats = [];
   User? _currentUser;
   bool _isLoading = true;
 
@@ -27,28 +27,58 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final user = await _authService.getCurrentUser();
-    final messages = await _messageService.getMyMessages();
-    setState(() {
-      _currentUser = user;
-      _messages = messages;
-      _isLoading = false;
-    });
+    try {
+      final user = await _authService.getCurrentUser();
+      final chats = await _messageService.getPrivateChats();
+      setState(() {
+        _currentUser = user;
+        _chats = chats;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Błąd podczas ładowania czatów: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // Pobierz userId rozmówcy z czatu (musimy pobrać użytkowników z czatu)
+  Future<int?> _getOtherUserIdFromChat(int chatId) async {
+    try {
+      final result = await _messageService.getPrivateChatMessages(chatId);
+      final users = result['users'] as List<dynamic>;
+      final currentUserId = int.tryParse(_currentUser?.id ?? '') ?? 0;
+      
+      for (var user in users) {
+        final userId = user['id'] is int ? user['id'] : int.tryParse(user['id']?.toString() ?? '') ?? 0;
+        if (userId > 0 && userId != currentUserId) {
+          return userId;
+        }
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Zgrupuj wiadomości po rozmówcy (druga strona konwersacji)
-    final Map<int, Message> lastMessages = {};
-    for (var msg in _messages) {
-      int otherUserId = msg.senderId == _currentUser?.id ? msg.receiverId : msg.senderId;
-      if (!lastMessages.containsKey(otherUserId) ||
-          msg.createdAt.isAfter(lastMessages[otherUserId]!.createdAt)) {
-        lastMessages[otherUserId] = msg;
-      }
-    }
-    final chatList = lastMessages.values.toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    // Sortuj czaty po dacie ostatniej wiadomości
+    final sortedChats = List<Map<String, dynamic>>.from(_chats)
+      ..sort((a, b) {
+        final dateA = a['lastMessageCreatedAt'] as DateTime?;
+        final dateB = b['lastMessageCreatedAt'] as DateTime?;
+        if (dateA == null && dateB == null) return 0;
+        if (dateA == null) return 1;
+        if (dateB == null) return -1;
+        return dateB.compareTo(dateA);
+      });
 
     return Scaffold(
       appBar: AppBar(
@@ -56,40 +86,87 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : chatList.isEmpty
+          : sortedChats.isEmpty
               ? const Center(child: Text('No conversations yet.'))
-              : ListView.builder(
-                  itemCount: chatList.length,
-                  itemBuilder: (context, index) {
-                    final msg = chatList[index];
-                    final isMe = msg.senderId == _currentUser?.id;
-                    final otherUserId = isMe ? msg.receiverId : msg.senderId;
-                    final otherUsername = isMe ? msg.receiverUsername : msg.senderUsername;
-                    return ListTile(
-                      leading: CircleAvatar(
-                        child: Text(
-                          otherUsername.isNotEmpty ? otherUsername[0].toUpperCase() : '?',
+              : RefreshIndicator(
+                  onRefresh: _loadData,
+                  child: ListView.builder(
+                    itemCount: sortedChats.length,
+                    itemBuilder: (context, index) {
+                      final chat = sortedChats[index];
+                      final otherUserName = chat['otherUserName'] as String;
+                      final otherUserPhotoUrl = chat['otherUserPhotoUrl'] as String?;
+                      final lastMessageContent = chat['lastMessageContent'] as String?;
+                      final lastMessageCreatedAt = chat['lastMessageCreatedAt'] as DateTime?;
+                      final chatId = chat['chatId'] as int;
+
+                      String formatTime(DateTime? dateTime) {
+                        if (dateTime == null) return '';
+                        return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+                      }
+
+                      return ListTile(
+                        leading: CircleAvatar(
+                          radius: 25,
+                          backgroundColor: Colors.grey[300],
+                          backgroundImage: otherUserPhotoUrl != null && otherUserPhotoUrl.isNotEmpty
+                              ? NetworkImage('https://localhost:7281$otherUserPhotoUrl')
+                              : null,
+                          child: otherUserPhotoUrl == null || otherUserPhotoUrl.isEmpty
+                              ? Text(
+                                  otherUserName.isNotEmpty ? otherUserName[0].toUpperCase() : '?',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                )
+                              : null,
                         ),
-                      ),
-                      title: Text(otherUsername),
-                      subtitle: Text(msg.content, maxLines: 1, overflow: TextOverflow.ellipsis),
-                      trailing: Text(
-                        '${msg.createdAt.hour.toString().padLeft(2, '0')}:${msg.createdAt.minute.toString().padLeft(2, '0')}',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ChatScreen(
-                              otherUserId: otherUserId,
-                              otherUsername: otherUsername,
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
+                        title: Text(
+                          otherUserName,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Text(
+                          lastMessageContent ?? 'Brak wiadomości',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: Text(
+                          formatTime(lastMessageCreatedAt),
+                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                        onTap: () async {
+                          // Pobierz userId rozmówcy z czatu
+                          final otherUserId = await _getOtherUserIdFromChat(chatId);
+                          if (otherUserId != null) {
+                            if (mounted) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ChatScreen(
+                                    otherUserId: otherUserId,
+                                    otherUsername: otherUserName,
+                                  ),
+                                ),
+                              ).then((_) {
+                                // Odśwież listę czatów po powrocie
+                                _loadData();
+                              });
+                            }
+                          } else {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Nie można otworzyć czatu'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                      );
+                    },
+                  ),
                 ),
     );
   }

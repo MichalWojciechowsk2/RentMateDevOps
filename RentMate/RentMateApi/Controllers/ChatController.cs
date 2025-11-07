@@ -51,20 +51,39 @@ namespace RentMateApi.Controllers
         [HttpPost("privateChat")]
         public async Task<IActionResult> CreatePrivateChat([FromQuery]int otherUserId)
         {
-            var activeUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (activeUserIdClaim == null || !int.TryParse(activeUserIdClaim.Value, out int activeUserId))
+            try
             {
-                return Unauthorized(new { message = "User not authenticated or invalid user ID." });
-            }
-            if (activeUserId == otherUserId) return BadRequest();
-            var existingChat = _chatService.CheckIfPrivateChatExists(activeUserId, otherUserId);
+                var activeUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (activeUserIdClaim == null || !int.TryParse(activeUserIdClaim.Value, out int activeUserId))
+                {
+                    return Unauthorized(new { message = "User not authenticated or invalid user ID." });
+                }
+                if (activeUserId == otherUserId) return BadRequest(new { message = "Cannot create chat with yourself." });
+                
+                // Sprawdź, czy prywatny czat już istnieje
+                var existingChatId = await _chatService.CheckIfPrivateChatExists(activeUserId, otherUserId);
 
-            if (existingChat == null)
-            {
-                var chat = await _chatService.CreateChat(activeUserId, otherUserId);
-                return Ok(chat);
+                if (existingChatId == null)
+                {
+                    // Utwórz nowy prywatny czat
+                    var chat = await _chatService.CreateChat(activeUserId, otherUserId);
+                    return Ok(chat);
+                }
+                else
+                {
+                    var existingChat = await _chatService.GetChatById(existingChatId.Value);
+                    if (existingChat == null)
+                    {
+                        var chat = await _chatService.CreateChat(activeUserId, otherUserId);
+                        return Ok(chat);
+                    }
+                    return Ok(existingChat);
+                }
             }
-            else return Ok(existingChat);
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Error creating private chat: {ex.Message}" });
+            }
         }
         /*[HttpPost("groupChat")]
         public async Task<IActionResult> CreateGroupChatForProperty()

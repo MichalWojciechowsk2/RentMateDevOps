@@ -110,6 +110,10 @@ namespace Services.Services
 
             return existingChat?.Id;
         }
+        public async Task<ChatEntity> GetChatById(int chatId)
+        {
+            return await _chatRepository.GetChatById(chatId);
+        }
     }
     public interface IChatService
     {
@@ -120,6 +124,7 @@ namespace Services.Services
         Task<bool> DeleteUserFromChat(int chatId, int userId);
         Task <bool> SetLastMessageId(int messageId, int chatId);
         Task<int?> CheckIfPrivateChatExists(int firstUserId, int secondUserId);
+        Task<ChatEntity> GetChatById(int chatId);
     }
     
 }
