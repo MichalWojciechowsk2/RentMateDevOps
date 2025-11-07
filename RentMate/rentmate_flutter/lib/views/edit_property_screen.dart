@@ -5,11 +5,18 @@ import 'package:flutter/foundation.dart';
 import 'dart:io';
 import '../models/property.dart';
 import '../models/property_image.dart';
+import '../models/offer.dart';
 import '../services/property_service.dart';
+import '../services/payment_service.dart';
+import '../services/offer_service.dart';
 import 'rental_agreements_tab.dart';
+import 'bills_tab.dart';
+import 'property_issues_tab.dart';
 
 class EditPropertyScreen extends StatefulWidget {
-  const EditPropertyScreen({super.key});
+  final int? initialTabIndex;
+  
+  const EditPropertyScreen({super.key, this.initialTabIndex});
 
   @override
   State<EditPropertyScreen> createState() => _EditPropertyScreenState();
@@ -18,6 +25,8 @@ class EditPropertyScreen extends StatefulWidget {
 class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _propertyService = PropertyService();
+  final _paymentService = PaymentService();
+  final _offerService = OfferService();
   final _imagePicker = ImagePicker();
   bool _isLoading = false;
   late Property _property;
@@ -39,7 +48,8 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    final initialIndex = widget.initialTabIndex ?? 0;
+    _tabController = TabController(length: 4, vsync: this, initialIndex: initialIndex);
   }
 
   @override
@@ -668,12 +678,11 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
   }
 
   Widget _buildBillsTab() {
-    return const Center(
-      child: Text(
-        'Zakładka rachunków będzie dostępna wkrótce',
-        style: TextStyle(fontSize: 16, color: Colors.grey),
-      ),
-    );
+    return BillsTab(property: _property);
+  }
+
+  Widget _buildProblemsTab() {
+    return PropertyIssuesTab(property: _property);
   }
 
   @override
@@ -694,6 +703,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
             Tab(text: 'Mieszkanie'),
             Tab(text: 'Umowy wynajmu'),
             Tab(text: 'Rachunki'),
+            Tab(text: 'Problemy'),
           ],
         ),
       ),
@@ -703,6 +713,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
           _buildPropertyEditTab(),
           RentalAgreementsTab(property: _property),
           _buildBillsTab(),
+          _buildProblemsTab(),
         ],
       ),
     );

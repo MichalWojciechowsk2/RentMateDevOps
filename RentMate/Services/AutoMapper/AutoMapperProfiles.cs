@@ -3,6 +3,7 @@ using ApplicationCore.Dto.Payment;
 using ApplicationCore.Dto.Property;
 using ApplicationCore.Dto.Property.Offer;
 using ApplicationCore.Dto.User;
+using ApplicationCore.Dto.Issue;
 using AutoMapper;
 using Data.Entities;
 
@@ -47,7 +48,10 @@ namespace Services.AutoMapper
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => PaymentStatus.Pending));
 
             CreateMap<PaymentDto, PaymentEntity>();
-            CreateMap<PaymentEntity, PaymentDto>();
+
+            //Issue
+            CreateMap<CreateIssueDto, IssueEntity>();
+            CreateMap<IssueEntity, IssueDto>();
 
             CreateMap<PaymentEntity, PaymentDtoWithTenantName>();
             CreateMap<PaymentEntity, PaymentEntity>();

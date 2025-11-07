@@ -47,6 +47,10 @@ namespace Data.Entities
                         Title = "Zaproszenie zaakceptowane";
                         Message = $"{senderName} zaakceptował Twoje zaproszenie.";
                         break;
+                    case NotificationType.CreateIssue:
+                        Title = "Nowy problem";
+                        Message = $"{senderName} zgłosił problem w mieszkaniu.";
+                        break;
                     default:
                         Title = "Powiadomienie";
                         Message = "";
@@ -64,6 +68,7 @@ public enum NotificationType
         CreatePayment,
         PaymentDue,
         InvitationAccepted,
+        CreateIssue,
         Other,
     }
 

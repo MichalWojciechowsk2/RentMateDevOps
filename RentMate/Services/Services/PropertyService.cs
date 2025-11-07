@@ -12,10 +12,12 @@ namespace Services.Services
     public class PropertyService : IPropertyService
     {
         private readonly IPropertyRepository _propertyRepository;
+        private readonly IOfferRepository _offerRepository;
         private readonly IMapper _mapper;
-        public PropertyService(IPropertyRepository propertyRepository, IMapper mapper)
+        public PropertyService(IPropertyRepository propertyRepository, IOfferRepository offerRepository, IMapper mapper)
         {
             _propertyRepository = propertyRepository;
+            _offerRepository = offerRepository;
             _mapper = mapper;
         }
         public async Task<PropertyDto> CreateProperty(PropertyDto propertyDto, int ownerId, int chatId)
@@ -49,15 +51,32 @@ namespace Services.Services
                     query = query.Where(p => p.RoomCount == filters.Rooms.Value);
             }
 
-            var totalItems = await query.CountAsync();
-
-            var items = await query
+            // Pobierz wszystkie mieszkania z filtrami
+            var allProperties = await query
                 .Include(p => p.Owner)
                 .Include(p => p.PropertyImages)
+                .ToListAsync();
+
+            // Filtruj mieszkania które nie są zapełnione (liczba zaakceptowanych ofert < liczba pokoi)
+            var availableProperties = new List<PropertyEntity>();
+            foreach (var property in allProperties)
+            {
+                var acceptedOffersCount = await _offerRepository.GetAcceptedOffersCountByPropertyId(property.Id);
+                // Mieszkanie jest dostępne jeśli liczba zaakceptowanych ofert < liczba pokoi
+                if (acceptedOffersCount < property.RoomCount)
+                {
+                    availableProperties.Add(property);
+                }
+            }
+
+            var totalItems = availableProperties.Count;
+
+            // Stosuj paginację
+            var items = availableProperties
                 .OrderBy(p => p.Id)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
-                .ToListAsync();
+                .ToList();
 
             return new PagedResult<PropertyDto>
             {
@@ -243,23 +262,23 @@ namespace Services.Services
 
             await _propertyRepository.SetMainImageAsync(image.PropertyId, imageId);
         }
+    }
 
-        public interface IPropertyService
-        {
-            Task<PropertyDto> CreateProperty(PropertyDto dto, int ownerId, int chatId);
-            Task<PagedResult<PropertyDto>> GetPagedAllActiveProperties(int pageNumber, int pageSize, PropertyFilterDto? filters = null);
-            Task<IEnumerable<PropertyDto>> SearchProperties(PropertyFilterDto filters);
-            Task<IEnumerable<PropertyDto>> GetPropertiesByOwnerId(int ownerId);
-            Task<PropertyDto> GetPropertyDetails(int id);
-            Task<PropertyDto> GetPropertyById(int id);
-            Task<PropertyEntity> GetOwnerPropertyById(int id);
-            Task<PropertyDto> UdpatePropertyIsActiveById(int id, bool updateIsActive);
-            Task<PropertyDto> UdpatePropertyById(int id, UpdatePropertyDto dto);
-            Task<List<PropertyImageDto>> UploadPropertyImages(int propertyId, int userId, List<IFormFile> images);
-            Task DeletePropertyImage(int imageId, int userId);
-            Task<PropertyImageEntity?> GetPropertyMainImageByPropertyId(int propertyId);
-            Task<IEnumerable<PropertyImageEntity>> GetAllImages(int propertyId);
-            Task SetMainPropertyImageAsync(int imageId, int userId);
-        }
+    public interface IPropertyService
+    {
+        Task<PropertyDto> CreateProperty(PropertyDto dto, int ownerId, int chatId);
+        Task<PagedResult<PropertyDto>> GetPagedAllActiveProperties(int pageNumber, int pageSize, PropertyFilterDto? filters = null);
+        Task<IEnumerable<PropertyDto>> SearchProperties(PropertyFilterDto filters);
+        Task<IEnumerable<PropertyDto>> GetPropertiesByOwnerId(int ownerId);
+        Task<PropertyDto> GetPropertyDetails(int id);
+        Task<PropertyDto> GetPropertyById(int id);
+        Task<PropertyEntity> GetOwnerPropertyById(int id);
+        Task<PropertyDto> UdpatePropertyIsActiveById(int id, bool updateIsActive);
+        Task<PropertyDto> UdpatePropertyById(int id, UpdatePropertyDto dto);
+        Task<List<PropertyImageDto>> UploadPropertyImages(int propertyId, int userId, List<IFormFile> images);
+        Task DeletePropertyImage(int imageId, int userId);
+        Task<PropertyImageEntity?> GetPropertyMainImageByPropertyId(int propertyId);
+        Task<IEnumerable<PropertyImageEntity>> GetAllImages(int propertyId);
+        Task SetMainPropertyImageAsync(int imageId, int userId);
     }
 }

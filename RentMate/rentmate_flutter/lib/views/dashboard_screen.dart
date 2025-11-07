@@ -9,7 +9,9 @@ import '../services/offer_service.dart';
 import '../models/user.dart';
 import '../views/my_chats_screen.dart';
 import '../views/my_apartment_screen.dart';
+import '../views/notifications_screen.dart';
 import '../services/message_service.dart';
+import '../services/notification_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -23,6 +25,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final _offerService = OfferService();
   final AuthService _authService = AuthService();
   final MessageService _messageService = MessageService();
+  final NotificationService _notificationService = NotificationService();
   List<Property> _properties = [];
   bool _isLoading = false;
   User? _currentUser;
@@ -31,6 +34,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _totalPages = 1;
   int _totalItems = 0;
   int _unreadMessagesCount = 0; // Liczba nieprzeczytanych wiadomości
+  int _unreadNotificationsCount = 0; // Liczba nieprzeczytanych notyfikacji
 
   // Filtry
   List<String> _cities = [];
@@ -46,13 +50,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadProperties();
     _loadCurrentUser();
     _loadUnreadMessagesCount();
+    _loadUnreadNotificationsCount();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Odśwież licznik nieprzeczytanych wiadomości gdy ekran staje się widoczny
+    // Odśwież liczniki nieprzeczytanych wiadomości i notyfikacji gdy ekran staje się widoczny
     _loadUnreadMessagesCount();
+    _loadUnreadNotificationsCount();
   }
 
   Future<void> _loadUnreadMessagesCount() async {
@@ -65,6 +71,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     } catch (e) {
       // Ignoruj błędy przy ładowaniu liczby nieprzeczytanych wiadomości
+    }
+  }
+
+  Future<void> _loadUnreadNotificationsCount() async {
+    try {
+      final count = await _notificationService.getUnreadCount();
+      if (mounted) {
+        setState(() {
+          _unreadNotificationsCount = count;
+        });
+      }
+    } catch (e) {
+      // Ignoruj błędy przy ładowaniu liczby nieprzeczytanych notyfikacji
     }
   }
 
@@ -226,14 +245,83 @@ class _DashboardScreenState extends State<DashboardScreen> {
               },
             ),
           if (_currentUser?.role == 'Tenant')
-            IconButton(
-              icon: const Icon(Icons.notifications),
-              tooltip: 'Powiadomienia',
-              onPressed: () async {
-                await Navigator.pushNamed(context, '/notifications');
-                // Odśwież dane po powrocie z powiadomień
-                _loadCurrentUser();
-              },
+            Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.notifications),
+                  tooltip: 'Powiadomienia',
+                  onPressed: () async {
+                    await Navigator.pushNamed(context, '/notifications');
+                    // Odśwież dane po powrocie z powiadomień
+                    _loadCurrentUser();
+                    _loadUnreadNotificationsCount();
+                  },
+                ),
+                if (_unreadNotificationsCount > 0)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        _unreadNotificationsCount > 99 ? '99+' : '$_unreadNotificationsCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          if (_currentUser?.role == 'Owner')
+            Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.notifications),
+                  tooltip: 'Powiadomienia',
+                  onPressed: () async {
+                    await Navigator.pushNamed(context, '/notifications');
+                    // Odśwież licznik nieprzeczytanych notyfikacji po powrocie
+                    _loadUnreadNotificationsCount();
+                  },
+                ),
+                if (_unreadNotificationsCount > 0)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        _unreadNotificationsCount > 99 ? '99+' : '$_unreadNotificationsCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           if (_currentUser?.role == 'Owner' || _currentUser?.role == 'Tenant')
             Stack(

@@ -110,6 +110,13 @@ namespace RentMateApi.Controllers
             return Ok(offers);
         }
         [HttpGet]
+        [Route("getOffersByPropertyId")]
+        public async Task<IActionResult> GetOffersByPropertyId(int propertyId)
+        {
+            var offers = await _offerService.GetOffersByPropertyId(propertyId);
+            return Ok(offers);
+        }
+        [HttpGet]
         [Route("getOfferByUserId")]
         public async Task<IActionResult> GetOfferByUserId(int userId)
         {
