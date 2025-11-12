@@ -38,7 +38,7 @@ namespace RentMateApi
             {
                 options.AddPolicy("AllowFrontend", policy =>
                 {
-                    policy.WithOrigins("http://localhost:5173", "http://localhost:8080", "http://localhost:64730")
+                    policy.WithOrigins("http://localhost:5173", "http://localhost:8080", "http://localhost:64730", "http://localhost:50592")
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials();

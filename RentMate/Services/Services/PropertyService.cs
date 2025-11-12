@@ -49,6 +49,10 @@ namespace Services.Services
                     query = query.Where(p => p.BasePrice <= filters.PriceTo.Value);
                 if (filters.Rooms.HasValue)
                     query = query.Where(p => p.RoomCount == filters.Rooms.Value);
+                if (filters.AreaFrom.HasValue)
+                    query = query.Where(p => p.Area >= filters.AreaFrom.Value);
+                if (filters.AreaTo.HasValue)
+                    query = query.Where(p => p.Area <= filters.AreaTo.Value);
             }
 
             // Pobierz wszystkie mieszkania z filtrami
@@ -118,6 +122,11 @@ namespace Services.Services
 
             if (filters.Rooms.HasValue)
                 query = query.Where(p => p.RoomCount == filters.Rooms.Value);
+            
+            if (filters.AreaFrom.HasValue)
+                query = query.Where(p => p.Area >= filters.AreaFrom.Value);
+            if (filters.AreaTo.HasValue)
+                query = query.Where(p => p.Area <= filters.AreaTo.Value);
             
             var entities = await query
                 .Include(p => p.Owner)
@@ -262,6 +271,42 @@ namespace Services.Services
 
             await _propertyRepository.SetMainImageAsync(image.PropertyId, imageId);
         }
+
+        public async Task<List<string>> GetUniqueCities()
+        {
+            var cities = await _propertyRepository.GetPropertiesQueryable()
+                .Where(p => !string.IsNullOrEmpty(p.City))
+                .Select(p => p.City)
+                .Distinct()
+                .OrderBy(c => c)
+                .ToListAsync();
+            return cities;
+        }
+
+        public async Task<List<string>> GetUniqueDistricts()
+        {
+            var districts = await _propertyRepository.GetPropertiesQueryable()
+                .Where(p => !string.IsNullOrEmpty(p.District))
+                .Select(p => p.District)
+                .Distinct()
+                .OrderBy(d => d)
+                .ToListAsync();
+            return districts;
+        }
+
+        public async Task<List<string>> GetUniqueDistrictsByCity(string city)
+        {
+            if (string.IsNullOrEmpty(city))
+                return new List<string>();
+            
+            var districts = await _propertyRepository.GetPropertiesQueryable()
+                .Where(p => p.City == city && !string.IsNullOrEmpty(p.District))
+                .Select(p => p.District)
+                .Distinct()
+                .OrderBy(d => d)
+                .ToListAsync();
+            return districts;
+        }
     }
 
     public interface IPropertyService
@@ -280,5 +325,8 @@ namespace Services.Services
         Task<PropertyImageEntity?> GetPropertyMainImageByPropertyId(int propertyId);
         Task<IEnumerable<PropertyImageEntity>> GetAllImages(int propertyId);
         Task SetMainPropertyImageAsync(int imageId, int userId);
+        Task<List<string>> GetUniqueCities();
+        Task<List<string>> GetUniqueDistricts();
+        Task<List<string>> GetUniqueDistrictsByCity(string city);
     }
 }

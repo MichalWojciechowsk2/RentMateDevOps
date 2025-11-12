@@ -225,7 +225,9 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              '${_property!.address}, ${_property!.city}, ${_property!.postalCode}',
+                              _property!.district.isNotEmpty
+                                  ? '${_property!.address}, ${_property!.district}, ${_property!.city}, ${_property!.postalCode}'
+                                  : '${_property!.address}, ${_property!.city}, ${_property!.postalCode}',
                               style: Theme.of(context).textTheme.bodyLarge,
                             ),
                             const SizedBox(height: 24),
@@ -264,6 +266,19 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                 ),
                               ],
                             ),
+                            if (_property!.ownerPhoneNumber != null && _property!.ownerPhoneNumber!.isNotEmpty) ...[
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildDetailItem(
+                                      Icons.phone,
+                                      _property!.ownerPhoneNumber!,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                             const SizedBox(height: 24),
                             if (!_isOwner)
                               SizedBox(

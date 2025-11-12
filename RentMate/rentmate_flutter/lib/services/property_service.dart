@@ -258,6 +258,24 @@ class PropertyService {
     }
   }
 
+  Future<List<String>> getDistricts({String? city}) async {
+    final uri = city != null && city.isNotEmpty
+        ? Uri.parse('$_baseUrl/Property/districts').replace(queryParameters: {'city': city})
+        : Uri.parse('$_baseUrl/Property/districts');
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((district) => district['name'].toString()).toList();
+    } else {
+      throw Exception('Failed to load districts: \\${response.body}');
+    }
+  }
+
   Future<List<Property>> searchProperties({String? city, double? priceFrom, double? priceTo, int? rooms}) async {
     final queryParams = <String, String>{};
     if (city != null && city.isNotEmpty) queryParams['city'] = city;
@@ -283,9 +301,12 @@ class PropertyService {
     int pageNumber = 1,
     int pageSize = 10,
     String? city,
+    String? district,
     double? priceFrom,
     double? priceTo,
     int? rooms,
+    double? areaFrom,
+    double? areaTo,
   }) async {
     try {
       final queryParams = <String, String>{
@@ -297,6 +318,9 @@ class PropertyService {
       if (city != null && city.isNotEmpty) {
         queryParams['city'] = city;
       }
+      if (district != null && district.isNotEmpty) {
+        queryParams['district'] = district;
+      }
       if (priceFrom != null) {
         queryParams['priceFrom'] = priceFrom.toString();
       }
@@ -305,6 +329,12 @@ class PropertyService {
       }
       if (rooms != null) {
         queryParams['rooms'] = rooms.toString();
+      }
+      if (areaFrom != null) {
+        queryParams['areaFrom'] = areaFrom.toString();
+      }
+      if (areaTo != null) {
+        queryParams['areaTo'] = areaTo.toString();
       }
       
       final uri = Uri.parse('$_baseUrl/Property').replace(queryParameters: queryParams);

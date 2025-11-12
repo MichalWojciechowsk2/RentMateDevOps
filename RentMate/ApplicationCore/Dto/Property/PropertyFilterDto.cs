@@ -13,5 +13,7 @@ namespace ApplicationCore.Dto.Property
         public decimal? PriceFrom { get; set; }
         public decimal? PriceTo { get; set; }
         public int? Rooms { get; set; }
+        public decimal? AreaFrom { get; set; }
+        public decimal? AreaTo { get; set; }
     }
 }

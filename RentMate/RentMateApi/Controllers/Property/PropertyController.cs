@@ -142,32 +142,25 @@ namespace RentMateApi.Controllers.Property
         }
 
         [HttpGet("cities")]
-        public IActionResult GetCities() => Ok(Enum.GetValues(typeof(City)).Cast<City>().Select(c => new {
-            Id = (int)c,
-            Name = c.ToString()
-        }));
-
-        [HttpGet("districts/{cityId}")]
-        public IActionResult GetDistricts(int cityId)
+        public async Task<IActionResult> GetCities()
         {
-            if (cityId == (int)City.Kraków)
+            var cities = await _propertyService.GetUniqueCities();
+            return Ok(cities.Select(c => new { Name = c }));
+        }
+
+        [HttpGet("districts")]
+        public async Task<IActionResult> GetDistricts([FromQuery] string? city = null)
+        {
+            List<string> districts;
+            if (!string.IsNullOrEmpty(city))
             {
-                return Ok(Enum.GetValues(typeof(KrakowDistricts)).Cast<KrakowDistricts>().Select(d => new
-                {
-                    Id = (int)d,
-                    Name = d.GetDisplayName(),
-                    EnumName = d.ToString()
-                }));
+                districts = await _propertyService.GetUniqueDistrictsByCity(city);
             }
-            if (cityId == (int)City.Warszawa)
+            else
             {
-                return Ok(Enum.GetValues(typeof(WarszawaDistricts)).Cast<WarszawaDistricts>().Select(d => new {
-                    Id = (int)d,
-                    Name = d.GetDisplayName(),
-                    EnumName = d.ToString()
-                }));
+                districts = await _propertyService.GetUniqueDistricts();
             }
-            return NotFound();
+            return Ok(districts.Select(d => new { Name = d }));
         }
 
         [HttpPost("{propertyId}/images")]

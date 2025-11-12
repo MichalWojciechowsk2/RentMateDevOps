@@ -94,6 +94,11 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     }
   }
 
+  String _formatName(String name) {
+    if (name.isEmpty) return name;
+    return name[0].toUpperCase() + name.substring(1).toLowerCase();
+  }
+
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -104,14 +109,18 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
         throw Exception('User not logged in');
       }
 
+      // Format city and district names (first letter uppercase, rest lowercase)
+      final formattedCity = _formatName(_cityController.text.trim());
+      final formattedDistrict = _formatName(_districtController.text.trim());
+
       final property = Property.createNew(
         title: _titleController.text,
         description: _descriptionController.text,
         basePrice: double.parse(_basePriceController.text),
         baseDeposit: double.parse(_baseDepositController.text),
         address: _addressController.text,
-        city: _cityController.text,
-        district: _districtController.text,
+        city: formattedCity,
+        district: formattedDistrict,
         postalCode: _postalCodeController.text,
         roomCount: int.parse(_roomCountController.text),
         area: _areaController.text,

@@ -38,15 +38,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // Filtry
   List<String> _cities = [];
+  List<String> _districts = [];
   String? _selectedCity;
+  String? _selectedDistrict;
   final _minPriceController = TextEditingController();
   final _maxPriceController = TextEditingController();
   final _roomsController = TextEditingController();
+  final _minAreaController = TextEditingController();
+  final _maxAreaController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _fetchCities();
+    _fetchDistricts();
     _loadProperties();
     _loadCurrentUser();
     _loadUnreadMessagesCount();
@@ -122,20 +127,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Future<void> _fetchDistricts({String? city}) async {
+    try {
+      final districts = await _propertyService.getDistricts(city: city);
+      setState(() {
+        _districts = districts;
+        // Reset selected district if it's not in the new list
+        if (_selectedDistrict != null && !districts.contains(_selectedDistrict)) {
+          _selectedDistrict = null;
+        }
+      });
+    } catch (e) {
+      // Możesz dodać obsługę błędów
+    }
+  }
+
   Future<void> _loadProperties() async {
     setState(() => _isLoading = true);
     try {
       final minPrice = _minPriceController.text.isNotEmpty ? double.tryParse(_minPriceController.text) : null;
       final maxPrice = _maxPriceController.text.isNotEmpty ? double.tryParse(_maxPriceController.text) : null;
       final rooms = _roomsController.text.isNotEmpty ? int.tryParse(_roomsController.text) : null;
+      final minArea = _minAreaController.text.isNotEmpty ? double.tryParse(_minAreaController.text) : null;
+      final maxArea = _maxAreaController.text.isNotEmpty ? double.tryParse(_maxAreaController.text) : null;
       
       final result = await _propertyService.getAllProperties(
         pageNumber: _currentPage,
         pageSize: 10,
         city: _selectedCity,
+        district: _selectedDistrict,
         priceFrom: minPrice,
         priceTo: maxPrice,
         rooms: rooms,
+        areaFrom: minArea,
+        areaTo: maxArea,
       );
       setState(() {
         _properties = result['properties'] as List<Property>;
@@ -168,11 +193,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _resetFilters() {
     setState(() {
       _selectedCity = null;
+      _selectedDistrict = null;
       _minPriceController.clear();
       _maxPriceController.clear();
       _roomsController.clear();
+      _minAreaController.clear();
+      _maxAreaController.clear();
       _currentPage = 1;
     });
+    _fetchDistricts(); // Reset to all districts
     _loadProperties();
   }
 
@@ -200,6 +229,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _minPriceController.dispose();
     _maxPriceController.dispose();
     _roomsController.dispose();
+    _minAreaController.dispose();
+    _maxAreaController.dispose();
     super.dispose();
   }
 
@@ -379,6 +410,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               onPressed: () async {
                 await Navigator.pushNamed(context, '/add-property');
                 _loadProperties();
+                _fetchCities();
+                _fetchDistricts();
               },
             ),
           IconButton(
@@ -405,11 +438,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       child: DropdownButtonFormField<String>(
                         value: _selectedCity,
                         items: [
-                          const DropdownMenuItem(value: null, child: Text('-- Wybierz miasto --')),
+                          const DropdownMenuItem(value: null, child: Text('-- Select city --')),
                           ..._cities.map((city) => DropdownMenuItem(value: city, child: Text(city))).toList(),
                         ],
-                        onChanged: (value) => setState(() => _selectedCity = value),
-                        decoration: const InputDecoration(labelText: 'Miasto'),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedCity = value;
+                            _selectedDistrict = null; // Reset district when city changes
+                          });
+                          _fetchDistricts(city: value); // Fetch districts for selected city
+                        },
+                        decoration: const InputDecoration(labelText: 'City'),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedDistrict,
+                        items: [
+                          const DropdownMenuItem(value: null, child: Text('-- Select district --')),
+                          ..._districts.map((district) => DropdownMenuItem(value: district, child: Text(district))).toList(),
+                        ],
+                        onChanged: (value) => setState(() => _selectedDistrict = value),
+                        decoration: const InputDecoration(labelText: 'District'),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -417,7 +468,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       child: TextField(
                         controller: _minPriceController,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Min. cena (zł)'),
+                        decoration: const InputDecoration(labelText: 'Min. price (zł)'),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -425,7 +476,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       child: TextField(
                         controller: _maxPriceController,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Max. cena (zł)'),
+                        decoration: const InputDecoration(labelText: 'Max. price (zł)'),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -433,7 +484,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       child: TextField(
                         controller: _roomsController,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Liczba pokoi'),
+                        decoration: const InputDecoration(labelText: 'Number of rooms'),
                       ),
                     ),
                   ],
@@ -441,14 +492,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _minAreaController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(labelText: 'Min. area (m²)'),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextField(
+                        controller: _maxAreaController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(labelText: 'Max. area (m²)'),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(child: Container()), // Empty space
+                    const SizedBox(width: 16),
+                    Expanded(child: Container()), // Empty space
+                    const SizedBox(width: 16),
+                    Expanded(child: Container()), // Empty space
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
                     ElevatedButton(
                       onPressed: _filterProperties,
-                      child: const Text('Filtruj'),
+                      child: const Text('Filter'),
                     ),
                     const SizedBox(width: 12),
                     OutlinedButton(
                       onPressed: _resetFilters,
-                      child: const Text('Resetuj'),
+                      child: const Text('Reset'),
                     ),
                   ],
                 ),
