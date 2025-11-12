@@ -15,7 +15,7 @@ namespace Data.Entities
         public int? UserId { get; set; }
         public int AuthorId { get; set; }
         [Range(1, 5)]
-        public decimal Rating { get; set; }
+        public decimal? Rating { get; set; }
         [StringLength(1000)]
         public string Comment { get; set; }
         public DateTime CreatedAt { get; set; }
