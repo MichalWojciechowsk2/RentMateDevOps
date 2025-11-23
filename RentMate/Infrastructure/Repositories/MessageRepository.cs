@@ -23,12 +23,10 @@ namespace Infrastructure.Repositories
         //        .OrderBy(m => m.CreatedAt)
         //        .ToListAsync();
         //}
-        public async Task<IEnumerable<MessageEntity>> GetConversationByChatId(int chatId, int skip, int take)
+        public async Task<IEnumerable<MessageEntity>> GetConversationByChatId(int chatId)
         {
             return await _context.Messages.Where(m=> (m.ChatId == chatId))
-                .OrderByDescending(m=> m.CreatedAt)
-                .Skip(skip)
-                .Take(take)
+                .OrderBy(m=> m.CreatedAt)
                 .ToListAsync();
         }
 

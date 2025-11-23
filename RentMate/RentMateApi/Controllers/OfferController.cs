@@ -24,7 +24,9 @@ namespace RentMateApi.Controllers
         public OfferController(IOfferService offerService,
             IPropertyService propertyService,
             IUserService userService,
-            INotificationService notificationService, IChatService chatService, IHubContext<NotificationHub> hubContext)
+            INotificationService notificationService, 
+            IChatService chatService,
+            IHubContext<NotificationHub> hubContext)
         {
             _offerService = offerService;
             _propertyService = propertyService;
@@ -139,7 +141,6 @@ namespace RentMateApi.Controllers
         [HttpPatch("{offerId}/status")]
         public async Task<IActionResult> UpdateStatus(int offerId, [FromBody] OfferStatus status)
         {
-            Console.WriteLine($"✅ _chatService == null? {_chatService == null}");
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int tenantId))
             {
@@ -172,13 +173,36 @@ namespace RentMateApi.Controllers
                 }
                 
                 var propertyOwnerId = await _offerService.GetOwnerByOfferPropertyId(updatedOffer.PropertyId);
-                if (status == OfferStatus.Accepted)
+                
+                // Pobierz property entity aby uzyskać ChatGroupId
+                var property = await _propertyService.GetOwnerPropertyById(updatedOffer.PropertyId);
+                if (property == null)
                 {
-                    await _chatService.AddUserToChat(updatedOffer.Property.ChatGroupId, tenantId);
+                    return NotFound(new { message = "Mieszkanie nie zostało znalezione." });
                 }
-                if (status == OfferStatus.Cancelled || status == OfferStatus.Completed)
+                
+                // Sprawdź czy ChatGroupId jest ustawiony (nie może być 0)
+                if (property.ChatGroupId > 0)
                 {
-                        await _chatService.DeleteUserFromChat(updatedOffer.Property.ChatGroupId, tenantId);
+                    try
+                    {
+                        // Dodaj najemcę do czatu tylko jeśli akceptuje ofertę
+                        if(status == OfferStatus.Accepted) 
+                            await _chatService.AddUserToChat(property.ChatGroupId, tenantId);
+                        
+                        // Usuń najemcę z czatu tylko jeśli poprzedni status był Accepted
+                        // (bo najemca jest dodawany do czatu dopiero po akceptacji)
+                        if ((status == OfferStatus.Cancelled || status == OfferStatus.Completed) 
+                            && previousStatus == OfferStatus.Accepted)
+                        {
+                            await _chatService.DeleteUserFromChat(property.ChatGroupId, tenantId);
+                        }
+                    }
+                    catch (Exception chatEx)
+                    {
+           
+                        Console.WriteLine($"Błąd podczas operacji na czacie: {chatEx.Message}");
+                    }
                 }
 
                 var sender = await _userService.GetUserById(tenantId);
@@ -219,19 +243,6 @@ namespace RentMateApi.Controllers
         {
             var offer = await _offerService.GetAcceptedOfferByUserId(userId);
             return Ok(offer);
-        }
-        [HttpGet("getPropertyChatIdByOfferId")]
-        public async Task<IActionResult> getPropertyChatIdByOfferId(int offerId)
-        {
-            try
-            {
-                var property = await _offerService.GetPropertyChatIdByOfferId(offerId);
-                return Ok(property);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
         }
     }
 }
