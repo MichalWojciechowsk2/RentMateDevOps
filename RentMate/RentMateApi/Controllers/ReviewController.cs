@@ -48,7 +48,7 @@ namespace RentMateApi.Controllers
                 return StatusCode(500, new { message = "An error occurred. ", error = ex.Message });
             }
         }
-        [HttpGet]
+        [HttpGet("{id}")]
         [Authorize]
         public async Task<IActionResult> GetReviewById(int reviewId)
         {
@@ -62,7 +62,6 @@ namespace RentMateApi.Controllers
                 return StatusCode(500, new { message = "An error occurred. ", error = ex.Message });
             }
         }
-        [HttpGet]
         [Authorize]
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetAllReviewsForUserByUserId(int userId)
@@ -77,7 +76,6 @@ namespace RentMateApi.Controllers
                 return StatusCode(500, new { message = "An error occurred. ", error = ex.Message });
             }
         }
-        [HttpGet]
         [Authorize]
         [HttpGet("property/{propertyId}")]
         public async Task<IActionResult> GetAllReviewsForPropertyByPropertyId(int propertyId)
