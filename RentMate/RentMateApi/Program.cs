@@ -38,14 +38,19 @@ namespace RentMateApi
             {
                 options.AddPolicy("AllowFrontend", policy =>
                 {
-                    policy.WithOrigins("http://localhost:5173")
+                    policy.WithOrigins("http://localhost:5173", "http://localhost:8080", "http://localhost:64730", "http://localhost:50592")
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials();
                 });
             });
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    // Ignoruj cykliczne referencje w JSON (np. Property -> Offers -> Property)
+                    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+                });
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -75,6 +80,9 @@ namespace RentMateApi
 
             builder.Services.AddScoped<IChatService, ChatService>();
             builder.Services.AddScoped<IChatRepository, ChatRepository>();
+
+            builder.Services.AddScoped<IIssueService, IssueService>();
+            builder.Services.AddScoped<IIssueRepository, IssueRepository>();
 
 
 
@@ -123,7 +131,7 @@ namespace RentMateApi
             builder.Services.AddSignalR();
 
 
-            //Wy³¹czone na moment projektowania systemu !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            //Wyï¿½ï¿½czone na moment projektowania systemu !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
             //Configure Hangfire Scheduler
           //  builder.Services.AddHangfire(config =>
@@ -139,14 +147,14 @@ namespace RentMateApi
           //                  UseRecommendedIsolationLevel = true,
           //                  DisableGlobalLocks = true
           //              }));
-            //Wy³¹czone na moment projektowania systemu !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            //Wyï¿½ï¿½czone na moment projektowania systemu !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             //builder.Services.AddHangfireServer();
 
             var app = builder.Build();
             //Free education Community MIT License
             QuestPDF.Settings.License = LicenseType.Community;
 
-            //Wy³¹czone podczas projektowania aplikacji, czasem wystêpuj¹ problemy przy po³¹czeniu HangFire - Baza danych !!!!!!!!
+            //Wyï¿½ï¿½czone podczas projektowania aplikacji, czasem wystï¿½pujï¿½ problemy przy poï¿½ï¿½czeniu HangFire - Baza danych !!!!!!!!
 
             //Hangfire dashboard to see tasks
             //app.UseHangfireDashboard("/hangfire");

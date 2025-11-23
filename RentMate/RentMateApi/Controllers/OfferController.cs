@@ -24,12 +24,15 @@ namespace RentMateApi.Controllers
         public OfferController(IOfferService offerService,
             IPropertyService propertyService,
             IUserService userService,
-            INotificationService notificationService, IHubContext<NotificationHub> hubContext)
+            INotificationService notificationService, 
+            IChatService chatService,
+            IHubContext<NotificationHub> hubContext)
         {
             _offerService = offerService;
             _propertyService = propertyService;
             _userService = userService;
             _notificationService = notificationService;
+            _chatService = chatService;
             _hubContext = hubContext;
         }
         [HttpPost]
@@ -107,11 +110,33 @@ namespace RentMateApi.Controllers
             return Ok(offers);
         }
         [HttpGet]
+        [Route("getOffersByPropertyId")]
+        public async Task<IActionResult> GetOffersByPropertyId(int propertyId)
+        {
+            var offers = await _offerService.GetOffersByPropertyId(propertyId);
+            return Ok(offers);
+        }
+        [HttpGet]
         [Route("getOfferByUserId")]
         public async Task<IActionResult> GetOfferByUserId(int userId)
         {
             var offer = await _offerService.GetOfferByUserId(userId);
             return Ok(offer);
+        }
+        
+        [HttpGet]
+        [Route("getAcceptedOfferByUserId")]
+        public async Task<IActionResult> GetAcceptedOfferByUserId(int userId)
+        {
+            var offerEntity = await _offerService.GetAcceptedOfferByUserId(userId);
+            if (offerEntity == null)
+                return NotFound(new { message = "Brak zaakceptowanej oferty dla użytkownika." });
+            
+            // Użyj GetOfferById aby uzyskać DTO
+            var offerDto = await _offerService.GetOfferById(offerEntity.Id);
+            if (offerDto == null)
+                return NotFound(new { message = "Brak zaakceptowanej oferty dla użytkownika." });
+            return Ok(offerDto);
         }
         [HttpPatch("{offerId}/status")]
         public async Task<IActionResult> UpdateStatus(int offerId, [FromBody] OfferStatus status)
@@ -132,11 +157,53 @@ namespace RentMateApi.Controllers
 
             try
             {
+                // Pobierz ofertę przed aktualizacją, aby sprawdzić poprzedni status
+                var currentOffer = await _offerService.GetOfferById(offerId);
+                if (currentOffer == null)
+                {
+                    return NotFound(new { message = "Oferta nie została znaleziona." });
+                }
+                
+                var previousStatus = currentOffer.Status;
+                
                 var updatedOffer = await _offerService.UpdateOfferStatus(offerId, status);
+                if (updatedOffer == null)
+                {
+                    return NotFound(new { message = "Oferta nie została znaleziona." });
+                }
+                
                 var propertyOwnerId = await _offerService.GetOwnerByOfferPropertyId(updatedOffer.PropertyId);
-                if(status == OfferStatus.Accepted) await _chatService.AddUserToChat(updatedOffer.Id, tenantId);
-                if (status == OfferStatus.Cancelled || status == OfferStatus.Completed) 
-                        await _chatService.DeleteUserFromChat(updatedOffer.Id, tenantId);
+                
+                // Pobierz property entity aby uzyskać ChatGroupId
+                var property = await _propertyService.GetOwnerPropertyById(updatedOffer.PropertyId);
+                if (property == null)
+                {
+                    return NotFound(new { message = "Mieszkanie nie zostało znalezione." });
+                }
+                
+                // Sprawdź czy ChatGroupId jest ustawiony (nie może być 0)
+                if (property.ChatGroupId > 0)
+                {
+                    try
+                    {
+                        // Dodaj najemcę do czatu tylko jeśli akceptuje ofertę
+                        if(status == OfferStatus.Accepted) 
+                            await _chatService.AddUserToChat(property.ChatGroupId, tenantId);
+                        
+                        // Usuń najemcę z czatu tylko jeśli poprzedni status był Accepted
+                        // (bo najemca jest dodawany do czatu dopiero po akceptacji)
+                        if ((status == OfferStatus.Cancelled || status == OfferStatus.Completed) 
+                            && previousStatus == OfferStatus.Accepted)
+                        {
+                            await _chatService.DeleteUserFromChat(property.ChatGroupId, tenantId);
+                        }
+                    }
+                    catch (Exception chatEx)
+                    {
+           
+                        Console.WriteLine($"Błąd podczas operacji na czacie: {chatEx.Message}");
+                    }
+                }
 
                 var sender = await _userService.GetUserById(tenantId);
                 var senderNamameSurname = sender.FirstName + " " + sender.LastName;
@@ -157,8 +224,9 @@ namespace RentMateApi.Controllers
                 var receiverUnreadNoti = await _notificationService.CountHowMuchNotRead(propertyOwnerId);
                 await _hubContext.Clients.User(propertyOwnerId.ToString()).SendAsync("ReceiveUnreadCount", receiverUnreadNoti);
 
-
-                return Ok(updatedOffer);
+                // Zwróć DTO zamiast Entity aby uniknąć cyklicznych referencji w JSON
+                var offerDto = await _offerService.GetOfferById(offerId);
+                return Ok(offerDto);
             }
             catch (KeyNotFoundException)
             {

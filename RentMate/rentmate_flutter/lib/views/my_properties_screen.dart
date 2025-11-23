@@ -61,12 +61,21 @@ class _MyPropertiesScreenState extends State<MyPropertiesScreen> {
                     return Card(
                       margin: const EdgeInsets.all(8.0),
                       child: InkWell(
-                        onTap: () {
-                          Navigator.pushNamed(
+                        onTap: () async {
+                          final result = await Navigator.pushNamed(
                             context,
-                            '/property-details',
-                            arguments: property.id,
+                            '/edit-property',
+                            arguments: property,
                           );
+                          if (!mounted) return;
+                          if (result is Property) {
+                            setState(() {
+                              final idx = _properties.indexWhere((p) => p.id == result.id);
+                              if (idx != -1) {
+                                _properties[idx] = result;
+                              }
+                            });
+                          }
                         },
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),

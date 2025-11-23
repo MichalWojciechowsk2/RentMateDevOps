@@ -41,8 +41,10 @@ namespace ApplicationCore.Dto.Property
         [Column(TypeName = "decimal(18,2)")]
         public decimal BaseDeposit { get; set; } //kaucja
         public bool isActive { get; set; }
+        public int ChatGroupId { get; set; }
 
         public string? OwnerUsername { get; set; }
+        public string? OwnerPhoneNumber { get; set; }
         
         public List<PropertyImageDto>? Images { get; set; }
     }
