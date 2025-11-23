@@ -25,10 +25,10 @@ namespace Services.Services
         //    var messages = await _messageRepository.GetConversation(userId, otherUserId);
         //    return _mapper.Map<IEnumerable<MessageDto>>(messages);
         //}
-        
-        public async Task<ChatWithContentDto> GetChatWithContent(int chatId)
+
+        public async Task<ChatWithContentDto> GetChatWithContent(int chatId, int skip, int take)
         {
-            var messages = await _messageRepository.GetConversationByChatId(chatId);
+            var messages = await _messageRepository.GetConversationByChatId(chatId, skip, take);
             var users = await _chatRepository.GetChatUsers(chatId);
 
             var chatWithContent = new ChatWithContentDto
@@ -68,16 +68,6 @@ namespace Services.Services
             var message = await _messageRepository.GetMessageById(messageId);
             return message.Content;
         }
-
-        public async Task<int> GetUnreadMessagesCount(int userId)
-        {
-            return await _messageRepository.GetUnreadMessagesCount(userId);
-        }
-
-        public async Task MarkMessagesAsRead(int chatId, int userId)
-        {
-            await _messageRepository.MarkMessagesAsRead(chatId, userId);
-        }
     }
     public interface IMessageService
     {
@@ -86,8 +76,6 @@ namespace Services.Services
         Task<MessageDto> SendMessage(int senderId, ChatCreateMessageDto createMessageDto);
         Task<IEnumerable<MessageDto>> GetUserMessages(int userId);
         Task<string> GetMessageById(int messageId);
-        Task<ChatWithContentDto> GetChatWithContent(int chatId);
-        Task<int> GetUnreadMessagesCount(int userId);
-        Task MarkMessagesAsRead(int chatId, int userId);
+        Task<ChatWithContentDto> GetChatWithContent(int chatId, int skip, int take);
     }
-} 
+}

@@ -21,7 +21,7 @@ namespace RentMateApi.Controllers
         }
 
 
-        //rozwa�y� czy b�dzie do usuni�cia skoro korzystamy z chat�w
+        //rozwa¿yæ czy bêdzie do usuniêcia skoro korzystamy z chatów
         //[HttpGet("conversation")]
         //public async Task<IActionResult> GetConversation([FromQuery] int otherUserId)
         //{
@@ -40,7 +40,7 @@ namespace RentMateApi.Controllers
         //    }
         //}
         [HttpGet("chat")]
-        public async Task<IActionResult> GetChatWithMessages([FromQuery] int chatId)
+        public async Task<IActionResult> GetChatWithMessages([FromQuery] int chatId, [FromQuery] int skip = 0, [FromQuery] int take = 12)
         {
             try
             {
@@ -48,7 +48,7 @@ namespace RentMateApi.Controllers
                 if (userId == 0)
                     return Unauthorized();
 
-                var messages = await _messageService.GetChatWithContent(chatId);
+                var messages = await _messageService.GetChatWithContent(chatId, skip, take);
                 return Ok(messages);
             }
             catch (Exception ex)
@@ -95,46 +95,10 @@ namespace RentMateApi.Controllers
             }
         }
         [HttpGet("messageById/{messageId}")]
-        public async Task<IActionResult> GetMessageById([FromQuery]int messageId)
+        public async Task<IActionResult> GetMessageById([FromQuery] int messageId)
         {
             var message = _messageService.GetMessageById(messageId);
             return Ok(message);
         }
-
-        [HttpGet("unread-count")]
-        public async Task<IActionResult> GetUnreadMessagesCount()
-        {
-            try
-            {
-                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-                if (userId == 0)
-                    return Unauthorized();
-
-                var count = await _messageService.GetUnreadMessagesCount(userId);
-                return Ok(count);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
-
-        [HttpPost("mark-as-read")]
-        public async Task<IActionResult> MarkMessagesAsRead([FromQuery] int chatId)
-        {
-            try
-            {
-                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-                if (userId == 0)
-                    return Unauthorized();
-
-                await _messageService.MarkMessagesAsRead(chatId, userId);
-                return Ok(new { success = true });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
     }
-} 
+}
