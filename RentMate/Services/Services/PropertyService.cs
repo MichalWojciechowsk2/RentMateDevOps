@@ -1,4 +1,4 @@
-﻿using ApplicationCore.Dto.Property;
+using ApplicationCore.Dto.Property;
 using AutoMapper;
 using Data.Entities;
 using Infrastructure.Repositories;

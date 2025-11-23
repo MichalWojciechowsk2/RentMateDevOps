@@ -32,7 +32,9 @@ namespace Infrastructure.Repositories
         }
         public async Task<IEnumerable<ChatEntity>> GetAllChats()
         {
-            return await _context.Chats.ToListAsync();
+            return await _context.Chats
+                .Include(c => c.ChatUsers)
+                .ToListAsync();
         }
         public async Task<ChatEntity> CreatePrivateChat(int firstUserId, int secondUserId)
         {

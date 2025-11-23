@@ -98,6 +98,28 @@ namespace Infrastructure.Repositories
             _context.Offers.Update(offerEntity);
             await _context.SaveChangesAsync();
         }
+        public async Task<int> GetAcceptedOffersCountByPropertyId(int propertyId)
+        {
+            return await _context.Offers
+                .Where(o => o.PropertyId == propertyId && o.Status == OfferStatus.Accepted)
+                .CountAsync();
+        }
+        public async Task<IEnumerable<OfferEntity>> getOffersByPropertyId(int propertyId)
+        {
+            try
+            {
+                return await _context.Offers
+                    .Include(o => o.Tenant)
+                    .Where(o => o.PropertyId == propertyId)
+                    .OrderByDescending(o => o.CreatedAt)
+                    .ToListAsync();
+            }
+            catch(Exception ex)
+            {
+                Console.Error.WriteLine($"Błąd podczas pobierania ofert dla propertyId {propertyId}: {ex.Message}");
+                return null;
+            }
+        }
     }
     public interface IOfferRepository
     {
@@ -113,5 +135,7 @@ namespace Infrastructure.Repositories
         Task<int?> GetPropertyChatIdByOfferId(int offerId);
         Task<OfferEntity> getOfferAndTenantByOfferId(int offerId);
         Task updateAsync(OfferEntity offerEntity);
+        Task<int> GetAcceptedOffersCountByPropertyId(int propertyId);
+        Task<IEnumerable<OfferEntity>> getOffersByPropertyId(int propertyId);
     }
 }

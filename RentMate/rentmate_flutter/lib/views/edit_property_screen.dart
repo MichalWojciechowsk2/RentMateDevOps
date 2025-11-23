@@ -5,23 +5,34 @@ import 'package:flutter/foundation.dart';
 import 'dart:io';
 import '../models/property.dart';
 import '../models/property_image.dart';
+import '../models/offer.dart';
 import '../services/property_service.dart';
+import '../services/payment_service.dart';
+import '../services/offer_service.dart';
+import 'rental_agreements_tab.dart';
+import 'bills_tab.dart';
+import 'property_issues_tab.dart';
 
 class EditPropertyScreen extends StatefulWidget {
-  const EditPropertyScreen({super.key});
+  final int? initialTabIndex;
+  
+  const EditPropertyScreen({super.key, this.initialTabIndex});
 
   @override
   State<EditPropertyScreen> createState() => _EditPropertyScreenState();
 }
 
-class _EditPropertyScreenState extends State<EditPropertyScreen> {
+class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _propertyService = PropertyService();
+  final _paymentService = PaymentService();
+  final _offerService = OfferService();
   final _imagePicker = ImagePicker();
   bool _isLoading = false;
   late Property _property;
   List<PropertyImage> _currentImages = [];
   List<XFile> _newImages = [];
+  late TabController _tabController;
 
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -33,6 +44,13 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
   final _postalCodeController = TextEditingController();
   final _roomCountController = TextEditingController();
   final _areaController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final initialIndex = widget.initialTabIndex ?? 0;
+    _tabController = TabController(length: 4, vsync: this, initialIndex: initialIndex);
+  }
 
   @override
   void didChangeDependencies() {
@@ -53,6 +71,49 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
     _roomCountController.text = _property.roomCount.toString();
     _areaController.text = _property.area;
     _currentImages = List.from(_property.images);
+  }
+
+  Future<void> _togglePublish() async {
+    setState(() => _isLoading = true);
+    try {
+      final updated = await _propertyService.updatePropertyIsActive(_property.id, !_property.isActive);
+      if (updated) {
+        setState(() {
+          _property = Property(
+            id: _property.id,
+            ownerId: _property.ownerId,
+            title: _property.title,
+            description: _property.description,
+            basePrice: _property.basePrice,
+            baseDeposit: _property.baseDeposit,
+            address: _property.address,
+            city: _property.city,
+            district: _property.district,
+            postalCode: _property.postalCode,
+            roomCount: _property.roomCount,
+            area: _property.area,
+            images: _property.images,
+            isActive: !_property.isActive,
+            createdAt: _property.createdAt,
+            updatedAt: DateTime.now(),
+            ownerUsername: _property.ownerUsername,
+          );
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(_property.isActive ? 'Property published' : 'Property unpublished')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update property: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _pickImage() async {
@@ -235,22 +296,18 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
     _postalCodeController.dispose();
     _roomCountController.dispose();
     _areaController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Property'),
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
+  Widget _buildPropertyEditTab() {
+    return _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
                   TextFormField(
                     controller: _titleController,
                     decoration: const InputDecoration(
@@ -487,6 +544,46 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
                                   ),
                                 Positioned(
                                   top: 0,
+                                  left: 0,
+                                  child: IconButton(
+                                    tooltip: image.isMainImage ? 'Main image' : 'Set as main',
+                                    icon: Icon(
+                                      image.isMainImage ? Icons.star : Icons.star_border,
+                                      color: image.isMainImage ? Colors.amber : Colors.white,
+                                    ),
+                                    onPressed: image.isMainImage
+                                        ? null
+                                        : () async {
+                                            try {
+                                              await _propertyService.setMainImage(image.id);
+                                              setState(() {
+                                                _currentImages = _currentImages
+                                                    .map((img) => PropertyImage(
+                                                          id: img.id,
+                                                          propertyId: img.propertyId,
+                                                          imageUrl: img.imageUrl,
+                                                          isMainImage: img.id == image.id,
+                                                          createdAt: img.createdAt,
+                                                        ))
+                                                    .toList();
+                                              });
+                                              if (mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(content: Text('Main image updated')),
+                                                );
+                                              }
+                                            } catch (e) {
+                                              if (mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text('Error: ${e.toString()}')),
+                                                );
+                                              }
+                                            }
+                                          },
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 0,
                                   right: 0,
                                   child: IconButton(
                                     icon: const Icon(
@@ -571,13 +668,54 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> {
                     label: const Text('Add Images'),
                   ),
                   const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: _submitForm,
-                    child: const Text('Save Changes'),
-                  ),
-                ],
-              ),
+                ElevatedButton(
+                  onPressed: _submitForm,
+                  child: const Text('Save Changes'),
+                ),
+              ],
             ),
+          );
+  }
+
+  Widget _buildBillsTab() {
+    return BillsTab(property: _property);
+  }
+
+  Widget _buildProblemsTab() {
+    return PropertyIssuesTab(property: _property);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Edit Property'),
+        actions: [
+          TextButton.icon(
+            onPressed: _isLoading ? null : _togglePublish,
+            icon: Icon(_property.isActive ? Icons.visibility_off : Icons.publish),
+            label: Text(_property.isActive ? 'Unpublish' : 'Publish'),
+          ),
+        ],
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'Mieszkanie'),
+            Tab(text: 'Umowy wynajmu'),
+            Tab(text: 'Rachunki'),
+            Tab(text: 'Problemy'),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildPropertyEditTab(),
+          RentalAgreementsTab(property: _property),
+          _buildBillsTab(),
+          _buildProblemsTab(),
+        ],
+      ),
     );
   }
 } 

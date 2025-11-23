@@ -68,6 +68,16 @@ namespace Services.Services
             var message = await _messageRepository.GetMessageById(messageId);
             return message.Content;
         }
+
+        public async Task<int> GetUnreadMessagesCount(int userId)
+        {
+            return await _messageRepository.GetUnreadMessagesCount(userId);
+        }
+
+        public async Task MarkMessagesAsRead(int chatId, int userId)
+        {
+            await _messageRepository.MarkMessagesAsRead(chatId, userId);
+        }
     }
     public interface IMessageService
     {

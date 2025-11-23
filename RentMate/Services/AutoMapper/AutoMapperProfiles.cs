@@ -3,6 +3,7 @@ using ApplicationCore.Dto.Payment;
 using ApplicationCore.Dto.Property;
 using ApplicationCore.Dto.Property.Offer;
 using ApplicationCore.Dto.User;
+using ApplicationCore.Dto.Issue;
 using AutoMapper;
 using Data.Entities;
 
@@ -22,6 +23,7 @@ namespace Services.AutoMapper
             CreateMap<PropertyEntity, PropertyDto>()
                 .ForMember(dest => dest.OwnerId, opt => opt.MapFrom(src => src.OwnerId))
                 .ForMember(dest => dest.OwnerUsername, opt => opt.MapFrom(src => src.Owner.FirstName + " " + src.Owner.LastName))
+                .ForMember(dest => dest.OwnerPhoneNumber, opt => opt.MapFrom(src => src.Owner.PhoneNumber))
                 .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.PropertyImages));
 
             //PropertyImage
@@ -47,7 +49,10 @@ namespace Services.AutoMapper
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => PaymentStatus.Pending));
 
             CreateMap<PaymentDto, PaymentEntity>();
-            CreateMap<PaymentEntity, PaymentDto>();
+
+            //Issue
+            CreateMap<CreateIssueDto, IssueEntity>();
+            CreateMap<IssueEntity, IssueDto>();
 
             CreateMap<PaymentEntity, PaymentDtoWithTenantName>();
             CreateMap<PaymentEntity, PaymentEntity>();

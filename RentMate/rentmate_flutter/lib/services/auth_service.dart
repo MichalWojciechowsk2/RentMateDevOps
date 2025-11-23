@@ -54,6 +54,8 @@ class AuthService {
     required String phoneNumber,
     required String password,
     required String role,
+    String? aboutMe,
+    String? photoUrl,
   }) async {
     try {
       final response = await http.post(
@@ -66,6 +68,8 @@ class AuthService {
           'lastName': lastName,
           'phoneNumber': phoneNumber,
           'role': role,
+          if (aboutMe != null) 'aboutMe': aboutMe,
+          if (photoUrl != null) 'photoUrl': photoUrl,
         }),
       );
 

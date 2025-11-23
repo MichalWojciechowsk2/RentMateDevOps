@@ -98,13 +98,26 @@ class PropertyService {
 
   Future<Property> updateProperty(Property property) async {
     try {
-      final response = await http.put(
-        Uri.parse('$_baseUrl/Property/${property.id}'),
+      final body = {
+        'title': property.title,
+        'description': property.description,
+        'address': property.address,
+        'area': double.tryParse(property.area.toString()) ?? 0,
+        'district': property.district,
+        'roomCount': property.roomCount,
+        'city': property.city,
+        'postalCode': property.postalCode,
+        'basePrice': property.basePrice,
+        'baseDeposit': property.baseDeposit,
+      };
+
+      final response = await http.patch(
+        Uri.parse('$_baseUrl/Property/${property.id}/updateProperty'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ${await _authService.getToken()}',
         },
-        body: json.encode(property.toJson()),
+        body: json.encode(body),
       );
 
       if (response.statusCode == 200) {
@@ -213,6 +226,23 @@ class PropertyService {
     }
   }
 
+  Future<void> setMainImage(int imageId) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$_baseUrl/Property/images/$imageId/set-main'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${await _authService.getToken()}',
+        },
+      );
+      if (response.statusCode != 200) {
+        throw Exception('Failed to set main image: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Failed to set main image: $e');
+    }
+  }
+
   Future<List<String>> getCities() async {
     final response = await http.get(
       Uri.parse('$_baseUrl/Property/cities'),
@@ -225,6 +255,24 @@ class PropertyService {
       return data.map((city) => city['name'].toString()).toList();
     } else {
       throw Exception('Failed to load cities: \\${response.body}');
+    }
+  }
+
+  Future<List<String>> getDistricts({String? city}) async {
+    final uri = city != null && city.isNotEmpty
+        ? Uri.parse('$_baseUrl/Property/districts').replace(queryParameters: {'city': city})
+        : Uri.parse('$_baseUrl/Property/districts');
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((district) => district['name'].toString()).toList();
+    } else {
+      throw Exception('Failed to load districts: \\${response.body}');
     }
   }
 
@@ -249,10 +297,49 @@ class PropertyService {
     }
   }
 
-  Future<List<Property>> getAllProperties() async {
+  Future<Map<String, dynamic>> getAllProperties({
+    int pageNumber = 1,
+    int pageSize = 10,
+    String? city,
+    String? district,
+    double? priceFrom,
+    double? priceTo,
+    int? rooms,
+    double? areaFrom,
+    double? areaTo,
+  }) async {
     try {
+      final queryParams = <String, String>{
+        'pageNumber': pageNumber.toString(),
+        'pageSize': pageSize.toString(),
+      };
+      
+      // Add filter parameters if provided
+      if (city != null && city.isNotEmpty) {
+        queryParams['city'] = city;
+      }
+      if (district != null && district.isNotEmpty) {
+        queryParams['district'] = district;
+      }
+      if (priceFrom != null) {
+        queryParams['priceFrom'] = priceFrom.toString();
+      }
+      if (priceTo != null) {
+        queryParams['priceTo'] = priceTo.toString();
+      }
+      if (rooms != null) {
+        queryParams['rooms'] = rooms.toString();
+      }
+      if (areaFrom != null) {
+        queryParams['areaFrom'] = areaFrom.toString();
+      }
+      if (areaTo != null) {
+        queryParams['areaTo'] = areaTo.toString();
+      }
+      
+      final uri = Uri.parse('$_baseUrl/Property').replace(queryParameters: queryParams);
       final response = await http.get(
-        Uri.parse('$_baseUrl/Property'),
+        uri,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ${await _authService.getToken()}',
@@ -260,13 +347,69 @@ class PropertyService {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        return data.map((json) => Property.fromJson(json)).toList();
+        final decodedData = json.decode(response.body);
+        
+        // Debug: print the response structure
+        print('Response data: $decodedData');
+        
+        // Check if response is a PagedResult object with Items property (API uses uppercase 'Items')
+        List<dynamic> data;
+        if (decodedData is Map) {
+          // Check for 'Items' (C# uses PascalCase)
+          if (decodedData.containsKey('Items')) {
+            data = List<dynamic>.from(decodedData['Items']);
+          } else if (decodedData.containsKey('items')) {
+            data = List<dynamic>.from(decodedData['items']);
+          } else {
+            // If it's a Map but doesn't have Items/items, throw error
+            throw Exception('Response is a Map but missing Items field. Keys: ${decodedData.keys.toList()}');
+          }
+        } else if (decodedData is List) {
+          data = decodedData;
+        } else {
+          throw Exception('Unexpected response format: ${decodedData.runtimeType}');
+        }
+        
+        print('Parsing ${data.length} properties');
+        final properties = data.map((json) => Property.fromJson(json)).toList();
+        print('Successfully parsed ${properties.length} properties');
+        
+        // Return both properties and pagination info
+        int totalItems = decodedData['TotalItems'] ?? decodedData['totalItems'] ?? properties.length;
+        int totalPages = decodedData['TotalPages'] ?? decodedData['totalPages'] ?? 1;
+        
+        return {
+          'properties': properties,
+          'pageNumber': decodedData['PageNumber'] ?? decodedData['pageNumber'] ?? pageNumber,
+          'pageSize': decodedData['PageSize'] ?? decodedData['pageSize'] ?? pageSize,
+          'totalItems': totalItems,
+          'totalPages': totalPages,
+        };
       } else {
         throw Exception('Failed to load all properties: ${response.body}');
       }
     } catch (e) {
       throw Exception('Failed to load all properties: $e');
+    }
+  }
+
+  Future<bool> updatePropertyIsActive(int propertyId, bool newIsActive) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$_baseUrl/Property/$propertyId/isActive'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${await _authService.getToken()}',
+        },
+        body: json.encode(newIsActive),
+      );
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        throw Exception('Failed to update isActive: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Failed to update isActive: $e');
     }
   }
 } 

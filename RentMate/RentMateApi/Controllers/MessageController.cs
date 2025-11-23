@@ -21,7 +21,7 @@ namespace RentMateApi.Controllers
         }
 
 
-        //rozwa¿yæ czy bêdzie do usuniêcia skoro korzystamy z chatów
+        //rozwaï¿½yï¿½ czy bï¿½dzie do usuniï¿½cia skoro korzystamy z chatï¿½w
         //[HttpGet("conversation")]
         //public async Task<IActionResult> GetConversation([FromQuery] int otherUserId)
         //{
@@ -99,6 +99,42 @@ namespace RentMateApi.Controllers
         {
             var message = _messageService.GetMessageById(messageId);
             return Ok(message);
+        }
+
+        [HttpGet("unread-count")]
+        public async Task<IActionResult> GetUnreadMessagesCount()
+        {
+            try
+            {
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+                if (userId == 0)
+                    return Unauthorized();
+
+                var count = await _messageService.GetUnreadMessagesCount(userId);
+                return Ok(count);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("mark-as-read")]
+        public async Task<IActionResult> MarkMessagesAsRead([FromQuery] int chatId)
+        {
+            try
+            {
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+                if (userId == 0)
+                    return Unauthorized();
+
+                await _messageService.MarkMessagesAsRead(chatId, userId);
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 } 

@@ -108,11 +108,33 @@ namespace RentMateApi.Controllers
             return Ok(offers);
         }
         [HttpGet]
+        [Route("getOffersByPropertyId")]
+        public async Task<IActionResult> GetOffersByPropertyId(int propertyId)
+        {
+            var offers = await _offerService.GetOffersByPropertyId(propertyId);
+            return Ok(offers);
+        }
+        [HttpGet]
         [Route("getOfferByUserId")]
         public async Task<IActionResult> GetOfferByUserId(int userId)
         {
             var offer = await _offerService.GetOfferByUserId(userId);
             return Ok(offer);
+        }
+        
+        [HttpGet]
+        [Route("getAcceptedOfferByUserId")]
+        public async Task<IActionResult> GetAcceptedOfferByUserId(int userId)
+        {
+            var offerEntity = await _offerService.GetAcceptedOfferByUserId(userId);
+            if (offerEntity == null)
+                return NotFound(new { message = "Brak zaakceptowanej oferty dla użytkownika." });
+            
+            // Użyj GetOfferById aby uzyskać DTO
+            var offerDto = await _offerService.GetOfferById(offerEntity.Id);
+            if (offerDto == null)
+                return NotFound(new { message = "Brak zaakceptowanej oferty dla użytkownika." });
+            return Ok(offerDto);
         }
         [HttpPatch("{offerId}/status")]
         public async Task<IActionResult> UpdateStatus(int offerId, [FromBody] OfferStatus status)
@@ -134,7 +156,21 @@ namespace RentMateApi.Controllers
 
             try
             {
+                // Pobierz ofertę przed aktualizacją, aby sprawdzić poprzedni status
+                var currentOffer = await _offerService.GetOfferById(offerId);
+                if (currentOffer == null)
+                {
+                    return NotFound(new { message = "Oferta nie została znaleziona." });
+                }
+                
+                var previousStatus = currentOffer.Status;
+                
                 var updatedOffer = await _offerService.UpdateOfferStatus(offerId, status);
+                if (updatedOffer == null)
+                {
+                    return NotFound(new { message = "Oferta nie została znaleziona." });
+                }
+                
                 var propertyOwnerId = await _offerService.GetOwnerByOfferPropertyId(updatedOffer.PropertyId);
                 if (status == OfferStatus.Accepted)
                 {
@@ -164,8 +200,9 @@ namespace RentMateApi.Controllers
                 var receiverUnreadNoti = await _notificationService.CountHowMuchNotRead(propertyOwnerId);
                 await _hubContext.Clients.User(propertyOwnerId.ToString()).SendAsync("ReceiveUnreadCount", receiverUnreadNoti);
 
-
-                return Ok(updatedOffer);
+                // Zwróć DTO zamiast Entity aby uniknąć cyklicznych referencji w JSON
+                var offerDto = await _offerService.GetOfferById(offerId);
+                return Ok(offerDto);
             }
             catch (KeyNotFoundException)
             {

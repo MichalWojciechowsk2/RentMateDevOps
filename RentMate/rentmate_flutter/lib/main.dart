@@ -6,6 +6,8 @@ import 'views/add_property_screen.dart';
 import 'views/edit_property_screen.dart';
 import 'views/property_details_screen.dart';
 import 'views/my_properties_screen.dart';
+import 'views/profile_screen.dart';
+import 'views/notifications_screen.dart';
 import 'services/auth_service.dart';
 
 void main() {
@@ -55,6 +57,8 @@ class MyApp extends StatelessWidget {
           return PropertyDetailsScreen(propertyId: propertyId);
         },
         '/my-properties': (context) => const MyPropertiesScreen(),
+        '/profile': (context) => const ProfileScreen(),
+        '/notifications': (context) => const NotificationsScreen(),
       },
     );
   }

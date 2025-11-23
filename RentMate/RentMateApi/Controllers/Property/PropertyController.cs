@@ -82,9 +82,9 @@ namespace RentMateApi.Controllers.Property
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllProperties([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAllProperties([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] PropertyFilterDto? filters = null)
         {
-            var result = await _propertyService.GetPagedAllActiveProperties(pageNumber, pageSize);
+            var result = await _propertyService.GetPagedAllActiveProperties(pageNumber, pageSize, filters);
             return Ok(result);
         }
 
@@ -143,32 +143,25 @@ namespace RentMateApi.Controllers.Property
         }
 
         [HttpGet("cities")]
-        public IActionResult GetCities() => Ok(Enum.GetValues(typeof(City)).Cast<City>().Select(c => new {
-            Id = (int)c,
-            Name = c.ToString()
-        }));
-
-        [HttpGet("districts/{cityId}")]
-        public IActionResult GetDistricts(int cityId)
+        public async Task<IActionResult> GetCities()
         {
-            if (cityId == (int)City.Kraków)
+            var cities = await _propertyService.GetUniqueCities();
+            return Ok(cities.Select(c => new { Name = c }));
+        }
+
+        [HttpGet("districts")]
+        public async Task<IActionResult> GetDistricts([FromQuery] string? city = null)
+        {
+            List<string> districts;
+            if (!string.IsNullOrEmpty(city))
             {
-                return Ok(Enum.GetValues(typeof(KrakowDistricts)).Cast<KrakowDistricts>().Select(d => new
-                {
-                    Id = (int)d,
-                    Name = d.GetDisplayName(),
-                    EnumName = d.ToString()
-                }));
+                districts = await _propertyService.GetUniqueDistrictsByCity(city);
             }
-            if (cityId == (int)City.Warszawa)
+            else
             {
-                return Ok(Enum.GetValues(typeof(WarszawaDistricts)).Cast<WarszawaDistricts>().Select(d => new {
-                    Id = (int)d,
-                    Name = d.GetDisplayName(),
-                    EnumName = d.ToString()
-                }));
+                districts = await _propertyService.GetUniqueDistricts();
             }
-            return NotFound();
+            return Ok(districts.Select(d => new { Name = d }));
         }
 
         [HttpPost("{propertyId}/images")]
@@ -253,6 +246,34 @@ namespace RentMateApi.Controllers.Property
                 imageUrl = $"{baseUrl}{img.ImageUrl}",
                 isMainImage = img.IsMainImage}).ToList();
             return Ok(result);
+        }
+
+        [HttpPatch("images/{imageId}/set-main")]
+        [Authorize]
+        public async Task<IActionResult> SetMainImage(int imageId)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    return Unauthorized(new { message = "User not authenticated or invalid user ID." });
+                }
+                await _propertyService.SetMainPropertyImageAsync(imageId, userId);
+                return Ok();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch
+            {
+                return StatusCode(500, "Wystąpił błąd podczas zmiany głównego zdjęcia.");
+            }
         }
 
 
