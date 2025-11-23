@@ -21,12 +21,6 @@ namespace Infrastructure.Repositories
         {
             return await _context.Offers.Where(o => o.Id == id).FirstOrDefaultAsync();
         }
-        public async Task<OfferEntity> GetOfferWithPropertyById(int id)
-        {
-            return await _context.Offers
-                .Include(o => o.Property)
-                .FirstOrDefaultAsync(o => o.Id == id);
-        }
         public async Task<bool> CreateOffer(OfferEntity entity)
         {
             try
@@ -85,10 +79,6 @@ namespace Infrastructure.Repositories
             var tenantId = await _context.Offers.Where(o => o.Id == offerId).Select(o => o.TenantId).FirstOrDefaultAsync();
             return tenantId.Value;
         }
-        public async Task<int?> GetPropertyChatIdByOfferId(int offerId)
-        {
-            return await _context.Offers.Include(o => o.Property).Where(o => o.Id == offerId).Select(o => o.Property.ChatGroupId).FirstOrDefaultAsync();
-        }
         public async Task<OfferEntity> getOfferAndTenantByOfferId(int offerId)
         {
             return await _context.Offers.Include(o => o.Tenant).FirstOrDefaultAsync(o => o.Id == offerId);
@@ -124,7 +114,6 @@ namespace Infrastructure.Repositories
     public interface IOfferRepository
     {
         Task<OfferEntity> getById(int id);
-        Task<OfferEntity> GetOfferWithPropertyById(int id);
         Task<bool> CreateOffer(OfferEntity entity);
         Task<IEnumerable<OfferEntity>> getActiveAndAcceptedOffersByPropId(int propertyId);
         Task<OfferEntity> getFirstAcceptedOfferByUserId(int userId);
@@ -132,7 +121,6 @@ namespace Infrastructure.Repositories
         Task<OfferEntity> getOfferById(int offerId);
         Task<int> GetOwnerIdByPropertyId(int propertyId);
         Task<int> GetTenantIdByOfferId(int offerId);
-        Task<int?> GetPropertyChatIdByOfferId(int offerId);
         Task<OfferEntity> getOfferAndTenantByOfferId(int offerId);
         Task updateAsync(OfferEntity offerEntity);
         Task<int> GetAcceptedOffersCountByPropertyId(int propertyId);
