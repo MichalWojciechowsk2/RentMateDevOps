@@ -1,4 +1,4 @@
-﻿using ApplicationCore.Dto.Property;
+using ApplicationCore.Dto.Property;
 using AutoMapper;
 using Data.Entities;
 using Infrastructure.Repositories;
@@ -12,12 +12,10 @@ namespace Services.Services
     public class PropertyService : IPropertyService
     {
         private readonly IPropertyRepository _propertyRepository;
-        private readonly IOfferRepository _offerRepository;
         private readonly IMapper _mapper;
-        public PropertyService(IPropertyRepository propertyRepository, IOfferRepository offerRepository, IMapper mapper)
+        public PropertyService(IPropertyRepository propertyRepository, IMapper mapper)
         {
             _propertyRepository = propertyRepository;
-            _offerRepository = offerRepository;
             _mapper = mapper;
         }
         public async Task<PropertyDto> CreateProperty(PropertyDto propertyDto, int ownerId, int chatId)
@@ -31,56 +29,18 @@ namespace Services.Services
             return _mapper.Map<PropertyDto>(createdEntity);
         }
 
-        public async Task<PagedResult<PropertyDto>> GetPagedAllActiveProperties(int pageNumber, int pageSize, PropertyFilterDto? filters = null)
+        public async Task<PagedResult<PropertyDto>> GetPagedAllActiveProperties(int pageNumber, int pageSize)
         {
             var query = _propertyRepository.GetPropertiesQueryable()
-                .Where(p => p.IsActive);
+        .Where(p => p.IsActive);
 
-            // Apply filters if provided
-            if (filters != null)
-            {
-                if (!string.IsNullOrEmpty(filters.City))
-                    query = query.Where(p => p.City == filters.City);
-                if (!string.IsNullOrEmpty(filters.District))
-                    query = query.Where(p => p.District == filters.District);
-                if (filters.PriceFrom.HasValue)
-                    query = query.Where(p => p.BasePrice >= filters.PriceFrom.Value);
-                if (filters.PriceTo.HasValue)
-                    query = query.Where(p => p.BasePrice <= filters.PriceTo.Value);
-                if (filters.Rooms.HasValue)
-                    query = query.Where(p => p.RoomCount == filters.Rooms.Value);
-                if (filters.AreaFrom.HasValue)
-                    query = query.Where(p => p.Area >= filters.AreaFrom.Value);
-                if (filters.AreaTo.HasValue)
-                    query = query.Where(p => p.Area <= filters.AreaTo.Value);
-            }
+            var totalItems = await query.CountAsync();
 
-            // Pobierz wszystkie mieszkania z filtrami
-            var allProperties = await query
-                .Include(p => p.Owner)
-                .Include(p => p.PropertyImages)
-                .ToListAsync();
-
-            // Filtruj mieszkania które nie są zapełnione (liczba zaakceptowanych ofert < liczba pokoi)
-            var availableProperties = new List<PropertyEntity>();
-            foreach (var property in allProperties)
-            {
-                var acceptedOffersCount = await _offerRepository.GetAcceptedOffersCountByPropertyId(property.Id);
-                // Mieszkanie jest dostępne jeśli liczba zaakceptowanych ofert < liczba pokoi
-                if (acceptedOffersCount < property.RoomCount)
-                {
-                    availableProperties.Add(property);
-                }
-            }
-
-            var totalItems = availableProperties.Count;
-
-            // Stosuj paginację
-            var items = availableProperties
+            var items = await query
                 .OrderBy(p => p.Id)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
-                .ToList();
+                .ToListAsync();
 
             return new PagedResult<PropertyDto>
             {
@@ -106,6 +66,7 @@ namespace Services.Services
             if (property == null) return null;
             return property;
         }
+
         public async Task<IEnumerable<PropertyDto>> SearchProperties(PropertyFilterDto filters)
         {
             var query = _propertyRepository.GetPropertiesQueryable();
@@ -122,11 +83,6 @@ namespace Services.Services
 
             if (filters.Rooms.HasValue)
                 query = query.Where(p => p.RoomCount == filters.Rooms.Value);
-            
-            if (filters.AreaFrom.HasValue)
-                query = query.Where(p => p.Area >= filters.AreaFrom.Value);
-            if (filters.AreaTo.HasValue)
-                query = query.Where(p => p.Area <= filters.AreaTo.Value);
             
             var entities = await query
                 .Include(p => p.Owner)
@@ -187,10 +143,6 @@ namespace Services.Services
                 Directory.CreateDirectory(uploadsPath);
             }
 
-            // Determine if property already has a main image
-            var existingImages = (await _propertyRepository.GetPhotos(propertyId)).ToList();
-            var hasMainAlready = existingImages.Any(i => i.IsMainImage);
-
             foreach (var image in images)
             {
                 if (image.Length > 0)
@@ -218,8 +170,7 @@ namespace Services.Services
                     {
                         PropertyId = propertyId,
                         ImageUrl = $"/uploads/images/{fileName}",
-                        // Only set main when none exists at all
-                        IsMainImage = !hasMainAlready && uploadedImages.Count == 0,
+                        IsMainImage = uploadedImages.Count == 0,
                         CreatedAt = DateTime.UtcNow
                     };
 
@@ -261,72 +212,22 @@ namespace Services.Services
             return await _propertyRepository.GetPhotos(propertyId);
         }
 
-        public async Task SetMainPropertyImageAsync(int imageId, int userId)
+        public interface IPropertyService
         {
-            var image = await _propertyRepository.GetPropertyImageById(imageId);
-            if (image == null) throw new ArgumentException($"Image with id {imageId} not found");
-            var property = await _propertyRepository.GetPropertieById(image.PropertyId);
-            if (property == null) throw new ArgumentException("Property not found");
-            if (property.OwnerId != userId) throw new UnauthorizedAccessException("You don't have permission to update images for this property");
+            Task<PropertyDto> CreateProperty(PropertyDto dto, int ownerId, int chatId);
+            Task<PagedResult<PropertyDto>> GetPagedAllActiveProperties(int pageNumber, int pageSize);
+            Task<IEnumerable<PropertyDto>> SearchProperties(PropertyFilterDto filters);
+            Task<IEnumerable<PropertyDto>> GetPropertiesByOwnerId(int ownerId);
+            Task<PropertyDto> GetPropertyDetails(int id);
+            Task<PropertyDto> GetPropertyById(int id);
+            Task<PropertyEntity> GetOwnerPropertyById(int id);
 
-            await _propertyRepository.SetMainImageAsync(image.PropertyId, imageId);
+            Task<PropertyDto> UdpatePropertyIsActiveById(int id, bool updateIsActive);
+            Task<PropertyDto> UdpatePropertyById(int id, UpdatePropertyDto dto);
+            Task<List<PropertyImageDto>> UploadPropertyImages(int propertyId, int userId, List<IFormFile> images);
+            Task DeletePropertyImage(int imageId, int userId);
+            Task<PropertyImageEntity?> GetPropertyMainImageByPropertyId(int propertyId);
+            Task<IEnumerable<PropertyImageEntity>> GetAllImages(int propertyId);
         }
-
-        public async Task<List<string>> GetUniqueCities()
-        {
-            var cities = await _propertyRepository.GetPropertiesQueryable()
-                .Where(p => !string.IsNullOrEmpty(p.City))
-                .Select(p => p.City)
-                .Distinct()
-                .OrderBy(c => c)
-                .ToListAsync();
-            return cities;
-        }
-
-        public async Task<List<string>> GetUniqueDistricts()
-        {
-            var districts = await _propertyRepository.GetPropertiesQueryable()
-                .Where(p => !string.IsNullOrEmpty(p.District))
-                .Select(p => p.District)
-                .Distinct()
-                .OrderBy(d => d)
-                .ToListAsync();
-            return districts;
-        }
-
-        public async Task<List<string>> GetUniqueDistrictsByCity(string city)
-        {
-            if (string.IsNullOrEmpty(city))
-                return new List<string>();
-            
-            var districts = await _propertyRepository.GetPropertiesQueryable()
-                .Where(p => p.City == city && !string.IsNullOrEmpty(p.District))
-                .Select(p => p.District)
-                .Distinct()
-                .OrderBy(d => d)
-                .ToListAsync();
-            return districts;
-        }
-    }
-
-    public interface IPropertyService
-    {
-        Task<PropertyDto> CreateProperty(PropertyDto dto, int ownerId, int chatId);
-        Task<PagedResult<PropertyDto>> GetPagedAllActiveProperties(int pageNumber, int pageSize, PropertyFilterDto? filters = null);
-        Task<IEnumerable<PropertyDto>> SearchProperties(PropertyFilterDto filters);
-        Task<IEnumerable<PropertyDto>> GetPropertiesByOwnerId(int ownerId);
-        Task<PropertyDto> GetPropertyDetails(int id);
-        Task<PropertyDto> GetPropertyById(int id);
-        Task<PropertyEntity> GetOwnerPropertyById(int id);
-        Task<PropertyDto> UdpatePropertyIsActiveById(int id, bool updateIsActive);
-        Task<PropertyDto> UdpatePropertyById(int id, UpdatePropertyDto dto);
-        Task<List<PropertyImageDto>> UploadPropertyImages(int propertyId, int userId, List<IFormFile> images);
-        Task DeletePropertyImage(int imageId, int userId);
-        Task<PropertyImageEntity?> GetPropertyMainImageByPropertyId(int propertyId);
-        Task<IEnumerable<PropertyImageEntity>> GetAllImages(int propertyId);
-        Task SetMainPropertyImageAsync(int imageId, int userId);
-        Task<List<string>> GetUniqueCities();
-        Task<List<string>> GetUniqueDistricts();
-        Task<List<string>> GetUniqueDistrictsByCity(string city);
     }
 }

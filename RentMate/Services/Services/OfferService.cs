@@ -77,6 +77,10 @@ namespace Services.Services
         {
             return await _offerRepository.GetTenantIdByOfferId(offerId);
         }
+        public async Task<int?> GetPropertyChatIdByOfferId(int offerId)
+        {
+            return await _offerRepository.GetPropertyChatIdByOfferId(offerId);
+        }
         public async Task<bool> CheckIfUserCanAcceptNewOffer(int userId)
         {
             var activeOffer = await _offerRepository.getFirstAcceptedOfferByUserId(userId);
@@ -85,7 +89,7 @@ namespace Services.Services
         }
         public async Task<OfferEntity> UpdateOfferStatus(int offerId, OfferStatus newStatus)
         {
-            var offer = await _offerRepository.getById(offerId);
+            var offer = await _offerRepository.GetOfferWithPropertyById(offerId);
             if (offer == null) throw new KeyNotFoundException($"Oferta o ID {offerId} nie istnieje");
             offer.Status = newStatus;
             offer.AcceptedAt = DateTime.Now;
@@ -127,6 +131,7 @@ namespace Services.Services
         Task<OfferDto> GetOfferAndTenantByOfferId(int offerId);
         Task<int> GetOwnerByOfferPropertyId(int propertId);
         Task<int> GetTenantByOfferId(int OfferId);
+        Task<int?> GetPropertyChatIdByOfferId(int offerId);
         Task<bool> CheckIfUserCanAcceptNewOffer(int userId);
         Task<OfferEntity> UpdateOfferStatus(int offerId, OfferStatus newStatus);
         public string GenerateOfferContract(Dictionary<string, string> data);

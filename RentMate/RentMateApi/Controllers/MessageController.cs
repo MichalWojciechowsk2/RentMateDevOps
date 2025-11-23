@@ -40,7 +40,7 @@ namespace RentMateApi.Controllers
         //    }
         //}
         [HttpGet("chat")]
-        public async Task<IActionResult> GetChatWithMessages([FromQuery] int chatId)
+        public async Task<IActionResult> GetChatWithMessages([FromQuery] int chatId, [FromQuery] int skip =0, [FromQuery] int take = 12)
         {
             try
             {
@@ -48,7 +48,7 @@ namespace RentMateApi.Controllers
                 if (userId == 0)
                     return Unauthorized();
 
-                var messages = await _messageService.GetChatWithContent(chatId);
+                var messages = await _messageService.GetChatWithContent(chatId, skip, take);
                 return Ok(messages);
             }
             catch (Exception ex)

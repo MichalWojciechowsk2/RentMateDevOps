@@ -85,15 +85,10 @@ namespace RentMateApi.Controllers
                 return StatusCode(500, new { message = $"Error creating private chat: {ex.Message}" });
             }
         }
-        /*[HttpPost("groupChat")]
-        public async Task<IActionResult> CreateGroupChatForProperty()
-        {
-            await _chatService.CreateChat
-        }
-        [HttpPost("groupChat")]
-        public async Task<IActionResult> CreateGroupChatForProperty()
-        {
-            await _chatService.CreateChat
-        }*/
+        //[HttpPost("groupChat")]
+        //public async Task<IActionResult> CreateGroupChatForProperty()
+        //{
+        //    await _chatService.CreateChat;
+        //}
     }
 }
