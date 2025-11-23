@@ -81,8 +81,8 @@ namespace RentMateApi
             builder.Services.AddScoped<IChatService, ChatService>();
             builder.Services.AddScoped<IChatRepository, ChatRepository>();
 
-            builder.Services.AddScoped<IIssueService, IssueService>();
-            builder.Services.AddScoped<IIssueRepository, IssueRepository>();
+            //builder.Services.AddScoped<IIssueService, IssueService>();
+            //builder.Services.AddScoped<IIssueRepository, IssueRepository>();
 
 
 

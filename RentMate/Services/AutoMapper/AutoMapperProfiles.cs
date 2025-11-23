@@ -3,7 +3,7 @@ using ApplicationCore.Dto.Payment;
 using ApplicationCore.Dto.Property;
 using ApplicationCore.Dto.Property.Offer;
 using ApplicationCore.Dto.User;
-using ApplicationCore.Dto.Issue;
+//using ApplicationCore.Dto.Issue;
 using AutoMapper;
 using Data.Entities;
 
@@ -51,8 +51,8 @@ namespace Services.AutoMapper
             CreateMap<PaymentDto, PaymentEntity>();
 
             //Issue
-            CreateMap<CreateIssueDto, IssueEntity>();
-            CreateMap<IssueEntity, IssueDto>();
+            //CreateMap<CreateIssueDto, IssueEntity>();
+            //CreateMap<IssueEntity, IssueDto>();
 
             CreateMap<PaymentEntity, PaymentDtoWithTenantName>();
             CreateMap<PaymentEntity, PaymentEntity>();
