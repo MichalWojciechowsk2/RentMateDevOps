@@ -133,7 +133,6 @@ namespace RentMateApi.Controllers.Property
             var result = await _propertyService.GetPropertiesByOwnerId(ownerId);
             return Ok(result);
         }
-
         [HttpGet("filter")]
         public async Task<IActionResult> Filter([FromQuery] PropertyFilterDto filters)
 

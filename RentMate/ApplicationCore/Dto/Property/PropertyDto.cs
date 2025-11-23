@@ -47,6 +47,5 @@ namespace ApplicationCore.Dto.Property
         public string? OwnerPhoneNumber { get; set; }
         
         public List<PropertyImageDto>? Images { get; set; }
-        public int ChatGroupId { get; set; }
     }
 }
