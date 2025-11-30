@@ -13,6 +13,7 @@ namespace ApplicationCore.Dto.Message
         public string ChatName { get; set; }
         public string? LastMessageContent { get; set; }
         public DateTime? LastMessageCreatedAt { get; set; }
+        public int OtherUserId { get; set; }
         public string OtherUserPhotoUrl { get; set; }
         public string OtherUserName {  get; set; }
     }

@@ -40,6 +40,7 @@ namespace Services.Services
                     ChatName = chat.Name,
                     LastMessageContent = lastMessage?.Content,
                     LastMessageCreatedAt = lastMessage?.CreatedAt,
+                    OtherUserId = otherUser.Id,
                     OtherUserPhotoUrl = otherUser.PhotoUrl,
                     OtherUserName = otherUser.FirstName + " " + otherUser.LastName,
                 };
