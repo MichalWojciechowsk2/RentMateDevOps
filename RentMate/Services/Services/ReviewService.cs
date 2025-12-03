@@ -42,7 +42,7 @@ namespace Services.Services
         }
         public async Task<IEnumerable<ReviewEntity>> GetAllReviewsForProperty(int propertyId)
         {
-            return await _reviewRepository.GetAllReviewsForUser(propertyId);
+            return await _reviewRepository.GetAllReviewsForProperty(propertyId);
         }
         public async Task<IEnumerable<ReviewEntity>> GetLast5ReviewsForProperty(int propertyId)
         {
