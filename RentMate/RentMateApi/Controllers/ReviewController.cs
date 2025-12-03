@@ -77,6 +77,20 @@ namespace RentMateApi.Controllers
             }
         }
         [Authorize]
+        [HttpGet("user/{userId}/last5Reviews")]
+        public async Task<IActionResult> GetLast5ReviewsForUserByUserId(int userId)
+        {
+            try
+            {
+                var response = await _reviewService.GetLast5ReviewsForUserByUserId(userId);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred. ", error = ex.Message });
+            }
+        }
+        [Authorize]
         [HttpGet("property/{propertyId}")]
         public async Task<IActionResult> GetAllReviewsForPropertyByPropertyId(int propertyId)
         {
@@ -90,6 +104,38 @@ namespace RentMateApi.Controllers
                 return StatusCode(500, new { message = "An error occurred. ", error = ex.Message });
             }
         }
+        [Authorize]
+        [HttpGet("property/{propertyId}/last5Reviews")]
+        public async Task<IActionResult> GetLast5ReviewsForProperty(int propertyId)
+        {
+            try
+            {
+                var response = await _reviewService.GetLast5ReviewsForProperty(propertyId);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred. ", error = ex.Message });
+            }
+        }
+
+        //semestrZ-25/26?
+        [Authorize]
+        [HttpGet("getAvgReview")]
+        public async Task<IActionResult> getAvgReview(bool isItUser, int objectId)
+        {
+            try
+            {
+                var response = await _reviewService.GetAvgReview(objectId, isItUser);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred. ", error = ex.Message });
+
+            }
+        }
+
     }
 
 }
