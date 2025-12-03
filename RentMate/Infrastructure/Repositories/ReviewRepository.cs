@@ -40,19 +40,19 @@ namespace Infrastructure.Repositories
         }
         public async Task<IEnumerable<ReviewEntity>> GetAllReviewsForUser(int userId)
         {
-            return await _context.Reviews.Where(r => r.UserId == userId).ToListAsync();
+            return await _context.Reviews.Where(r => r.UserId == userId).Include(r => r.Author).ToListAsync();
         }
         public async Task<IEnumerable<ReviewEntity>> GetLast5ReviewsForUser(int userId)
         {
-            return await _context.Reviews.Where(r => r.UserId == userId).OrderByDescending(r => r.CreatedAt).Take(5).ToListAsync();
+            return await _context.Reviews.Where(r => r.UserId == userId).OrderByDescending(r => r.CreatedAt).Include(r=> r.Author).Take(5).ToListAsync();
         }
         public async Task<IEnumerable<ReviewEntity>> GetAllReviewsForProperty(int propertyId)
         {
-            return await _context.Reviews.Where(r => r.PropertyId == propertyId).ToListAsync();
+            return await _context.Reviews.Where(r => r.PropertyId == propertyId).Include(r => r.Author).ToListAsync();
         }
         public async Task<IEnumerable<ReviewEntity>> GetLast5ReviewsForProperty(int propertyId)
         {
-            return await _context.Reviews.Where(r => r.PropertyId == propertyId).OrderByDescending(r => r.CreatedAt).Take(5).ToListAsync();
+            return await _context.Reviews.Where(r => r.PropertyId == propertyId).OrderByDescending(r => r.CreatedAt).Take(5).Include(r => r.Author).ToListAsync();
         }
         public async Task<decimal> GetAvgForUser(int userId)
         {
