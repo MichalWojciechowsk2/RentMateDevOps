@@ -52,11 +52,11 @@ namespace Services.Services
         {
             if (isItUser)
             {
-                return await _reviewRepository.GetAvgForUser(int objectId);
+                return await _reviewRepository.GetAvgForUser(objectId);
             }
             else
             {
-                return await _reviewRepository.GetAvgForProperty(int objectId);
+                return await _reviewRepository.GetAvgForProperty(objectId);
             }
 
         }
