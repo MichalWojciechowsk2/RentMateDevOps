@@ -739,7 +739,8 @@ namespace Data.Migrations
 
                     b.HasOne("Data.Entities.UserEntity", "User")
                         .WithMany()
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Author");
 

@@ -1,4 +1,4 @@
-﻿using ApplicationCore.Dto.Review;
+using ApplicationCore.Dto.Review;
 using Data.Entities;
 using Infrastructure.Repositories;
 
@@ -13,13 +13,25 @@ namespace Services.Services
         }
         public async Task<ReviewEntity> CreateReview(ReviewDto reviewDto, int authorId)
         {
+            // Walidacja - przynajmniej jedno z PropertyId lub UserId musi być ustawione
+            if (!reviewDto.PropertyId.HasValue && !reviewDto.UserId.HasValue)
+            {
+                throw new ArgumentException("Either PropertyId or UserId must be provided.");
+            }
+
+            // Walidacja - Rating musi być w zakresie 1-5
+            if (reviewDto.Rating < 1 || reviewDto.Rating > 5)
+            {
+                throw new ArgumentException("Rating must be between 1 and 5.");
+            }
+
             var review = new ReviewEntity
             {
                 PropertyId = reviewDto.PropertyId,
                 UserId = reviewDto.UserId,
                 AuthorId = authorId,
                 Rating = reviewDto.Rating,
-                Comment = reviewDto.Comment,
+                Comment = string.IsNullOrWhiteSpace(reviewDto.Comment) ? string.Empty : reviewDto.Comment.Trim(),
                 CreatedAt = DateTime.UtcNow
             };
             return await _reviewRepository.CreateReview(review);

@@ -3,6 +3,8 @@ import '../models/message.dart';
 import '../models/user.dart';
 import '../services/message_service.dart';
 import '../services/auth_service.dart';
+import '../services/user_service.dart';
+import 'tenant_profile_view.dart';
 
 class ChatScreen extends StatefulWidget {
   final int otherUserId;
@@ -21,6 +23,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final MessageService _messageService = MessageService();
   final AuthService _authService = AuthService();
+  final UserService _userService = UserService();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
@@ -153,6 +156,30 @@ class _ChatScreenState extends State<ChatScreen> {
     return int.tryParse(_currentUser!.id) == message.senderId;
   }
 
+  Future<void> _showUserProfile(int userId) async {
+    try {
+      final user = await _userService.getUserById(userId);
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => TenantProfileView(
+            tenant: user,
+            propertyId: 0, // Nie używamy propertyId w czacie prywatnym
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Błąd podczas ładowania profilu: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -210,23 +237,26 @@ class _ChatScreenState extends State<ChatScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 if (!isMyMessage) ...[
-                                  CircleAvatar(
-                                    radius: 20,
-                                    backgroundColor: Colors.grey[300],
-                                    backgroundImage: displayPhotoUrl != null && displayPhotoUrl.isNotEmpty
-                                        ? NetworkImage('https://localhost:7281$displayPhotoUrl')
-                                        : null,
-                                    child: displayPhotoUrl == null || displayPhotoUrl.isEmpty
-                                        ? (senderName.isNotEmpty
-                                            ? Text(
-                                                senderName[0].toUpperCase(),
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              )
-                                            : const Icon(Icons.person, size: 16))
-                                        : null,
+                                  GestureDetector(
+                                    onTap: () => _showUserProfile(message.senderId),
+                                    child: CircleAvatar(
+                                      radius: 20,
+                                      backgroundColor: Colors.grey[300],
+                                      backgroundImage: displayPhotoUrl != null && displayPhotoUrl.isNotEmpty
+                                          ? NetworkImage('https://localhost:7281$displayPhotoUrl')
+                                          : null,
+                                      child: displayPhotoUrl == null || displayPhotoUrl.isEmpty
+                                          ? (senderName.isNotEmpty
+                                              ? Text(
+                                                  senderName[0].toUpperCase(),
+                                                  style: const TextStyle(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                )
+                                              : const Icon(Icons.person, size: 16))
+                                          : null,
+                                    ),
                                   ),
                                   const SizedBox(width: 8),
                                 ],
@@ -316,23 +346,33 @@ class _ChatScreenState extends State<ChatScreen> {
                                 ),
                                 if (isMyMessage) ...[
                                   const SizedBox(width: 8),
-                                  CircleAvatar(
-                                    radius: 20,
-                                    backgroundColor: Colors.grey[300],
-                                    backgroundImage: displayPhotoUrl != null && displayPhotoUrl.isNotEmpty
-                                        ? NetworkImage('https://localhost:7281$displayPhotoUrl')
-                                        : null,
-                                    child: displayPhotoUrl == null || displayPhotoUrl.isEmpty
-                                        ? Text(
-                                            _currentUser?.firstName.isNotEmpty == true
-                                                ? _currentUser!.firstName[0].toUpperCase()
-                                                : '?',
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          )
-                                        : null,
+                                  GestureDetector(
+                                    onTap: () {
+                                      if (_currentUser != null) {
+                                        final currentUserId = int.tryParse(_currentUser!.id);
+                                        if (currentUserId != null) {
+                                          _showUserProfile(currentUserId);
+                                        }
+                                      }
+                                    },
+                                    child: CircleAvatar(
+                                      radius: 20,
+                                      backgroundColor: Colors.grey[300],
+                                      backgroundImage: displayPhotoUrl != null && displayPhotoUrl.isNotEmpty
+                                          ? NetworkImage('https://localhost:7281$displayPhotoUrl')
+                                          : null,
+                                      child: displayPhotoUrl == null || displayPhotoUrl.isEmpty
+                                          ? Text(
+                                              _currentUser?.firstName.isNotEmpty == true
+                                                  ? _currentUser!.firstName[0].toUpperCase()
+                                                  : '?',
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            )
+                                          : null,
+                                    ),
                                   ),
                                 ],
                               ],

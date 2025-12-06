@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_carousel_widget/flutter_carousel_widget.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/property.dart';
+import '../models/user.dart';
 import '../services/property_service.dart';
 import '../services/auth_service.dart';
+import '../services/user_service.dart';
 import 'chat_screen.dart';
+import 'tenant_profile_view.dart';
 
 class PropertyDetailsScreen extends StatefulWidget {
   final int propertyId;
@@ -17,6 +20,7 @@ class PropertyDetailsScreen extends StatefulWidget {
 class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
   final _propertyService = PropertyService();
   final _authService = AuthService();
+  final _userService = UserService();
   bool _isLoading = true;
   Property? _property;
   bool _isOwner = false;
@@ -33,9 +37,11 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
       final property = await _propertyService.getPropertyDetails(widget.propertyId);
       setState(() {
         _property = property;
+      });
+      await _checkOwnership();
+      setState(() {
         _isLoading = false;
       });
-      _checkOwnership();
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
@@ -50,11 +56,39 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
     }
   }
 
+
+  Future<void> _showOwnerProfile() async {
+    if (_property == null) return;
+    
+    try {
+      final owner = await _userService.getUserById(_property!.ownerId);
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => TenantProfileView(
+            tenant: owner,
+            propertyId: widget.propertyId,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Błąd podczas ładowania profilu właściciela: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _checkOwnership() async {
     final currentUser = await _authService.getCurrentUser();
     if (currentUser != null && _property != null) {
       setState(() {
-        _isOwner = currentUser.id == _property!.ownerId;
+        _isOwner = int.tryParse(currentUser.id) == _property!.ownerId;
       });
     }
   }
@@ -280,7 +314,20 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                               ),
                             ],
                             const SizedBox(height: 24),
-                            if (!_isOwner)
+                            // Owner Profile Section - tylko dla użytkowników, którzy nie są właścicielem
+                            if (!_isOwner) ...[
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  onPressed: () => _showOwnerProfile(),
+                                  icon: const Icon(Icons.person),
+                                  label: Text('Zobacz profil właściciela: ${_property!.ownerUsername ?? "Właściciel"}'),
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
                               SizedBox(
                                 width: double.infinity,
                                 child: ElevatedButton(
@@ -298,6 +345,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                   child: const Text('Contact Owner'),
                                 ),
                               ),
+                            ],
                           ],
                         ),
                       ),

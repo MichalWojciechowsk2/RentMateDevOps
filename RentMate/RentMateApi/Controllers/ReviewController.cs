@@ -1,4 +1,4 @@
-﻿using ApplicationCore.Dto.Review;
+using ApplicationCore.Dto.Review;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.Services;
@@ -31,7 +31,17 @@ namespace RentMateApi.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while creating the review.", error = ex.Message });
+                // Loguj pełny błąd z inner exception
+                var errorMessage = ex.Message;
+                if (ex.InnerException != null)
+                {
+                    errorMessage += $" Inner: {ex.InnerException.Message}";
+                    if (ex.InnerException.InnerException != null)
+                    {
+                        errorMessage += $" InnerInner: {ex.InnerException.InnerException.Message}";
+                    }
+                }
+                return StatusCode(500, new { message = "An error occurred while creating the review.", error = errorMessage, stackTrace = ex.StackTrace });
             }
         }
         [HttpDelete("{reviewId}")]

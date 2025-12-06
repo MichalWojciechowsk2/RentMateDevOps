@@ -1,4 +1,4 @@
-﻿using Data.Entities;
+using Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Data
@@ -17,8 +17,8 @@ namespace Data
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
 
-            optionsBuilder.UseSqlServer("Data Source=DESKTOP-GI765C2;Initial Catalog=RentMate;Integrated Security=True;Encrypt=True;Trust Server Certificate=True");
-            //optionsBuilder.UseSqlServer("Data Source=HP;Initial Catalog=RentMate;Integrated Security=True;Encrypt=True;Trust Server Certificate=True");
+            //optionsBuilder.UseSqlServer("Data Source=DESKTOP-GI765C2;Initial Catalog=RentMate;Integrated Security=True;Encrypt=True;Trust Server Certificate=True");
+            optionsBuilder.UseSqlServer("Data Source=HP;Initial Catalog=RentMate;Integrated Security=True;Encrypt=True;Trust Server Certificate=True");
 
         }
 
@@ -99,6 +99,12 @@ namespace Data
                 .WithMany(p => p.Reviews)
                 .HasForeignKey(r => r.PropertyId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ReviewEntity>()
+                .HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<ReviewEntity>()
                 .HasOne(r => r.Author)

@@ -1,4 +1,4 @@
-﻿using Data;
+using Data;
 using Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -19,9 +19,26 @@ namespace Infrastructure.Repositories
         }
         public async Task<ReviewEntity> CreateReview(ReviewEntity review)
         {
-            await _context.Reviews.AddAsync(review);
-            await _context.SaveChangesAsync();
-            return review;
+            try
+            {
+                if (string.IsNullOrEmpty(review.Comment))
+                {
+                    review.Comment = string.Empty;
+                }
+
+                await _context.Reviews.AddAsync(review);
+                await _context.SaveChangesAsync();
+                return review;
+            }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException dbEx)
+            {
+                var errorDetails = dbEx.Message;
+                if (dbEx.InnerException != null)
+                {
+                    errorDetails += $" | Inner: {dbEx.InnerException.Message}";
+                }
+                throw new Exception($"Database error: {errorDetails}", dbEx);
+            }
         }
         public async Task<bool> DeleteReviewById(int reviewId)
         {
