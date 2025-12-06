@@ -1,4 +1,4 @@
-﻿using ApplicationCore.Dto.Payment;
+using ApplicationCore.Dto.Payment;
 using AutoMapper;
 using Data.Entities;
 using Infrastructure.Repositories;
@@ -135,24 +135,31 @@ namespace Services.Services
         //który będzie sprawdzał czy data płatności minęła, jeżeli tak to zmienia status na failed.
         public async Task<IEnumerable<PaymentDto>> GetPaymentsByActiveUserOffers(int ownerId)
         {
-            var payments = await _paymentRepository.GetPaymentsByActiveUserOffers(ownerId);
-            var now = DateTime.UtcNow;
-            var updated = false;
+            try
+            {
+                var payments = await _paymentRepository.GetPaymentsByActiveUserOffers(ownerId);
+                var now = DateTime.UtcNow;
+                var updated = false;
 
-            foreach (var payment in payments)
-            {
-                if (payment.Status == PaymentStatus.Pending && payment.DueDate < now)
+                foreach (var payment in payments)
                 {
-                    payment.Status = PaymentStatus.Failed;
-                    updated = true;
+                    if (payment.Status == PaymentStatus.Pending && payment.DueDate < now)
+                    {
+                        payment.Status = PaymentStatus.Failed;
+                        updated = true;
+                    }
                 }
+                if (updated)
+                {
+                    await _paymentRepository.SaveChangesAsync();
+                }
+                var entityToDto = _mapper.Map<IEnumerable<PaymentDto>>(payments);
+                return entityToDto;
             }
-            if (updated)
+            catch (Exception ex)
             {
-                await _paymentRepository.SaveChangesAsync();
+                throw new Exception($"Error getting payments for user {ownerId}: {ex.Message}", ex);
             }
-            var entityToDto = _mapper.Map<IEnumerable<PaymentDto>>(payments);
-            return entityToDto;
         }
         //Nie można za każdym razem iterować po payment bo będzie to spowalniało system, trzeba zrobić osobny system 
         //który będzie sprawdzał czy data płatności minęła, jeżeli tak to zmienia status na failed.

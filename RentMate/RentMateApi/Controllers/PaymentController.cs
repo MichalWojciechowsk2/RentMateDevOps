@@ -1,4 +1,4 @@
-﻿using ApplicationCore.Dto.Payment;
+using ApplicationCore.Dto.Payment;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -66,8 +66,20 @@ namespace RentMateApi.Controllers
             {
                 return Unauthorized(new { message = "User not authenticated or invalid user ID." });
             }
-            var payments = await _paymentService.GetPaymentsByActiveUserOffers(userId);
-            return Ok(payments);
+            try
+            {
+                var payments = await _paymentService.GetPaymentsByActiveUserOffers(userId);
+                return Ok(payments);
+            }
+            catch (Exception ex)
+            {
+                var errorMessage = ex.Message;
+                if (ex.InnerException != null)
+                {
+                    errorMessage += $" Inner: {ex.InnerException.Message}";
+                }
+                return StatusCode(500, new { message = "An error occurred while getting payments.", error = errorMessage });
+            }
         }
 
         //Sprawdzić czy użytkownik jest właścicielem mieszkania.

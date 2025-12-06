@@ -1,4 +1,4 @@
-﻿using ApplicationCore.Dto.Message;
+using ApplicationCore.Dto.Message;
 using ApplicationCore.Dto.Payment;
 using ApplicationCore.Dto.Property;
 using ApplicationCore.Dto.Property.Offer;
@@ -49,6 +49,7 @@ namespace Services.AutoMapper
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => PaymentStatus.Pending));
 
             CreateMap<PaymentDto, PaymentEntity>();
+            CreateMap<PaymentEntity, PaymentDto>();
 
             //Issue
             //CreateMap<CreateIssueDto, IssueEntity>();

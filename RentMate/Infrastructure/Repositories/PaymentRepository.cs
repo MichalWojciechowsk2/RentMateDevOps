@@ -1,4 +1,4 @@
-﻿using Data;
+using Data;
 using Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -45,8 +45,9 @@ namespace Infrastructure.Repositories
         }
         public async Task<IEnumerable<PaymentEntity>> GetPaymentsByActiveUserOffers(int userId)
         {
-            return await _context.Payments.Include(p => p.Offer)
-                .Where(p => p.TenantId == userId && p.Offer.Status == OfferStatus.Accepted)
+            return await _context.Payments
+                .Include(p => p.Offer)
+                .Where(p => p.TenantId == userId && p.Offer != null && p.Offer.Status == OfferStatus.Accepted)
                 .ToListAsync();
         }
         public async Task<IEnumerable<PaymentEntity>> GetAllPaymentsForPropertyByActiveUserOffers(int propertyId)
