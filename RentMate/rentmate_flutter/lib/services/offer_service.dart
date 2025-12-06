@@ -163,6 +163,25 @@ class OfferService {
     }
   }
 
+  // Sprawdź czy użytkownik ma aktywną ofertę dla danego mieszkania
+  Future<bool> hasActiveOfferForProperty(int propertyId) async {
+    try {
+      final currentUser = await _authService.getCurrentUser();
+      if (currentUser == null) return false;
+      
+      final userId = int.tryParse(currentUser.id);
+      if (userId == null) return false;
+      
+      final offers = await getOffersByUserId(userId);
+      return offers.any((offer) => 
+        offer.propertyId == propertyId && 
+        offer.status == OfferStatus.accepted
+      );
+    } catch (e) {
+      return false;
+    }
+  }
+
 }
 
 
