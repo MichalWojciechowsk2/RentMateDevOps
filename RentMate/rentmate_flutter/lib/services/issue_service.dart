@@ -114,13 +114,39 @@ class IssueService {
             }
           }
           
+          // Konwertuj status z enum (liczba) na string
+          String statusStr = 'New';
+          if (issue['status'] != null) {
+            final statusValue = issue['status'];
+            if (statusValue is int) {
+              switch (statusValue) {
+                case 0:
+                  statusStr = 'New';
+                  break;
+                case 1:
+                  statusStr = 'InProgress';
+                  break;
+                case 2:
+                  statusStr = 'Resolved';
+                  break;
+                case 3:
+                  statusStr = 'Closed';
+                  break;
+                default:
+                  statusStr = 'New';
+              }
+            } else {
+              statusStr = statusValue.toString();
+            }
+          }
+          
           return {
             'id': issue['id'] is int ? issue['id'] : int.tryParse(issue['id']?.toString() ?? '') ?? 0,
             'propertyId': issue['propertyId'] is int ? issue['propertyId'] : int.tryParse(issue['propertyId']?.toString() ?? '') ?? 0,
             'tenantId': issue['tenantId'] is int ? issue['tenantId'] : int.tryParse(issue['tenantId']?.toString() ?? '') ?? 0,
             'title': issue['title']?.toString() ?? '',
             'description': issue['description']?.toString() ?? '',
-            'status': issue['status']?.toString() ?? 'New',
+            'status': statusStr,
             'urgency': urgencyStr,
             'createdAt': issue['createdAt'] != null ? DateTime.parse(issue['createdAt'].toString()) : DateTime.now(),
             'resolvedAt': issue['resolvedAt'] != null ? DateTime.parse(issue['resolvedAt'].toString()) : null,
@@ -177,13 +203,39 @@ class IssueService {
             }
           }
           
+          // Konwertuj status z enum (liczba) na string
+          String statusStr = 'New';
+          if (issue['status'] != null) {
+            final statusValue = issue['status'];
+            if (statusValue is int) {
+              switch (statusValue) {
+                case 0:
+                  statusStr = 'New';
+                  break;
+                case 1:
+                  statusStr = 'InProgress';
+                  break;
+                case 2:
+                  statusStr = 'Resolved';
+                  break;
+                case 3:
+                  statusStr = 'Closed';
+                  break;
+                default:
+                  statusStr = 'New';
+              }
+            } else {
+              statusStr = statusValue.toString();
+            }
+          }
+          
           return {
             'id': issue['id'] is int ? issue['id'] : int.tryParse(issue['id']?.toString() ?? '') ?? 0,
             'propertyId': issue['propertyId'] is int ? issue['propertyId'] : int.tryParse(issue['propertyId']?.toString() ?? '') ?? 0,
             'tenantId': issue['tenantId'] is int ? issue['tenantId'] : int.tryParse(issue['tenantId']?.toString() ?? '') ?? 0,
             'title': issue['title']?.toString() ?? '',
             'description': issue['description']?.toString() ?? '',
-            'status': issue['status']?.toString() ?? 'New',
+            'status': statusStr,
             'urgency': urgencyStr,
             'createdAt': issue['createdAt'] != null ? DateTime.parse(issue['createdAt'].toString()) : DateTime.now(),
             'resolvedAt': issue['resolvedAt'] != null ? DateTime.parse(issue['resolvedAt'].toString()) : null,
@@ -233,13 +285,40 @@ class IssueService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        
+        // Konwertuj status z liczby na string
+        String statusStr = 'New';
+        if (data['status'] != null) {
+          final statusValue = data['status'];
+          if (statusValue is int) {
+            switch (statusValue) {
+              case 0:
+                statusStr = 'New';
+                break;
+              case 1:
+                statusStr = 'InProgress';
+                break;
+              case 2:
+                statusStr = 'Resolved';
+                break;
+              case 3:
+                statusStr = 'Closed';
+                break;
+              default:
+                statusStr = 'New';
+            }
+          } else {
+            statusStr = statusValue.toString();
+          }
+        }
+        
         return {
           'id': data['id'] is int ? data['id'] : int.tryParse(data['id']?.toString() ?? '') ?? 0,
           'propertyId': data['propertyId'] is int ? data['propertyId'] : int.tryParse(data['propertyId']?.toString() ?? '') ?? 0,
           'tenantId': data['tenantId'] is int ? data['tenantId'] : int.tryParse(data['tenantId']?.toString() ?? '') ?? 0,
           'title': data['title']?.toString() ?? '',
           'description': data['description']?.toString() ?? '',
-          'status': data['status']?.toString() ?? 'New',
+          'status': statusStr,
           'urgency': data['urgency']?.toString() ?? 'Medium',
           'createdAt': data['createdAt'] != null ? DateTime.parse(data['createdAt'].toString()) : DateTime.now(),
           'resolvedAt': data['resolvedAt'] != null ? DateTime.parse(data['resolvedAt'].toString()) : null,

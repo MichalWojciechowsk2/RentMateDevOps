@@ -18,7 +18,19 @@ class _MyApartmentIssuesTabState extends State<MyApartmentIssuesTab> {
   final _issueService = IssueService();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+  String _selectedIssueType = 'Przeciekający kran';
   String _selectedUrgency = 'Medium';
+  final List<String> _issueTypes = [
+    'Przeciekający kran',
+    'Wilgoć',
+    'Uszkodzona instalacja elektryczna',
+    'Zepsuta pralka/zmywarka',
+    'Problem z ogrzewaniem',
+    'Zatkany odpływ',
+    'Uszkodzone drzwi/okna',
+    'Problem z wentylacją',
+    'Inne'
+  ];
   final List<String> _urgencyLevels = ['Low', 'Medium', 'High', 'Critical'];
   bool _isSubmitting = false;
 
@@ -36,7 +48,7 @@ class _MyApartmentIssuesTabState extends State<MyApartmentIssuesTab> {
     try {
       await _issueService.createIssue(
         propertyId: widget.property.id,
-        title: _titleController.text.trim(),
+        title: _selectedIssueType,
         description: _descriptionController.text.trim(),
         urgency: _selectedUrgency,
       );
@@ -53,6 +65,7 @@ class _MyApartmentIssuesTabState extends State<MyApartmentIssuesTab> {
         _formKey.currentState!.reset();
         _titleController.clear();
         _descriptionController.clear();
+        _selectedIssueType = 'Przeciekający kran';
         _selectedUrgency = 'Medium';
         setState(() {});
       }
@@ -126,22 +139,23 @@ class _MyApartmentIssuesTabState extends State<MyApartmentIssuesTab> {
             ),
             const SizedBox(height: 24),
             
-            // Tytuł
-            TextFormField(
-              controller: _titleController,
+            // Typ problemu
+            DropdownButtonFormField<String>(
+              value: _selectedIssueType,
               decoration: const InputDecoration(
-                labelText: 'Tytuł problemu',
+                labelText: 'Typ problemu',
                 border: OutlineInputBorder(),
-                hintText: 'np. Przeciekający kran',
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Podaj tytuł problemu';
-                }
-                if (value.length > 150) {
-                  return 'Tytuł nie może być dłuższy niż 150 znaków';
-                }
-                return null;
+              items: _issueTypes.map((type) {
+                return DropdownMenuItem<String>(
+                  value: type,
+                  child: Text(type),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedIssueType = value ?? 'Przeciekający kran';
+                });
               },
             ),
             const SizedBox(height: 16),

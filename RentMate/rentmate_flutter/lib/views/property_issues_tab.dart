@@ -185,7 +185,22 @@ class _PropertyIssuesTabState extends State<PropertyIssuesTab> {
 
   Future<void> _updateIssueStatus(int issueId, String newStatus) async {
     try {
+      // Optymistyczna aktualizacja - zaktualizuj lokalnie od razu
+      setState(() {
+        final issueIndex = _issues.indexWhere((issue) => issue['id'] == issueId);
+        if (issueIndex != -1) {
+          // Zaktualizuj status w lokalnej liście
+          final updatedIssue = Map<String, dynamic>.from(_issues[issueIndex]);
+          updatedIssue['status'] = newStatus;
+          _issues[issueIndex] = updatedIssue;
+        }
+      });
+      
+      // Wyślij aktualizację do API
       await _issueService.updateIssueStatus(issueId, newStatus);
+      
+      // Odśwież dane z serwera
+      await _loadIssues();
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -194,9 +209,11 @@ class _PropertyIssuesTabState extends State<PropertyIssuesTab> {
             backgroundColor: Colors.green,
           ),
         );
-        _loadIssues();
       }
     } catch (e) {
+      // W przypadku błędu, odśwież dane z serwera aby przywrócić poprawny stan
+      await _loadIssues();
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -226,7 +243,29 @@ class _PropertyIssuesTabState extends State<PropertyIssuesTab> {
                   itemCount: _issues.length,
                   itemBuilder: (context, index) {
                     final issue = _issues[index];
-                    final status = issue['status']?.toString() ?? 'New';
+                    final statusRaw = issue['status'];
+                    // Status może być liczbą (0=New, 1=InProgress, 2=Resolved, 3=Closed) lub stringiem
+                    String status;
+                    if (statusRaw is int) {
+                      switch (statusRaw) {
+                        case 0:
+                          status = 'New';
+                          break;
+                        case 1:
+                          status = 'InProgress';
+                          break;
+                        case 2:
+                          status = 'Resolved';
+                          break;
+                        case 3:
+                          status = 'Closed';
+                          break;
+                        default:
+                          status = 'New';
+                      }
+                    } else {
+                      status = statusRaw?.toString() ?? 'New';
+                    }
                     final urgencyRaw = issue['urgency']?.toString() ?? 'Medium';
                     final urgency = _normalizeUrgency(urgencyRaw);
                     final createdAt = issue['createdAt'] as DateTime?;
@@ -268,17 +307,6 @@ class _PropertyIssuesTabState extends State<PropertyIssuesTab> {
                                                 decoration: isResolved ? TextDecoration.lineThrough : null,
                                               ),
                                             ),
-                                          ),
-                                          Checkbox(
-                                            value: isResolved,
-                                            onChanged: (bool? value) {
-                                              if (value == true) {
-                                                _updateIssueStatus(issue['id'] as int, 'Resolved');
-                                              } else {
-                                                _updateIssueStatus(issue['id'] as int, 'New');
-                                              }
-                                            },
-                                            activeColor: Colors.green,
                                           ),
                                         ],
                                       ),
@@ -349,23 +377,39 @@ class _PropertyIssuesTabState extends State<PropertyIssuesTab> {
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: _getStatusColor(status).withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    _getStatusText(status),
-                                    style: TextStyle(
-                                      color: _getStatusColor(status),
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
+                                Row(
+                                  children: [
+                                    Checkbox(
+                                      value: isResolved,
+                                      onChanged: (bool? value) async {
+                                        if (value == true) {
+                                          await _updateIssueStatus(issue['id'] as int, 'Resolved');
+                                        } else {
+                                          await _updateIssueStatus(issue['id'] as int, 'New');
+                                        }
+                                      },
+                                      activeColor: Colors.green,
                                     ),
-                                  ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: _getStatusColor(status).withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        _getStatusText(status),
+                                        style: TextStyle(
+                                          color: _getStatusColor(status),
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),

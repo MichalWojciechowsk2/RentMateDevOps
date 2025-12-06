@@ -59,6 +59,17 @@ namespace Infrastructure.Repositories
                 .SelectMany(o => o.Payments)
                 .ToListAsync();
         }
+        public async Task<IEnumerable<PaymentEntity>> GetLastPaymentsForProperty(int propertyId, int count = 10)
+        {
+            return await _context.Properties
+                .Where(p => p.Id == propertyId)
+                .SelectMany(p => p.Offers)
+                .Where(o => o.Status == OfferStatus.Accepted && o.Payments != null)
+                .SelectMany(o => o.Payments)
+                .OrderByDescending(p => p.CreateDateTime)
+                .Take(count)
+                .ToListAsync();
+        }
     }
     public interface IPaymentRepository
     {
@@ -70,6 +81,6 @@ namespace Infrastructure.Repositories
         Task<PaymentEntity> GetPaymentById(int id);
         Task<IEnumerable<PaymentEntity>> GetPaymentsByActiveUserOffers(int userId);
         Task<IEnumerable<PaymentEntity>> GetAllPaymentsForPropertyByActiveUserOffers(int propertyId);
-
+        Task<IEnumerable<PaymentEntity>> GetLastPaymentsForProperty(int propertyId, int count = 10);
     }
 }

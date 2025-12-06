@@ -236,6 +236,41 @@ namespace Services.Services
             await _paymentRepository.UpdateAsync(paymentToDeactive);
             return true;
         }
+        public async Task<IEnumerable<PaymentDtoWithTenantName>> GetLastPaymentsForProperty(int propertyId, int count = 10)
+        {
+            var payments = await _paymentRepository.GetLastPaymentsForProperty(propertyId, count);
+            var result = new List<PaymentDtoWithTenantName>();
+
+            foreach (var payment in payments)
+            {
+                var dto = _mapper.Map<PaymentDtoWithTenantName>(payment);
+                var tenant = await _userService.GetUserById(payment.TenantId);
+                dto.TenantName = tenant.FirstName;
+                dto.TenantSurname = tenant.LastName;
+                result.Add(dto);
+            }
+
+            return result;
+        }
+        public async Task<bool> MarkPaymentAsPaid(int paymentId, bool isPaid)
+        {
+            var payment = await _paymentRepository.GetPaymentById(paymentId);
+            if (payment == null) return false;
+            
+            if (isPaid)
+            {
+                payment.Status = PaymentStatus.Completed;
+                payment.PaidAt = DateTime.UtcNow;
+            }
+            else
+            {
+                payment.Status = PaymentStatus.Pending;
+                payment.PaidAt = null;
+            }
+            
+            await _paymentRepository.UpdateAsync(payment);
+            return true;
+        }
     }
     public interface IPaymentService
     {
@@ -246,5 +281,7 @@ namespace Services.Services
         Task<IEnumerable<RecurringPaymentDto>> GetAllRecurringPaymentsWithPaymentByPropertyId(int propertyId);
         Task<bool> DeleteRecurringPaymentById(int recurringPaymentId);
         Task<bool> DeactivePayment(int paymentId);
+        Task<IEnumerable<PaymentDtoWithTenantName>> GetLastPaymentsForProperty(int propertyId, int count = 10);
+        Task<bool> MarkPaymentAsPaid(int paymentId, bool isPaid);
     }
 }
