@@ -48,9 +48,29 @@ namespace Services.Services
         {
             return await _reviewRepository.GetAllReviewsForUser(userId);
         }
+        public async Task<IEnumerable<ReviewEntity>> GetLast5ReviewsForUserByUserId(int userId)
+        {
+            return await _reviewRepository.GetLast5ReviewsForUser(userId);
+        }
         public async Task<IEnumerable<ReviewEntity>> GetAllReviewsForProperty(int propertyId)
         {
-            return await _reviewRepository.GetAllReviewsForUser(propertyId);
+            return await _reviewRepository.GetAllReviewsForProperty(propertyId);
+        }
+        public async Task<IEnumerable<ReviewEntity>> GetLast5ReviewsForProperty(int propertyId)
+        {
+            return await _reviewRepository.GetLast5ReviewsForProperty(propertyId);
+        }
+        public async Task <decimal> GetAvgReview (int objectId, bool isItUser)
+        {
+            if (isItUser)
+            {
+                return await _reviewRepository.GetAvgForUser(objectId);
+            }
+            else
+            {
+                return await _reviewRepository.GetAvgForProperty(objectId);
+            }
+
         }
     }
     public interface IReviewService
@@ -59,6 +79,10 @@ namespace Services.Services
         Task<bool> DeleteReviewById(int reviewId);
         Task<ReviewEntity> GetReviewById(int reviewId);
         Task<IEnumerable<ReviewEntity>> GetAllReviewsForUser(int userId);
+        Task<IEnumerable<ReviewEntity>> GetLast5ReviewsForUserByUserId(int userId);        
         Task<IEnumerable<ReviewEntity>> GetAllReviewsForProperty(int propertyId);
+        Task<IEnumerable<ReviewEntity>> GetLast5ReviewsForProperty(int propertyId);
+        Task<decimal> GetAvgReview(int objectId, bool isItUser);
+
     }
 }
