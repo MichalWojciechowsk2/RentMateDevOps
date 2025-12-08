@@ -84,8 +84,8 @@ namespace RentMateApi
             builder.Services.AddScoped<IReviewService, ReviewService>();
             builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 
-            //builder.Services.AddScoped<IIssueService, IssueService>();
-            //builder.Services.AddScoped<IIssueRepository, IssueRepository>();
+            builder.Services.AddScoped<IIssueService, IssueService>();
+            builder.Services.AddScoped<IIssueRepository, IssueRepository>();
 
 
 

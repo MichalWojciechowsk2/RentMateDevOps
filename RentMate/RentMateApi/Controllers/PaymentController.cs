@@ -116,5 +116,35 @@ namespace RentMateApi.Controllers
                 return NotFound(new { message = "Payment not found" });
             return Ok(new { message = "Payment deactivated" });
         }
+        [HttpGet("getLastPaymentsForProperty")]
+        [Authorize]
+        public async Task<IActionResult> GetLastPaymentsForProperty([FromQuery] int propertyId, [FromQuery] int count = 10)
+        {
+            try
+            {
+                var payments = await _paymentService.GetLastPaymentsForProperty(propertyId, count);
+                return Ok(payments);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while getting payments.", error = ex.Message });
+            }
+        }
+        [HttpPatch("markAsPaid")]
+        [Authorize]
+        public async Task<IActionResult> MarkPaymentAsPaid([FromQuery] int paymentId, [FromQuery] bool isPaid)
+        {
+            try
+            {
+                var result = await _paymentService.MarkPaymentAsPaid(paymentId, isPaid);
+                if (!result)
+                    return NotFound(new { message = "Payment not found" });
+                return Ok(new { message = isPaid ? "Payment marked as paid" : "Payment marked as unpaid" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while updating payment.", error = ex.Message });
+            }
+        }
     }
 }

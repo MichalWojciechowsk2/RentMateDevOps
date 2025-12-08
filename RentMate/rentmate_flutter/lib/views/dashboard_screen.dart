@@ -12,6 +12,8 @@ import '../views/my_apartment_screen.dart';
 import '../views/notifications_screen.dart';
 import '../services/message_service.dart';
 import '../services/notification_service.dart';
+import '../services/review_service.dart';
+import '../models/review.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -26,6 +28,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final AuthService _authService = AuthService();
   final MessageService _messageService = MessageService();
   final NotificationService _notificationService = NotificationService();
+  final ReviewService _reviewService = ReviewService();
   List<Property> _properties = [];
   bool _isLoading = false;
   User? _currentUser;
@@ -35,6 +38,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _totalItems = 0;
   int _unreadMessagesCount = 0; // Liczba nieprzeczytanych wiadomości
   int _unreadNotificationsCount = 0; // Liczba nieprzeczytanych notyfikacji
+  Map<int, double> _propertyRatings = {}; // Mapowanie propertyId -> średnia ocena
+  Map<int, int> _propertyReviewCounts = {}; // Mapowanie propertyId -> liczba recenzji
 
   // Filtry
   List<String> _cities = [];
@@ -142,6 +147,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Future<void> _loadPropertyRatings() async {
+    final ratings = <int, double>{};
+    final counts = <int, int>{};
+    
+    for (final property in _properties) {
+      try {
+        final reviews = await _reviewService.getReviewsForProperty(property.id);
+        if (reviews.isNotEmpty) {
+          final sum = reviews.fold<double>(0.0, (sum, review) => sum + review.rating);
+          ratings[property.id] = sum / reviews.length;
+          counts[property.id] = reviews.length;
+        }
+      } catch (e) {
+        // Ignoruj błędy
+      }
+    }
+    
+    if (mounted) {
+      setState(() {
+        _propertyRatings = ratings;
+        _propertyReviewCounts = counts;
+      });
+    }
+  }
+
   Future<void> _loadProperties() async {
     setState(() => _isLoading = true);
     try {
@@ -169,6 +199,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _totalItems = result['totalItems'] as int;
         _isLoading = false;
       });
+      
+      // Załaduj oceny dla wszystkich properties
+      await _loadPropertyRatings();
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
@@ -619,9 +652,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                             child: Column(
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
-                                                Text(
-                                                  property.title,
-                                                  style: Theme.of(context).textTheme.titleLarge,
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: Text(
+                                                        property.title,
+                                                        style: Theme.of(context).textTheme.titleLarge,
+                                                      ),
+                                                    ),
+                                                    if (_propertyRatings.containsKey(property.id)) ...[
+                                                      Row(
+                                                        children: [
+                                                          const Icon(Icons.star, color: Colors.amber, size: 20),
+                                                          const SizedBox(width: 4),
+                                                          Text(
+                                                            _propertyRatings[property.id]!.toStringAsFixed(1),
+                                                            style: const TextStyle(
+                                                              fontSize: 16,
+                                                              fontWeight: FontWeight.bold,
+                                                            ),
+                                                          ),
+                                                          if (_propertyReviewCounts.containsKey(property.id)) ...[
+                                                            const SizedBox(width: 4),
+                                                            Text(
+                                                              '(${_propertyReviewCounts[property.id]})',
+                                                              style: TextStyle(
+                                                                fontSize: 14,
+                                                                color: Colors.grey[600],
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ],
                                                 ),
                                                 const SizedBox(height: 8),
                                                 Text(

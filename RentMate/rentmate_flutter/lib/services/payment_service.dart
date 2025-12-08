@@ -124,6 +124,70 @@ class PaymentService {
       throw Exception('Error getting payments: $e');
     }
   }
+
+  // Pobierz ostatnie 10 rachunków dla mieszkania
+  Future<List<Map<String, dynamic>>> getLastPaymentsForProperty(int propertyId, {int count = 10}) async {
+    try {
+      final token = await _authService.getToken();
+      if (token == null) throw Exception('No authentication token');
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/Payment/getLastPaymentsForProperty?propertyId=$propertyId&count=$count'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map<Map<String, dynamic>>((payment) {
+          return {
+            'id': payment['id'] is int ? payment['id'] : int.tryParse(payment['id']?.toString() ?? '') ?? 0,
+            'offerId': payment['offerId'] is int ? payment['offerId'] : int.tryParse(payment['offerId']?.toString() ?? '') ?? 0,
+            'tenantId': payment['tenantId'] is int ? payment['tenantId'] : int.tryParse(payment['tenantId']?.toString() ?? '') ?? 0,
+            'amount': payment['amount'] is double ? payment['amount'] : double.tryParse(payment['amount']?.toString() ?? '') ?? 0.0,
+            'description': payment['description']?.toString() ?? '',
+            'status': payment['status']?.toString() ?? 'Pending',
+            'dueDate': payment['dueDate'] != null ? DateTime.parse(payment['dueDate'].toString()) : null,
+            'paidAt': payment['paidAt'] != null ? DateTime.parse(payment['paidAt'].toString()) : null,
+            'paymentMethod': payment['paymentMethod']?.toString() ?? '',
+            'tenantName': payment['tenantName']?.toString() ?? '',
+            'tenantSurname': payment['tenantSurname']?.toString() ?? '',
+            'createDateTime': payment['createDateTime'] != null ? DateTime.parse(payment['createDateTime'].toString()) : null,
+          };
+        }).toList();
+      } else {
+        throw Exception('Failed to load payments: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error getting payments: $e');
+    }
+  }
+
+  // Oznacz rachunek jako zapłacony/niezapłacony
+  Future<bool> markPaymentAsPaid(int paymentId, bool isPaid) async {
+    try {
+      final token = await _authService.getToken();
+      if (token == null) throw Exception('No authentication token');
+
+      final response = await http.patch(
+        Uri.parse('$baseUrl/Payment/markAsPaid?paymentId=$paymentId&isPaid=$isPaid'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        throw Exception('Failed to update payment: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error updating payment: $e');
+    }
+  }
 }
 
 
