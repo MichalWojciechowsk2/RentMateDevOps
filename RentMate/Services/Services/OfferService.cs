@@ -115,6 +115,10 @@ namespace Services.Services
             //return _pdfGenerator.GenerateOfferContractPdf(contractTextFormated);
             return _pdfGenerator.GenerateOfferContractPdf(contractText);
         }
+        public async Task<int?> GetPropertyChatIdByOfferId(int offerId)
+        {
+            return await _offerRepository.GetPropertyChatIdByOfferId(offerId);
+        }
     }
     public interface IOfferService
     {
@@ -132,5 +136,6 @@ namespace Services.Services
         public string GenerateOfferContract(Dictionary<string, string> data);
         Task<OfferEntity> AddOfferContractToOffer(int offerId, string contract);
         public byte[] GenerateOfferContractPdf(string contractText);
+        Task<int?> GetPropertyChatIdByOfferId(int offerId);
     }
 }

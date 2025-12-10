@@ -110,6 +110,10 @@ namespace Infrastructure.Repositories
                 return null;
             }
         }
+        public async Task<int?> GetPropertyChatIdByOfferId(int offerId)
+        {
+            return await _context.Offers.Include(o => o.Property).Where(o => o.Id == offerId).Select(o => o.Property.ChatGroupId).FirstOrDefaultAsync();
+        }
     }
     public interface IOfferRepository
     {
@@ -125,5 +129,6 @@ namespace Infrastructure.Repositories
         Task updateAsync(OfferEntity offerEntity);
         Task<int> GetAcceptedOffersCountByPropertyId(int propertyId);
         Task<IEnumerable<OfferEntity>> getOffersByPropertyId(int propertyId);
+        Task<int?> GetPropertyChatIdByOfferId(int offerId);
     }
 }
