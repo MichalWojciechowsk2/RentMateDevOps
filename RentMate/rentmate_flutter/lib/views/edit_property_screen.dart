@@ -101,14 +101,14 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
         });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(_property.isActive ? 'Property published' : 'Property unpublished')),
+            SnackBar(content: Text(_property.isActive ? 'Mieszkanie opublikowane' : 'Mieszkanie cofnięte z publikacji')),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update property: $e')),
+          SnackBar(content: Text('Błąd podczas aktualizacji mieszkania: $e')),
         );
       }
     } finally {
@@ -128,7 +128,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error selecting images: ${e.toString()}'),
+            content: Text('Błąd podczas wybierania zdjęć: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -189,7 +189,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Image deleted successfully!'),
+              content: Text('Zdjęcie zostało usunięte pomyślnie!'),
               backgroundColor: Colors.green,
             ),
           );
@@ -198,7 +198,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error deleting image: ${e.toString()}'),
+              content: Text('Błąd podczas usuwania zdjęcia: ${e.toString()}'),
               backgroundColor: Colors.red,
             ),
           );
@@ -211,16 +211,16 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
     return await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Image'),
-        content: const Text('Are you sure you want to delete this image?'),
+        title: const Text('Usuń zdjęcie'),
+        content: const Text('Czy na pewno chcesz usunąć to zdjęcie?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text('Anuluj'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: const Text('Usuń'),
           ),
         ],
       ),
@@ -262,7 +262,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Property updated successfully!'),
+            content: Text('Mieszkanie zostało zaktualizowane pomyślnie!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -272,7 +272,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('Błąd: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -311,12 +311,12 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
                   TextFormField(
                     controller: _titleController,
                     decoration: const InputDecoration(
-                      labelText: 'Title',
+                      labelText: 'Tytuł',
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter a title';
+                        return 'Podaj tytuł';
                       }
                       return null;
                     },
@@ -325,13 +325,13 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
                   TextFormField(
                     controller: _descriptionController,
                     decoration: const InputDecoration(
-                      labelText: 'Description',
+                      labelText: 'Opis',
                       border: OutlineInputBorder(),
                     ),
                     maxLines: 3,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter a description';
+                        return 'Podaj opis';
                       }
                       return null;
                     },
@@ -343,17 +343,17 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
                         child: TextFormField(
                           controller: _basePriceController,
                           decoration: const InputDecoration(
-                            labelText: 'Base Price per month',
+                            labelText: 'Cena bazowa za miesiąc',
                             border: OutlineInputBorder(),
                             prefixText: '\$ ',
                           ),
                           keyboardType: TextInputType.number,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter a price';
+                              return 'Podaj cenę';
                             }
                             if (double.tryParse(value) == null) {
-                              return 'Please enter a valid number';
+                              return 'Podaj prawidłową liczbę';
                             }
                             return null;
                           },
@@ -364,17 +364,17 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
                         child: TextFormField(
                           controller: _baseDepositController,
                           decoration: const InputDecoration(
-                            labelText: 'Base Deposit',
+                            labelText: 'Kaucja',
                             border: OutlineInputBorder(),
                             prefixText: '\$ ',
                           ),
                           keyboardType: TextInputType.number,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter a deposit';
+                              return 'Podaj kaucję';
                             }
                             if (double.tryParse(value) == null) {
-                              return 'Please enter a valid number';
+                              return 'Podaj prawidłową liczbę';
                             }
                             return null;
                           },
@@ -386,12 +386,12 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
                   TextFormField(
                     controller: _addressController,
                     decoration: const InputDecoration(
-                      labelText: 'Address',
+                      labelText: 'Adres',
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter an address';
+                        return 'Podaj adres';
                       }
                       return null;
                     },
@@ -400,12 +400,12 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
                   TextFormField(
                     controller: _cityController,
                     decoration: const InputDecoration(
-                      labelText: 'City',
+                      labelText: 'Miasto',
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter a city';
+                        return 'Podaj miasto';
                       }
                       return null;
                     },
@@ -414,12 +414,12 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
                   TextFormField(
                     controller: _districtController,
                     decoration: const InputDecoration(
-                      labelText: 'District',
+                      labelText: 'Dzielnica',
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter a district';
+                        return 'Podaj dzielnicę';
                       }
                       return null;
                     },
@@ -428,12 +428,12 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
                   TextFormField(
                     controller: _postalCodeController,
                     decoration: const InputDecoration(
-                      labelText: 'Postal Code',
+                      labelText: 'Kod pocztowy',
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter a postal code';
+                        return 'Podaj kod pocztowy';
                       }
                       return null;
                     },
@@ -445,16 +445,16 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
                         child: TextFormField(
                           controller: _roomCountController,
                           decoration: const InputDecoration(
-                            labelText: 'Number of Rooms',
+                            labelText: 'Liczba pokoi',
                             border: OutlineInputBorder(),
                           ),
                           keyboardType: TextInputType.number,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter number of rooms';
+                              return 'Podaj liczbę pokoi';
                             }
                             if (int.tryParse(value) == null) {
-                              return 'Please enter a valid number';
+                              return 'Podaj prawidłową liczbę';
                             }
                             return null;
                           },
@@ -465,13 +465,13 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
                         child: TextFormField(
                           controller: _areaController,
                           decoration: const InputDecoration(
-                            labelText: 'Area (m²)',
+                            labelText: 'Powierzchnia (m²)',
                             border: OutlineInputBorder(),
                           ),
                           keyboardType: TextInputType.text,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter area';
+                              return 'Podaj powierzchnię';
                             }
                             return null;
                           },
@@ -481,7 +481,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
                   ),
                   const SizedBox(height: 24),
                   const Text(
-                    'Images',
+                    'Zdjęcia',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -491,7 +491,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
                   
                   // Obecne zdjęcia z serwera
                   if (_currentImages.isNotEmpty) ...[
-                    const Text('Current Images:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Text('Obecne zdjęcia:', style: TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     SizedBox(
                       height: 100,
@@ -537,7 +537,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: const Text(
-                                        'Main',
+                                        'Główne',
                                         style: TextStyle(color: Colors.white, fontSize: 10),
                                       ),
                                     ),
@@ -546,7 +546,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
                                   top: 0,
                                   left: 0,
                                   child: IconButton(
-                                    tooltip: image.isMainImage ? 'Main image' : 'Set as main',
+                                    tooltip: image.isMainImage ? 'Zdjęcie główne' : 'Ustaw jako główne',
                                     icon: Icon(
                                       image.isMainImage ? Icons.star : Icons.star_border,
                                       color: image.isMainImage ? Colors.amber : Colors.white,
@@ -569,7 +569,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
                                               });
                                               if (mounted) {
                                                 ScaffoldMessenger.of(context).showSnackBar(
-                                                  const SnackBar(content: Text('Main image updated')),
+                                                  const SnackBar(content: Text('Zdjęcie główne zaktualizowane')),
                                                 );
                                               }
                                             } catch (e) {
@@ -605,7 +605,7 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
                   
                   // Nowe wybrane zdjęcia (lokalne)
                   if (_newImages.isNotEmpty) ...[
-                    const Text('New Images to Upload:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Text('Nowe zdjęcia do przesłania:', style: TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     SizedBox(
                       height: 100,
@@ -665,12 +665,12 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
                   ElevatedButton.icon(
                     onPressed: _pickImage,
                     icon: const Icon(Icons.add_photo_alternate),
-                    label: const Text('Add Images'),
+                    label: const Text('Dodaj zdjęcia'),
                   ),
                   const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: _submitForm,
-                  child: const Text('Save Changes'),
+                  child: const Text('Zapisz zmiany'),
                 ),
               ],
             ),
@@ -689,12 +689,12 @@ class _EditPropertyScreenState extends State<EditPropertyScreen> with SingleTick
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Property'),
+        title: const Text('Edytuj mieszkanie'),
         actions: [
           TextButton.icon(
             onPressed: _isLoading ? null : _togglePublish,
             icon: Icon(_property.isActive ? Icons.visibility_off : Icons.publish),
-            label: Text(_property.isActive ? 'Unpublish' : 'Publish'),
+            label: Text(_property.isActive ? 'Cofnij publikację' : 'Opublikuj'),
           ),
         ],
         bottom: TabBar(

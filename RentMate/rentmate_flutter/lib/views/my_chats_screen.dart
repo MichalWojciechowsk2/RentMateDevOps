@@ -82,12 +82,12 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Messages'),
+        title: const Text('Moje wiadomości'),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : sortedChats.isEmpty
-              ? const Center(child: Text('No conversations yet.'))
+              ? const Center(child: Text('Brak rozmów.'))
               : RefreshIndicator(
                   onRefresh: _loadData,
                   child: ListView.builder(

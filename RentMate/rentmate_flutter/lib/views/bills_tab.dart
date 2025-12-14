@@ -29,10 +29,11 @@ class _BillsTabState extends State<BillsTab> {
   int? _selectedOfferId;
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _bankAccountController = TextEditingController();
   DateTime? _selectedDueDate;
   String _selectedPaymentMethod = 'Przelew';
   
-  final List<String> _paymentMethods = ['Przelew', 'Gotówka', 'Karta', 'Inne'];
+  final List<String> _paymentMethods = ['Przelew', 'Gotówka', 'Inne'];
 
   @override
   void initState() {
@@ -195,6 +196,15 @@ class _BillsTabState extends State<BillsTab> {
       );
       return;
     }
+    if (_selectedPaymentMethod == 'Przelew' && (_bankAccountController.text.isEmpty || _bankAccountController.text.length != 26)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Podaj prawidłowy numer konta bankowego (26 cyfr)'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
     setState(() => _isSubmitting = true);
     try {
@@ -210,6 +220,7 @@ class _BillsTabState extends State<BillsTab> {
         description: _descriptionController.text,
         dueDate: _selectedDueDate!,
         paymentMethod: _selectedPaymentMethod,
+        bankAccountNumber: _selectedPaymentMethod == 'Przelew' ? _bankAccountController.text : null,
       );
 
       if (mounted) {
@@ -224,6 +235,7 @@ class _BillsTabState extends State<BillsTab> {
         _formKey.currentState!.reset();
         _amountController.clear();
         _descriptionController.clear();
+        _bankAccountController.clear();
         _selectedDueDate = null;
         _selectedOfferId = null;
         _selectedPaymentMethod = 'Przelew';
@@ -250,6 +262,7 @@ class _BillsTabState extends State<BillsTab> {
   void dispose() {
     _amountController.dispose();
     _descriptionController.dispose();
+    _bankAccountController.dispose();
     super.dispose();
   }
 
@@ -436,9 +449,40 @@ class _BillsTabState extends State<BillsTab> {
                                     onChanged: (value) {
                                       setState(() {
                                         _selectedPaymentMethod = value ?? 'Przelew';
+                                        if (value != 'Przelew') {
+                                          _bankAccountController.clear();
+                                        }
                                       });
                                     },
                                   ),
+                                  // Numer konta bankowego (tylko dla Przelew)
+                                  if (_selectedPaymentMethod == 'Przelew') ...[
+                                    const SizedBox(height: 16),
+                                    TextFormField(
+                                      controller: _bankAccountController,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Numer konta bankowego',
+                                        hintText: '26 cyfr',
+                                        border: OutlineInputBorder(),
+                                      ),
+                                      keyboardType: TextInputType.number,
+                                      maxLength: 26,
+                                      validator: (value) {
+                                        if (_selectedPaymentMethod == 'Przelew') {
+                                          if (value == null || value.isEmpty) {
+                                            return 'Podaj numer konta bankowego';
+                                          }
+                                          if (value.length != 26) {
+                                            return 'Numer konta musi mieć 26 cyfr';
+                                          }
+                                          if (!RegExp(r'^\d{26}$').hasMatch(value)) {
+                                            return 'Numer konta może zawierać tylko cyfry';
+                                          }
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                  ],
                                   const SizedBox(height: 24),
                                   
                                   // Przyciski
@@ -452,6 +496,7 @@ class _BillsTabState extends State<BillsTab> {
                                                   _formKey.currentState!.reset();
                                                   _amountController.clear();
                                                   _descriptionController.clear();
+                                                  _bankAccountController.clear();
                                                   _selectedDueDate = null;
                                                   _selectedOfferId = null;
                                                   _selectedPaymentMethod = 'Przelew';

@@ -43,7 +43,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error selecting images: ${e.toString()}'),
+            content: Text('Błąd podczas wybierania zdjęć: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -139,7 +139,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Property created successfully!'),
+            content: Text('Mieszkanie zostało utworzone pomyślnie!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -149,7 +149,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('Błąd: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -180,7 +180,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Property'),
+        title: const Text('Dodaj mieszkanie'),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -192,12 +192,12 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                   TextFormField(
                     controller: _titleController,
                     decoration: const InputDecoration(
-                      labelText: 'Title',
+                      labelText: 'Tytuł',
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter a title';
+                        return 'Podaj tytuł';
                       }
                       return null;
                     },
@@ -206,13 +206,13 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                   TextFormField(
                     controller: _descriptionController,
                     decoration: const InputDecoration(
-                      labelText: 'Description',
+                      labelText: 'Opis',
                       border: OutlineInputBorder(),
                     ),
                     maxLines: 3,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter a description';
+                        return 'Podaj opis';
                       }
                       return null;
                     },
@@ -224,17 +224,17 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                         child: TextFormField(
                           controller: _basePriceController,
                           decoration: const InputDecoration(
-                            labelText: 'Base Price per month',
+                            labelText: 'Cena bazowa za miesiąc',
                             border: OutlineInputBorder(),
                             prefixText: '\$ ',
                           ),
                           keyboardType: TextInputType.number,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter a price';
+                              return 'Podaj cenę';
                             }
                             if (double.tryParse(value) == null) {
-                              return 'Please enter a valid number';
+                              return 'Podaj prawidłową liczbę';
                             }
                             return null;
                           },
@@ -245,17 +245,17 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                         child: TextFormField(
                           controller: _baseDepositController,
                           decoration: const InputDecoration(
-                            labelText: 'Base Deposit',
+                            labelText: 'Kaucja',
                             border: OutlineInputBorder(),
                             prefixText: '\$ ',
                           ),
                           keyboardType: TextInputType.number,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter a deposit';
+                              return 'Podaj kaucję';
                             }
                             if (double.tryParse(value) == null) {
-                              return 'Please enter a valid number';
+                              return 'Podaj prawidłową liczbę';
                             }
                             return null;
                           },
@@ -267,12 +267,12 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                   TextFormField(
                     controller: _addressController,
                     decoration: const InputDecoration(
-                      labelText: 'Address',
+                      labelText: 'Adres',
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter an address';
+                        return 'Podaj adres';
                       }
                       return null;
                     },
@@ -281,12 +281,12 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                   TextFormField(
                     controller: _cityController,
                     decoration: const InputDecoration(
-                      labelText: 'City',
+                      labelText: 'Miasto',
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter a city';
+                        return 'Podaj miasto';
                       }
                       return null;
                     },
@@ -295,12 +295,12 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                   TextFormField(
                     controller: _districtController,
                     decoration: const InputDecoration(
-                      labelText: 'District',
+                      labelText: 'Dzielnica',
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter a district';
+                        return 'Podaj dzielnicę';
                       }
                       return null;
                     },
@@ -309,12 +309,12 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                   TextFormField(
                     controller: _postalCodeController,
                     decoration: const InputDecoration(
-                      labelText: 'Postal Code',
+                      labelText: 'Kod pocztowy',
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter a postal code';
+                        return 'Podaj kod pocztowy';
                       }
                       return null;
                     },
@@ -326,16 +326,16 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                         child: TextFormField(
                           controller: _roomCountController,
                           decoration: const InputDecoration(
-                            labelText: 'Number of Rooms',
+                            labelText: 'Liczba pokoi',
                             border: OutlineInputBorder(),
                           ),
                           keyboardType: TextInputType.number,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter number of rooms';
+                              return 'Podaj liczbę pokoi';
                             }
                             if (int.tryParse(value) == null) {
-                              return 'Please enter a valid number';
+                              return 'Podaj prawidłową liczbę';
                             }
                             return null;
                           },
@@ -346,13 +346,13 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                         child: TextFormField(
                           controller: _areaController,
                           decoration: const InputDecoration(
-                            labelText: 'Area (m²)',
+                            labelText: 'Powierzchnia (m²)',
                             border: OutlineInputBorder(),
                           ),
                           keyboardType: TextInputType.text,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter area';
+                              return 'Podaj powierzchnię';
                             }
                             return null;
                           },
@@ -362,7 +362,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                   ),
                   const SizedBox(height: 24),
                   const Text(
-                    'Images',
+                    'Zdjęcia',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -425,12 +425,12 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                   ElevatedButton.icon(
                     onPressed: _pickImage,
                     icon: const Icon(Icons.add_photo_alternate),
-                    label: const Text('Add Images'),
+                    label: const Text('Dodaj zdjęcia'),
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: _submitForm,
-                    child: const Text('Add Property'),
+                    child: const Text('Dodaj mieszkanie'),
                   ),
                 ],
               ),

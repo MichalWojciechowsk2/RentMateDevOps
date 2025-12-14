@@ -19,3 +19,4 @@ namespace ApplicationCore.Dto.Issue
         public int Urgency { get; set; } // 0 = Low, 1 = Medium, 2 = High, 3 = Critical
     }
 }
+

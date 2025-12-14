@@ -58,7 +58,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load property details: $e'),
+            content: Text('Błąd podczas ładowania szczegółów mieszkania: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -150,16 +150,16 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Property'),
-        content: const Text('Are you sure you want to delete this property?'),
+        title: const Text('Usuń mieszkanie'),
+        content: const Text('Czy na pewno chcesz usunąć to mieszkanie?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text('Anuluj'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: const Text('Usuń'),
           ),
         ],
       ),
@@ -193,7 +193,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Property Details'),
+        title: const Text('Szczegóły mieszkania'),
         actions: [
           if (_isOwner)
             IconButton(
@@ -220,7 +220,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _property == null
-              ? const Center(child: Text('Property not found.'))
+              ? const Center(child: Text('Mieszkanie nie znalezione.'))
               : SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,7 +259,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                         size: 50,
                                       ),
                                       Text(
-                                        'Error: $error',
+                                        'Błąd: $error',
                                         style: const TextStyle(color: Colors.grey),
                                       ),
                                     ],
@@ -337,7 +337,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                             ],
                             const SizedBox(height: 8),
                             Text(
-                              '\$${_property!.basePrice.toStringAsFixed(2)} per month',
+                              '${_property!.basePrice.toStringAsFixed(2)} zł / miesiąc',
                               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                     color: Theme.of(context).primaryColor,
                                   ),
@@ -349,7 +349,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                             ),
                             const SizedBox(height: 24),
                             const Text(
-                              'Location',
+                              'Lokalizacja',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -364,7 +364,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                             ),
                             const SizedBox(height: 24),
                             const Text(
-                              'Details',
+                              'Szczegóły',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -376,7 +376,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                 Expanded(
                                   child: _buildDetailItem(
                                     Icons.door_front_door,
-                                    '${_property!.roomCount} Rooms',
+                                    '${_property!.roomCount} pokoi',
                                   ),
                                 ),
                                 Expanded(
@@ -393,7 +393,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                 Expanded(
                                   child: _buildDetailItem(
                                     Icons.attach_money,
-                                    'Base Deposit: \$${_property!.baseDeposit.toStringAsFixed(2)}',
+                                    'Kaucja: ${_property!.baseDeposit.toStringAsFixed(2)} zł',
                                   ),
                                 ),
                               ],
@@ -435,12 +435,12 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                       MaterialPageRoute(
                                         builder: (context) => ChatScreen(
                                           otherUserId: _property!.ownerId,
-                                          otherUsername: _property!.ownerUsername ?? 'Property Owner',
+                                          otherUsername: _property!.ownerUsername ?? 'Właściciel',
                                         ),
                                       ),
                                     );
                                   },
-                                  child: const Text('Contact Owner'),
+                                  child: const Text('Skontaktuj się z właścicielem'),
                                 ),
                               ),
                             ],

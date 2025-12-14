@@ -2,6 +2,7 @@
 using AutoMapper;
 using Data.Entities;
 using Infrastructure.Repositories;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -119,6 +120,44 @@ namespace Services.Services
         {
             return await _offerRepository.GetPropertyChatIdByOfferId(offerId);
         }
+        public async Task<string> UploadContractPdf(int offerId, IFormFile pdfFile)
+        {
+            var offer = await _offerRepository.getById(offerId);
+            if (offer == null) throw new KeyNotFoundException($"Oferta o ID {offerId} nie istnieje");
+            
+            if (pdfFile == null) throw new ArgumentException("Nie podano pliku PDF");
+            
+            var allowedTypes = new[] { "application/pdf" };
+            if (!allowedTypes.Contains(pdfFile.ContentType.ToLower()))
+            {
+                throw new ArgumentException($"Typ pliku {pdfFile.ContentType} nie jest dozwolony. Tylko pliki PDF są dozwolone.");
+            }
+            
+            if (pdfFile.Length > 10 * 1024 * 1024) // 10MB
+            {
+                throw new ArgumentException("Rozmiar pliku nie może przekraczać 10MB");
+            }
+            
+            var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "uploads", "Contracts");
+            if (!Directory.Exists(uploadPath))
+            {
+                Directory.CreateDirectory(uploadPath);
+            }
+            
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(pdfFile.FileName)}";
+            var filePath = Path.Combine(uploadPath, fileName);
+            
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await pdfFile.CopyToAsync(stream);
+            }
+            
+            var pdfUrl = $"/uploads/Contracts/{fileName}";
+            offer.ContractPdfUrl = pdfUrl;
+            await _offerRepository.updateAsync(offer);
+            
+            return pdfUrl;
+        }
     }
     public interface IOfferService
     {
@@ -137,5 +176,6 @@ namespace Services.Services
         Task<OfferEntity> AddOfferContractToOffer(int offerId, string contract);
         public byte[] GenerateOfferContractPdf(string contractText);
         Task<int?> GetPropertyChatIdByOfferId(int offerId);
+        Task<string> UploadContractPdf(int offerId, IFormFile pdfFile);
     }
 }

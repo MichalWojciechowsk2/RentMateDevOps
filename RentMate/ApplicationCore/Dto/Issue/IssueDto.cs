@@ -15,3 +15,4 @@ namespace ApplicationCore.Dto.Issue
         public DateTime? ResolvedAt { get; set; }
     }
 }
+

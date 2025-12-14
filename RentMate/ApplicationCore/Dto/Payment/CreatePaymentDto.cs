@@ -15,6 +15,7 @@ namespace ApplicationCore.Dto.Payment
         public string Description { get; set; }
         public DateTime DueDate {  get; set; }
         public string PaymentMethod { get; set; }
+        public string? BankAccountNumber { get; set; }
         public bool GenerateWithRecurring { get; set; }
         public int? RecurrenceTimes { get; set; }
     }

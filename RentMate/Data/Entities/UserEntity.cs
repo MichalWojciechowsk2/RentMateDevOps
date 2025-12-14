@@ -19,8 +19,8 @@ namespace Data.Entities
         [StringLength(512)]
         public string PasswordHash { get; set; }
         [StringLength(2000)]
-        public string AboutMe { get; set; }
-        public string PhotoUrl {  get; set; }
+        public string? AboutMe { get; set; }
+        public string? PhotoUrl {  get; set; }
 
         [Required]
         [StringLength(50)]

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/property.dart';
 import '../models/offer.dart';
 import '../services/offer_service.dart';
@@ -215,10 +216,57 @@ class _RentalAgreementsTabState extends State<RentalAgreementsTab> {
               'Okres: ${_formatDate(offer.rentalPeriodStart)} - ${_formatDate(offer.rentalPeriodEnd)}',
               style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
+            // Link do PDF umowy jeśli istnieje
+            if (offer.contractPdfUrl != null && offer.contractPdfUrl!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: () => _openContractPdf(offer.contractPdfUrl!),
+                icon: const Icon(Icons.picture_as_pdf, size: 18),
+                label: const Text('Pobierz umowę PDF'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red[50],
+                  foregroundColor: Colors.red[700],
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _openContractPdf(String pdfUrl) async {
+    try {
+      // Jeśli URL jest względny, dodaj bazowy URL
+      String fullUrl = pdfUrl;
+      if (!pdfUrl.startsWith('http')) {
+        fullUrl = 'https://localhost:7281$pdfUrl';
+      }
+      
+      final uri = Uri.parse(fullUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Nie można otworzyć pliku PDF'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Błąd podczas otwierania PDF: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildEmptySlot() {

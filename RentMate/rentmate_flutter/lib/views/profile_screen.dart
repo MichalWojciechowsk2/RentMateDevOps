@@ -62,7 +62,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading profile: $e')),
+          SnackBar(content: Text('Błąd podczas ładowania profilu: $e')),
         );
       }
     } finally {
@@ -85,7 +85,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error picking image: $e')),
+          SnackBar(content: Text('Błąd podczas wybierania zdjęcia: $e')),
         );
       }
     }
@@ -119,7 +119,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated successfully')),
+          const SnackBar(content: Text('Profil został zaktualizowany pomyślnie')),
         );
         setState(() {
           _isEditing = false;
@@ -130,7 +130,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating profile: $e')),
+          SnackBar(content: Text('Błąd podczas aktualizacji profilu: $e')),
         );
       }
     } finally {
@@ -151,14 +151,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     if (_isLoading && _currentUser == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Profile')),
+        appBar: AppBar(title: const Text('Profil')),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Profile'),
+        title: const Text('Mój profil'),
         actions: [
           if (_isEditing)
             IconButton(
@@ -235,13 +235,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextFormField(
                 controller: _firstNameController,
                 decoration: const InputDecoration(
-                  labelText: 'First Name',
+                  labelText: 'Imię',
                   prefixIcon: Icon(Icons.person),
                 ),
                 enabled: _isEditing,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your first name';
+                    return 'Podaj imię';
                   }
                   return null;
                 },
@@ -250,13 +250,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextFormField(
                 controller: _lastNameController,
                 decoration: const InputDecoration(
-                  labelText: 'Last Name',
+                  labelText: 'Nazwisko',
                   prefixIcon: Icon(Icons.person),
                 ),
                 enabled: _isEditing,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your last name';
+                    return 'Podaj nazwisko';
                   }
                   return null;
                 },
@@ -265,7 +265,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextFormField(
                 controller: _phoneNumberController,
                 decoration: const InputDecoration(
-                  labelText: 'Phone Number',
+                  labelText: 'Numer telefonu',
                   prefixIcon: Icon(Icons.phone),
                 ),
                 keyboardType: TextInputType.phone,
@@ -275,7 +275,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextFormField(
                 controller: _aboutMeController,
                 decoration: const InputDecoration(
-                  labelText: 'About Me',
+                  labelText: 'O mnie',
                   prefixIcon: Icon(Icons.info),
                 ),
                 maxLines: 3,
@@ -288,7 +288,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: _saveProfile,
-                        child: const Text('Save Changes'),
+                        child: const Text('Zapisz zmiany'),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -302,7 +302,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           });
                           _loadUserProfile();
                         },
-                        child: const Text('Cancel'),
+                        child: const Text('Anuluj'),
                       ),
                     ),
                   ],

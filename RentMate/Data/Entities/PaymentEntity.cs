@@ -19,6 +19,7 @@ namespace Data.Entities
         public DateTime CreateDateTime { get; set; }
         public DateTime? PaidAt { get; set; }
         public string PaymentMethod { get; set; }
+        public string? BankAccountNumber { get; set; }
         public string? TransactionId { get; set; }
         public OfferEntity Offer { get; set; }
         public UserEntity Tenant { get; set; }

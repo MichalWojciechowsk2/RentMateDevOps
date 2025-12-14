@@ -84,5 +84,17 @@ namespace RentMateApi.Controllers.User
                 return BadRequest(new { message = ex.Message});
             }
         }
+        [HttpGet("search")]
+        [Authorize]
+        public async Task<IActionResult> SearchUsers([FromQuery] string? searchTerm = null)
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                return Ok(new List<object>());
+            }
+            
+            var users = await _userService.SearchUsersByName(searchTerm);
+            return Ok(users);
+        }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using ApplicationCore.Dto.Property;
 using ApplicationCore.Dto.Property.Offer;
 using Data.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using RentMateApi.Hubs;
@@ -87,7 +88,7 @@ namespace RentMateApi.Controllers
                 var receiverUnreadNoti = await _notificationService.CountHowMuchNotRead(offerContract.TenantId.Value);
                 await _hubContext.Clients.User(offerContract.TenantId.Value.ToString()).SendAsync("ReceiveUnreadCount", receiverUnreadNoti);
             }
-            return Ok(new { message = "Offer and contract generated successfully" });
+            return Ok(new { message = "Offer and contract generated successfully", offerId = result.Id });
         }
         [HttpGet("{offerId}/offerContract/pdf")]
         public async Task<IActionResult> DownloadOfferContractPdf(int offerId)
@@ -256,6 +257,34 @@ namespace RentMateApi.Controllers
             catch (KeyNotFoundException ex)
             {
                 return NotFound(ex.Message);
+            }
+        }
+        [HttpPost("{offerId}/uploadContractPdf")]
+        [Authorize]
+        public async Task<IActionResult> UploadContractPdf(int offerId, IFormFile pdfFile)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return Unauthorized(new { message = "User not authenticated or invalid user ID." });
+            }
+            
+            try
+            {
+                var pdfUrl = await _offerService.UploadContractPdf(offerId, pdfFile);
+                return Ok(new { pdfUrl = pdfUrl });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Wystąpił błąd podczas przesyłania pliku PDF.", error = ex.Message });
             }
         }
     }

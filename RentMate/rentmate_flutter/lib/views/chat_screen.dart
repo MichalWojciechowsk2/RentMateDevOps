@@ -107,7 +107,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load messages: $e'),
+            content: Text('Błąd podczas ładowania wiadomości: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -131,7 +131,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to send message: $e'),
+            content: Text('Błąd podczas wysyłania wiadomości: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -196,7 +196,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 : _messages.isEmpty
                     ? const Center(
                         child: Text(
-                          'No messages yet. Start the conversation!',
+                          'Brak wiadomości. Rozpocznij rozmowę!',
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.grey,
@@ -400,7 +400,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: TextField(
                     controller: _messageController,
                     decoration: const InputDecoration(
-                      hintText: 'Type a message...',
+                      hintText: 'Napisz wiadomość...',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(25)),
                       ),

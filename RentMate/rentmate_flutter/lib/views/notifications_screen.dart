@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart' hide Notification;
+import 'package:url_launcher/url_launcher.dart';
 import '../models/notification.dart' as models;
 import '../models/offer.dart';
 import '../models/property.dart';
@@ -201,6 +202,244 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         );
       }
     }
+  }
+
+  Future<void> _openContractPdf(String pdfUrl) async {
+    try {
+      // Jeśli URL jest względny, dodaj bazowy URL
+      String fullUrl = pdfUrl;
+      if (!pdfUrl.startsWith('http')) {
+        fullUrl = 'https://localhost:7281$pdfUrl';
+      }
+      
+      final uri = Uri.parse(fullUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Nie można otworzyć pliku PDF'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Błąd podczas otwierania PDF: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _showOfferDetailsDialog(
+    models.Notification notification,
+    Offer offer,
+    Property property,
+  ) async {
+    await showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        insetPadding: const EdgeInsets.all(16),
+        child: Container(
+          constraints: const BoxConstraints(maxHeight: 700),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(8),
+                    topRight: Radius.circular(8),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Warunki umowy',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+              ),
+              // Content
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Szczegóły mieszkania
+                        Text(
+                          'Szczegóły mieszkania:',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[800],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey[300]!),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.home, size: 20, color: Colors.blue[700]),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      property.title,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.blue[700],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                '${property.city}, ${property.district}',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${property.roomCount} pokoi • ${property.area} m²',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        // Warunki umowy
+                        Text(
+                          'Warunki umowy:',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[800],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[50],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey[300]!),
+                          ),
+                          child: Column(
+                            children: [
+                              _buildOfferDetailRow('Czynsz miesięczny', '${offer.rentAmount.toStringAsFixed(2)} zł'),
+                              const SizedBox(height: 12),
+                              _buildOfferDetailRow('Kaucja', '${offer.depositAmount.toStringAsFixed(2)} zł'),
+                              const SizedBox(height: 12),
+                              _buildOfferDetailRow(
+                                'Okres najmu',
+                                '${_formatDateShort(offer.rentalPeriodStart)} - ${_formatDateShort(offer.rentalPeriodEnd)}',
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        // Przycisk PDF
+                        if (offer.contractPdfUrl != null && offer.contractPdfUrl!.isNotEmpty) ...[
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                _openContractPdf(offer.contractPdfUrl!);
+                              },
+                              icon: const Icon(Icons.picture_as_pdf, size: 20),
+                              label: const Text('Pobierz umowę PDF'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red[50],
+                                foregroundColor: Colors.red[700],
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                side: BorderSide(color: Colors.red[300]!),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                        // Przyciski akcji (tylko jeśli oferta jest aktywna)
+                        if (offer.status == OfferStatus.active) ...[
+                          const Divider(height: 32),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                    _handleOfferAction(notification, false);
+                                  },
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.red,
+                                    side: const BorderSide(color: Colors.red),
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                  ),
+                                  child: const Text('Odrzuć'),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                    _handleOfferAction(notification, true);
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                  ),
+                                  child: const Text('Zaakceptuj'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -603,54 +842,50 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               ),
               const SizedBox(height: 16),
               
-              // Warunki umowy
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Warunki umowy:',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey[800],
+              // Warunki umowy - klikalne
+              InkWell(
+                onTap: () => _showOfferDetailsDialog(notification, matchingOffer!, property!),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey[300]!),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Warunki umowy:',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[800],
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16,
+                            color: Colors.grey[600],
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildOfferDetailRow('Czynsz miesięczny', '${matchingOffer!.rentAmount.toStringAsFixed(2)} zł'),
-                    const SizedBox(height: 4),
-                    _buildOfferDetailRow('Kaucja', '${matchingOffer!.depositAmount.toStringAsFixed(2)} zł'),
-                    const SizedBox(height: 4),
-                    _buildOfferDetailRow(
-                      'Okres najmu',
-                      '${_formatDateShort(matchingOffer!.rentalPeriodStart)} - ${_formatDateShort(matchingOffer!.rentalPeriodEnd)}',
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      _buildOfferDetailRow('Czynsz miesięczny', '${matchingOffer!.rentAmount.toStringAsFixed(2)} zł'),
+                      const SizedBox(height: 4),
+                      _buildOfferDetailRow('Kaucja', '${matchingOffer!.depositAmount.toStringAsFixed(2)} zł'),
+                      const SizedBox(height: 4),
+                      _buildOfferDetailRow(
+                        'Okres najmu',
+                        '${_formatDateShort(matchingOffer!.rentalPeriodStart)} - ${_formatDateShort(matchingOffer!.rentalPeriodEnd)}',
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-            
-            // Akcje dla powiadomień o ofertach
-            if (isOfferNotification && !notification.isRead) ...[
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => _handleOfferAction(notification, false),
-                    child: const Text('Odrzuć', style: TextStyle(color: Colors.red)),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () => _handleOfferAction(notification, true),
-                    child: const Text('Zaakceptuj'),
-                  ),
-                ],
               ),
             ],
           ],

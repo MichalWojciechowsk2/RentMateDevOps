@@ -1,5 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/offer.dart';
 import 'auth_service.dart';
 
@@ -7,7 +11,7 @@ class OfferService {
   final String _baseUrl = 'https://localhost:7281/api';
   final AuthService _authService = AuthService();
 
-  Future<void> createOffer(CreateOfferDto dto) async {
+  Future<Offer> createOffer(CreateOfferDto dto) async {
     try {
       final response = await http.post(
         Uri.parse('$_baseUrl/Offer'),
@@ -19,14 +23,83 @@ class OfferService {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // Backend zwraca { message: "Offer and contract generated successfully" }
-        // Oferta została utworzona i powiadomienie wysłane
-        return;
+        // Backend zwraca { message: "Offer and contract generated successfully", offerId: ... }
+        final responseData = json.decode(response.body);
+        final offerId = responseData['offerId'] as int?;
+        
+        if (offerId != null) {
+          // Pobierz utworzoną ofertę
+          final offerResponse = await http.get(
+            Uri.parse('$_baseUrl/Offer/getOffersByPropertyId?propertyId=${dto.propertyId}'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ${await _authService.getToken()}',
+            },
+          );
+          
+          if (offerResponse.statusCode == 200) {
+            final List<dynamic> offers = json.decode(offerResponse.body);
+            try {
+              final createdOffer = offers.firstWhere((o) => (o['id'] is int ? o['id'] : int.tryParse(o['id']?.toString() ?? '') ?? 0) == offerId);
+              return Offer.fromJson(createdOffer);
+            } catch (e) {
+              // Oferta nie została znaleziona w liście
+            }
+          }
+        }
+        
+        // Fallback - zwróć podstawową ofertę z ID
+        return Offer(
+          id: offerId ?? 0,
+          propertyId: dto.propertyId,
+          rentAmount: dto.rentAmount,
+          depositAmount: dto.depositAmount,
+          rentalPeriodStart: dto.rentalPeriodStart,
+          rentalPeriodEnd: dto.rentalPeriodEnd,
+          status: OfferStatus.active,
+          tenantId: dto.tenantId,
+          createdAt: DateTime.now(),
+        );
       } else {
         throw Exception('Failed to create offer: ${response.body}');
       }
     } catch (e) {
       throw Exception('Failed to create offer: $e');
+    }
+  }
+
+  Future<void> uploadContractPdf(int offerId, File? pdfFile, Uint8List? pdfBytes) async {
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$_baseUrl/Offer/$offerId/uploadContractPdf'),
+      );
+
+      request.headers.addAll({
+        'Authorization': 'Bearer ${await _authService.getToken()}',
+      });
+
+      if (kIsWeb && pdfBytes != null) {
+        request.files.add(http.MultipartFile.fromBytes(
+          'pdfFile',
+          pdfBytes,
+          filename: 'contract.pdf',
+          contentType: MediaType('application', 'pdf'),
+        ));
+      } else if (pdfFile != null) {
+        request.files.add(await http.MultipartFile.fromPath('pdfFile', pdfFile.path));
+      } else {
+        throw Exception('No PDF file provided');
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to upload PDF: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Failed to upload PDF: $e');
     }
   }
 

@@ -44,8 +44,8 @@ namespace Services.Services
                 LastName = registerDto.LastName,
                 PhoneNumber = registerDto.PhoneNumber,
                 Role = (UserRole)Enum.Parse(typeof(UserRole), registerDto.Role),
-                AboutMe = registerDto.AboutMe ?? string.Empty, // Use provided value or empty string
-                PhotoUrl = registerDto.PhotoUrl ?? string.Empty, // Use provided value or empty string
+                AboutMe = registerDto.AboutMe, // Nullable - can be null
+                PhotoUrl = registerDto.PhotoUrl, // Nullable - can be null
                 CreatedAt = DateTime.UtcNow,
                 LastLoginAt = DateTime.UtcNow
             };

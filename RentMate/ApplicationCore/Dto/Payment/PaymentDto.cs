@@ -18,6 +18,7 @@ namespace ApplicationCore.Dto.Payment
         public DateTime DueDate { get; set; }
         public DateTime? PaidAt { get; set; }
         public string PaymentMethod { get; set; }
+        public string? BankAccountNumber { get; set; }
         public string? TransactionId { get; set; }
 
     }

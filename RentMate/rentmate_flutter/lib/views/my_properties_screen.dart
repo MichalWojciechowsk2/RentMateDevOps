@@ -36,7 +36,7 @@ class _MyPropertiesScreenState extends State<MyPropertiesScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load your properties: $e'),
+            content: Text('Błąd podczas ładowania mieszkań: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -48,12 +48,12 @@ class _MyPropertiesScreenState extends State<MyPropertiesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Properties'),
+        title: const Text('Moje mieszkania'),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _properties.isEmpty
-              ? const Center(child: Text('You have no properties listed.'))
+              ? const Center(child: Text('Nie masz żadnych mieszkań.'))
               : ListView.builder(
                   itemCount: _properties.length,
                   itemBuilder: (context, index) {
@@ -116,7 +116,7 @@ class _MyPropertiesScreenState extends State<MyPropertiesScreen> {
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      'Price: \$${property.basePrice.toStringAsFixed(2)} / month',
+                                      'Cena: ${property.basePrice.toStringAsFixed(2)} zł / miesiąc',
                                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                     ),
                                   ],

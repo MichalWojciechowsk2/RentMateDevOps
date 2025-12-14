@@ -95,3 +95,4 @@ namespace Services.Services
         Task<IssueEntity> UpdateIssueStatus(int issueId, IssueStatus newStatus);
     }
 }
+

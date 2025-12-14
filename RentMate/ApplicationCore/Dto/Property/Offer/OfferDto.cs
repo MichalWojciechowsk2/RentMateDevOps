@@ -27,6 +27,7 @@ namespace ApplicationCore.Dto.Property.Offer
         // Status oferty
         public OfferStatus Status { get; set; }
         public string OfferContract { get; set; }
+        public string? ContractPdfUrl { get; set; }
 
         // Dane najemcy (gdy oferta zostanie zaakceptowana)
         public int? TenantId { get; set; }

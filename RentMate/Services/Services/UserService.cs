@@ -79,6 +79,11 @@ namespace Services.Services
 
             return _mapper.Map<UserDto>(user);
         }
+        public async Task<List<UserDto>> SearchUsersByName(string searchTerm)
+        {
+            var users = await _userRepository.SearchUsersByName(searchTerm);
+            return _mapper.Map<List<UserDto>>(users);
+        }
     }
     public interface IUserService
     {
@@ -86,5 +91,6 @@ namespace Services.Services
         Task<string> UploadUserPhoto(int userId, IFormFile photo);
         Task<string> GetUserPhoto(int userId);
         Task<UserDto> UpdateUser(int userId, UserFieldToUpdate field, string value);
+        Task<List<UserDto>> SearchUsersByName(string searchTerm);
     }
 }

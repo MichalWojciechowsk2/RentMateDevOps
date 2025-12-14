@@ -17,6 +17,7 @@ class Offer {
   final DateTime createdAt;
   final DateTime? acceptedAt;
   final String? offerContract;
+  final String? contractPdfUrl;
   final Map<String, dynamic>? tenant;
   final String tenantName;
 
@@ -32,6 +33,7 @@ class Offer {
     required this.createdAt,
     this.acceptedAt,
     this.offerContract,
+    this.contractPdfUrl,
     this.tenant,
     this.tenantName = '',
   });
@@ -75,6 +77,7 @@ class Offer {
           ? DateTime.parse(json['acceptedAt'].toString())
           : null,
       offerContract: json['offerContract'],
+      contractPdfUrl: json['contractPdfUrl'],
       tenant: json['tenant'],
       tenantName: json['tenant'] != null && json['tenant'] is Map
           ? '${json['tenant']['firstName'] ?? ''} ${json['tenant']['lastName'] ?? ''}'.trim()
@@ -111,6 +114,7 @@ class Offer {
       'createdAt': createdAt.toIso8601String(),
       'acceptedAt': acceptedAt?.toIso8601String(),
       'offerContract': offerContract,
+      'contractPdfUrl': contractPdfUrl,
       'tenant': tenant,
     };
   }

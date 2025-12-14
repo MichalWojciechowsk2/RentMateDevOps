@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/property.dart';
 import '../models/offer.dart';
 import '../services/offer_service.dart';
 import '../services/auth_service.dart';
+import '../services/user_service.dart';
 import '../models/user.dart';
 
 class CreateOfferScreen extends StatefulWidget {
@@ -19,16 +24,22 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
   final _formKey = GlobalKey<FormState>();
   final _offerService = OfferService();
   final _authService = AuthService();
+  final _userService = UserService();
   bool _isLoading = false;
 
   final _rentAmountController = TextEditingController(text: '0');
   final _depositAmountController = TextEditingController(text: '0');
   final _startDateController = TextEditingController();
   final _endDateController = TextEditingController();
-  final _tenantIdController = TextEditingController(text: '0');
+  final _tenantSearchController = TextEditingController();
 
   DateTime? _startDate;
   DateTime? _endDate;
+  int? _selectedTenantId;
+  List<User> _searchResults = [];
+  bool _isSearching = false;
+  File? _selectedPdfFile;
+  Uint8List? _selectedPdfBytes;
 
   @override
   void initState() {
@@ -83,12 +94,86 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     }
   }
 
+  Future<void> _searchUsers(String query) async {
+    if (query.trim().isEmpty) {
+      setState(() {
+        _searchResults = [];
+        _isSearching = false;
+      });
+      return;
+    }
+
+    setState(() => _isSearching = true);
+    try {
+      final users = await _userService.searchUsersByName(query);
+      setState(() {
+        _searchResults = users;
+        _isSearching = false;
+      });
+    } catch (e) {
+      setState(() => _isSearching = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Błąd podczas wyszukiwania użytkowników: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickPdfFile() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+      );
+
+      if (result != null) {
+        if (kIsWeb) {
+          final bytes = result.files.single.bytes;
+          if (bytes != null) {
+            setState(() {
+              _selectedPdfBytes = bytes;
+              _selectedPdfFile = null;
+            });
+          }
+        } else {
+          final file = File(result.files.single.path!);
+          setState(() {
+            _selectedPdfFile = file;
+            _selectedPdfBytes = null;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Błąd podczas wybierania pliku: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
     if (_startDate == null || _endDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Proszę wybrać daty rozpoczęcia i zakończenia najmu'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    if (_selectedTenantId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Proszę wybrać najemcę'),
           backgroundColor: Colors.red,
         ),
       );
@@ -103,10 +188,15 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
         depositAmount: double.parse(_depositAmountController.text),
         rentalPeriodStart: _startDate!,
         rentalPeriodEnd: _endDate!,
-        tenantId: int.parse(_tenantIdController.text),
+        tenantId: _selectedTenantId!,
       );
 
-      await _offerService.createOffer(dto);
+      final offer = await _offerService.createOffer(dto);
+
+      // Jeśli wybrano plik PDF, wyślij go
+      if (_selectedPdfFile != null || _selectedPdfBytes != null) {
+        await _offerService.uploadContractPdf(offer.id, _selectedPdfFile, _selectedPdfBytes);
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -139,7 +229,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     _depositAmountController.dispose();
     _startDateController.dispose();
     _endDateController.dispose();
-    _tenantIdController.dispose();
+    _tenantSearchController.dispose();
     super.dispose();
   }
 
@@ -235,25 +325,155 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
+                  // Wyszukiwarka najemcy
                   TextFormField(
-                    controller: _tenantIdController,
-                    decoration: const InputDecoration(
-                      labelText: 'ID najemcy (tenantId)',
-                      border: OutlineInputBorder(),
+                    controller: _tenantSearchController,
+                    decoration: InputDecoration(
+                      labelText: 'Wyszukaj najemcę',
+                      hintText: 'Wpisz imię i nazwisko',
+                      border: const OutlineInputBorder(),
+                      suffixIcon: _isSearching
+                          ? const Padding(
+                              padding: EdgeInsets.all(12.0),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            )
+                          : null,
                     ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Proszę podać ID najemcy';
+                    onChanged: (value) {
+                      if (value.length >= 2) {
+                        _searchUsers(value);
+                      } else {
+                        setState(() {
+                          _searchResults = [];
+                          _selectedTenantId = null;
+                        });
                       }
-                      final id = int.tryParse(value);
-                      if (id == null || id <= 0) {
-                        return 'ID najemcy musi być dodatnią liczbą';
+                    },
+                    validator: (value) {
+                      if (_selectedTenantId == null) {
+                        return 'Proszę wybrać najemcę z listy';
                       }
                       return null;
                     },
                   ),
+                  // Lista wyników wyszukiwania
+                  if (_searchResults.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      constraints: const BoxConstraints(maxHeight: 200),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: _searchResults.length,
+                        itemBuilder: (context, index) {
+                          final user = _searchResults[index];
+                          final isSelected = _selectedTenantId == int.parse(user.id);
+                          return ListTile(
+                            title: Text('${user.firstName} ${user.lastName}'),
+                            subtitle: Text('ID: ${user.id}'),
+                            selected: isSelected,
+                            selectedTileColor: Colors.blue[50],
+                            onTap: () {
+                              setState(() {
+                                _selectedTenantId = int.parse(user.id);
+                                _tenantSearchController.text = '${user.firstName} ${user.lastName} (${user.id})';
+                                _searchResults = [];
+                              });
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                  // Wyświetl wybranego najemcę
+                  if (_selectedTenantId != null) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: Colors.blue[200]!),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.person, color: Colors.blue),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Wybrany najemca: ${_tenantSearchController.text}',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.clear, size: 20),
+                            onPressed: () {
+                              setState(() {
+                                _selectedTenantId = null;
+                                _tenantSearchController.clear();
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  // Upload PDF
+                  const Text(
+                    'Umowa najmu (PDF) - opcjonalnie',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton.icon(
+                    onPressed: _pickPdfFile,
+                    icon: const Icon(Icons.upload_file),
+                    label: const Text('Wybierz plik PDF'),
+                  ),
+                  if (_selectedPdfFile != null || _selectedPdfBytes != null) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.green[50],
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: Colors.green[200]!),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.picture_as_pdf, color: Colors.red),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              kIsWeb
+                                  ? 'Wybrany plik PDF'
+                                  : _selectedPdfFile!.path.split('/').last,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.clear, size: 20),
+                            onPressed: () {
+                              setState(() {
+                                _selectedPdfFile = null;
+                                _selectedPdfBytes = null;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 32),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,

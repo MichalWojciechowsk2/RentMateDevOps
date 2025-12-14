@@ -289,11 +289,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           : null,
                     ),
                     const SizedBox(width: 12),
-                    Text('Hello, ${_currentUser!.firstName}'),
+                    Text('Witaj, ${_currentUser!.firstName}'),
                   ],
                 ),
               )
-            : const Text('My Properties'),
+            : const Text('Moje mieszkania'),
         actions: [
           if (_currentUser?.role == 'Tenant' && _acceptedOffer != null)
             IconButton(
@@ -392,7 +392,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.message),
-                  tooltip: 'My Messages',
+                  tooltip: 'Moje wiadomości',
                   onPressed: () async {
                     await Navigator.push(
                       context,
@@ -471,7 +471,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       child: DropdownButtonFormField<String>(
                         value: _selectedCity,
                         items: [
-                          const DropdownMenuItem(value: null, child: Text('-- Select city --')),
+                          const DropdownMenuItem(value: null, child: Text('-- Wybierz miasto --')),
                           ..._cities.map((city) => DropdownMenuItem(value: city, child: Text(city))).toList(),
                         ],
                         onChanged: (value) {
@@ -481,7 +481,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           });
                           _fetchDistricts(city: value); // Fetch districts for selected city
                         },
-                        decoration: const InputDecoration(labelText: 'City'),
+                        decoration: const InputDecoration(labelText: 'Miasto'),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -489,11 +489,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       child: DropdownButtonFormField<String>(
                         value: _selectedDistrict,
                         items: [
-                          const DropdownMenuItem(value: null, child: Text('-- Select district --')),
+                          const DropdownMenuItem(value: null, child: Text('-- Wybierz dzielnicę --')),
                           ..._districts.map((district) => DropdownMenuItem(value: district, child: Text(district))).toList(),
                         ],
                         onChanged: (value) => setState(() => _selectedDistrict = value),
-                        decoration: const InputDecoration(labelText: 'District'),
+                        decoration: const InputDecoration(labelText: 'Dzielnica'),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -517,7 +517,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       child: TextField(
                         controller: _roomsController,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Number of rooms'),
+                        decoration: const InputDecoration(labelText: 'Liczba pokoi'),
                       ),
                     ),
                   ],
@@ -553,12 +553,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     ElevatedButton(
                       onPressed: _filterProperties,
-                      child: const Text('Filter'),
+                      child: const Text('Filtruj'),
                     ),
                     const SizedBox(width: 12),
                     OutlinedButton(
                       onPressed: _resetFilters,
-                      child: const Text('Reset'),
+                      child: const Text('Resetuj'),
                     ),
                   ],
                 ),
@@ -571,7 +571,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 : _properties.isEmpty
                     ? const Center(
                         child: Text(
-                          'No properties found. Add your first property!',
+                          'Nie znaleziono mieszkań. Dodaj swoje pierwsze mieszkanie!',
                           style: TextStyle(fontSize: 16),
                         ),
                       )
@@ -689,7 +689,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                 ),
                                                 const SizedBox(height: 8),
                                                 Text(
-                                                  '\$${property.basePrice.toStringAsFixed(2)} per month',
+                                                  '${property.basePrice.toStringAsFixed(2)} zł / miesiąc',
                                                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                                         color: Theme.of(context).primaryColor,
                                                       ),
@@ -705,7 +705,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                     Expanded(
                                                       child: _buildDetailItem(
                                                         Icons.door_front_door,
-                                                        '${property.roomCount} Rooms',
+                                                        '${property.roomCount} pokoi',
                                                       ),
                                                     ),
                                                     Expanded(

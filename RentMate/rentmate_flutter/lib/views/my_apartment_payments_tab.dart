@@ -243,6 +243,30 @@ class _MyApartmentPaymentsTabState extends State<MyApartmentPaymentsTab> {
                                 ],
                               ),
                             ],
+                            if (payment['paymentMethod']?.toString() == 'Przelew' && 
+                                payment['bankAccountNumber']?.toString().isNotEmpty == true) ...[
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Numer konta bankowego:',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                  Text(
+                                    payment['bankAccountNumber']?.toString() ?? '',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.blue[700],
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                             if (status.toLowerCase() == 'pending') ...[
                               const SizedBox(height: 16),
                               SizedBox(

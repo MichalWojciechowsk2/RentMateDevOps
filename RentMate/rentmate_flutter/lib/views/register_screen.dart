@@ -55,7 +55,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error picking image: $e')),
+          SnackBar(content: Text('Błąd podczas wybierania zdjęcia: $e')),
         );
       }
     }
@@ -65,7 +65,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (_formKey.currentState!.validate()) {
       if (_selectedRole == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select a role.')),
+          const SnackBar(content: Text('Wybierz rolę.')),
         );
         return;
       }
@@ -103,7 +103,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Register'),
+        title: const Text('Rejestracja'),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -135,13 +135,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _firstNameController,
                   decoration: const InputDecoration(
-                    labelText: 'First Name',
+                    labelText: 'Imię',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.person),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your first name';
+                      return 'Podaj imię';
                     }
                     return null;
                   },
@@ -150,13 +150,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _lastNameController,
                   decoration: const InputDecoration(
-                    labelText: 'Last Name',
+                    labelText: 'Nazwisko',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.person),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your last name';
+                      return 'Podaj nazwisko';
                     }
                     return null;
                   },
@@ -165,14 +165,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _phoneNumberController,
                   decoration: const InputDecoration(
-                    labelText: 'Phone Number',
+                    labelText: 'Numer telefonu',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.phone),
                   ),
                   keyboardType: TextInputType.phone,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your phone number';
+                      return 'Podaj numer telefonu';
                     }
                     return null;
                   },
@@ -181,13 +181,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 DropdownButtonFormField<String>(
                   value: _selectedRole,
                   decoration: const InputDecoration(
-                    labelText: 'Role',
+                    labelText: 'Rola',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.person_pin),
                   ),
                   items: const [
-                    DropdownMenuItem(value: 'Owner', child: Text('Owner')),
-                    DropdownMenuItem(value: 'Tenant', child: Text('Renter')),
+                    DropdownMenuItem(value: 'Owner', child: Text('Właściciel')),
+                    DropdownMenuItem(value: 'Tenant', child: Text('Najemca')),
                   ],
                   onChanged: (value) {
                     setState(() {
@@ -196,7 +196,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please select your role';
+                      return 'Wybierz rolę';
                     }
                     return null;
                   },
@@ -205,7 +205,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _passwordController,
                   decoration: InputDecoration(
-                    labelText: 'Password',
+                    labelText: 'Hasło',
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
@@ -222,10 +222,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   obscureText: _obscurePassword,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
+                      return 'Podaj hasło';
                     }
                     if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
+                      return 'Hasło musi mieć co najmniej 6 znaków';
                     }
                     return null;
                   },
@@ -234,7 +234,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _confirmPasswordController,
                   decoration: InputDecoration(
-                    labelText: 'Confirm Password',
+                    labelText: 'Potwierdź hasło',
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
@@ -251,10 +251,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   obscureText: _obscureConfirmPassword,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please confirm your password';
+                      return 'Potwierdź hasło';
                     }
                     if (value != _passwordController.text) {
-                      return 'Passwords do not match';
+                      return 'Hasła nie są zgodne';
                     }
                     return null;
                   },
@@ -263,7 +263,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _aboutMeController,
                   decoration: const InputDecoration(
-                    labelText: 'About Me (Optional)',
+                    labelText: 'O mnie (opcjonalnie)',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.info),
                   ),
@@ -287,8 +287,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         Expanded(
                           child: Text(
                             _selectedImage == null 
-                                ? 'Select Profile Photo (Optional)' 
-                                : 'Photo selected: ${_selectedImage!.path.split('/').last}',
+                                ? 'Wybierz zdjęcie profilowe (opcjonalnie)' 
+                                : 'Wybrane zdjęcie: ${_selectedImage!.path.split('/').last}',
                           ),
                         ),
                         if (_selectedImage != null)
@@ -323,7 +323,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     onPressed: _isLoading ? null : _register,
                     child: _isLoading
                         ? const CircularProgressIndicator()
-                        : const Text('Register'),
+                        : const Text('Zarejestruj się'),
                   ),
                 ),
               ],

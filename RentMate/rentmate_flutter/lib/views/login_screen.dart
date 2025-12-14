@@ -53,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login'),
+        title: const Text('Logowanie'),
       ),
       body: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -71,10 +71,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
+                        return 'Podaj adres email';
                       }
                       if (!value.contains('@')) {
-                        return 'Please enter a valid email';
+                        return 'Podaj prawidłowy adres email';
                       }
                       return null;
                     },
@@ -83,16 +83,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextFormField(
                     controller: _passwordController,
                 decoration: const InputDecoration(
-                      labelText: 'Password',
+                      labelText: 'Hasło',
                   border: OutlineInputBorder(),
                     ),
                 obscureText: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
+                        return 'Podaj hasło';
                       }
                       if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
+                        return 'Hasło musi mieć co najmniej 6 znaków';
                       }
                       return null;
                     },
@@ -105,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: _isLoading ? null : _login,
                     child: _isLoading
                       ? const CircularProgressIndicator()
-                        : const Text('Login'),
+                        : const Text('Zaloguj'),
                 ),
                   ),
                   const SizedBox(height: 16),
@@ -113,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: () {
                       Navigator.pushNamed(context, '/register');
                     },
-                    child: const Text('Don\'t have an account? Register'),
+                    child: const Text('Nie masz konta? Zarejestruj się'),
                   ),
                 ],
           ),

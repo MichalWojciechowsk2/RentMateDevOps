@@ -67,3 +67,4 @@ namespace Infrastructure.Repositories
         Task<IssueEntity> UpdateIssue(IssueEntity issue);
     }
 }
+

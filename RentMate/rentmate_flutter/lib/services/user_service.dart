@@ -105,5 +105,26 @@ class UserService {
       throw Exception('Failed to load user: $e');
     }
   }
+
+  Future<List<User>> searchUsersByName(String searchTerm) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/User/search?searchTerm=${Uri.encodeComponent(searchTerm)}'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${await _authService.getToken()}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((json) => User.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to search users: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Failed to search users: $e');
+    }
+  }
 }
 

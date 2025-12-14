@@ -37,6 +37,25 @@ namespace Infrastructure.Repositories
             await _context.SaveChangesAsync();
             return user;
         }
+        public async Task<List<UserEntity>> SearchUsersByName(string searchTerm)
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                return new List<UserEntity>();
+            }
+            
+            var term = searchTerm.Trim().ToLower();
+            return await _context.Users
+                .Where(u => 
+                    (u.FirstName != null && u.FirstName.ToLower().Contains(term)) ||
+                    (u.LastName != null && u.LastName.ToLower().Contains(term)) ||
+                    (u.FirstName != null && u.LastName != null && 
+                     (u.FirstName + " " + u.LastName).ToLower().Contains(term)))
+                .OrderBy(u => u.FirstName)
+                .ThenBy(u => u.LastName)
+                .Take(20) // Limit do 20 wyników
+                .ToListAsync();
+        }
 
     }
     public interface IUserRepository
@@ -45,6 +64,7 @@ namespace Infrastructure.Repositories
         Task<UserEntity> UpdateUserPhoto(int userId, string photoUrl);
         Task<string> GetUserPhotoUrl(int userId);
         Task<UserEntity?> Update(UserEntity user);
+        Task<List<UserEntity>> SearchUsersByName(string searchTerm);
     }
     public enum UserFieldToUpdate
     {

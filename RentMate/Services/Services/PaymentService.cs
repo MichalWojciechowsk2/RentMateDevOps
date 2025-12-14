@@ -36,6 +36,19 @@ namespace Services.Services
         }
         public async Task<bool> CreatePayment(CreatePaymentDto dto, int ownerId)
         {
+            // Walidacja: jeśli metoda płatności to Przelew, numer konta bankowego jest wymagany i musi mieć 26 cyfr
+            if (dto.PaymentMethod == "Przelew")
+            {
+                if (string.IsNullOrWhiteSpace(dto.BankAccountNumber))
+                {
+                    throw new Exception("Numer konta bankowego jest wymagany dla metody płatności Przelew");
+                }
+                if (dto.BankAccountNumber.Length != 26 || !dto.BankAccountNumber.All(char.IsDigit))
+                {
+                    throw new Exception("Numer konta bankowego musi składać się z dokładnie 26 cyfr");
+                }
+            }
+            
             if(dto.OfferId == -1)
             {
                 var offers = await _offerRepository.getActiveAndAcceptedOffersByPropId(dto.PropertyId);

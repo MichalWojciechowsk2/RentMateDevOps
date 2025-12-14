@@ -14,6 +14,7 @@ class PaymentService {
     required String description,
     required DateTime dueDate,
     required String paymentMethod,
+    String? bankAccountNumber,
     bool generateWithRecurring = false,
     int? recurrenceTimes,
   }) async {
@@ -21,22 +22,28 @@ class PaymentService {
       final token = await _authService.getToken();
       if (token == null) throw Exception('No authentication token');
 
+      final requestBody = {
+        'propertyId': propertyId,
+        'offerId': offerId,
+        'amount': amount,
+        'description': description,
+        'dueDate': dueDate.toIso8601String(),
+        'paymentMethod': paymentMethod,
+        'generateWithRecurring': generateWithRecurring,
+        'recurrenceTimes': recurrenceTimes,
+      };
+      
+      if (bankAccountNumber != null && bankAccountNumber.isNotEmpty) {
+        requestBody['bankAccountNumber'] = bankAccountNumber;
+      }
+
       final response = await http.post(
         Uri.parse('$baseUrl/Payment'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
-        body: json.encode({
-          'propertyId': propertyId,
-          'offerId': offerId,
-          'amount': amount,
-          'description': description,
-          'dueDate': dueDate.toIso8601String(),
-          'paymentMethod': paymentMethod,
-          'generateWithRecurring': generateWithRecurring,
-          'recurrenceTimes': recurrenceTimes,
-        }),
+        body: json.encode(requestBody),
       );
 
       if (response.statusCode == 201) {
@@ -76,6 +83,7 @@ class PaymentService {
             'dueDate': payment['dueDate'] != null ? DateTime.parse(payment['dueDate'].toString()) : null,
             'paidAt': payment['paidAt'] != null ? DateTime.parse(payment['paidAt'].toString()) : null,
             'paymentMethod': payment['paymentMethod']?.toString() ?? '',
+            'bankAccountNumber': payment['bankAccountNumber']?.toString() ?? '',
             'tenantName': payment['tenantName']?.toString() ?? '',
           };
         }).toList();
@@ -114,6 +122,7 @@ class PaymentService {
             'dueDate': payment['dueDate'] != null ? DateTime.parse(payment['dueDate'].toString()) : null,
             'paidAt': payment['paidAt'] != null ? DateTime.parse(payment['paidAt'].toString()) : null,
             'paymentMethod': payment['paymentMethod']?.toString() ?? '',
+            'bankAccountNumber': payment['bankAccountNumber']?.toString() ?? '',
             'tenantName': payment['tenantName']?.toString() ?? '',
           };
         }).toList();
@@ -152,6 +161,7 @@ class PaymentService {
             'dueDate': payment['dueDate'] != null ? DateTime.parse(payment['dueDate'].toString()) : null,
             'paidAt': payment['paidAt'] != null ? DateTime.parse(payment['paidAt'].toString()) : null,
             'paymentMethod': payment['paymentMethod']?.toString() ?? '',
+            'bankAccountNumber': payment['bankAccountNumber']?.toString() ?? '',
             'tenantName': payment['tenantName']?.toString() ?? '',
             'tenantSurname': payment['tenantSurname']?.toString() ?? '',
             'createDateTime': payment['createDateTime'] != null ? DateTime.parse(payment['createDateTime'].toString()) : null,
