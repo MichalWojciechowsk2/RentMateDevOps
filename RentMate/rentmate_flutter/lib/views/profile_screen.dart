@@ -96,26 +96,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
     
     setState(() => _isLoading = true);
     try {
+      if (_currentUser == null) return;
+      
+      final userId = int.parse(_currentUser!.id);
+      
       // Upload photo if selected
       if (_selectedImageBytes != null) {
-        final photoUrl = await _userService.uploadUserPhoto(_selectedImageBytes!);
-        // Update current user's photoUrl immediately
-        if (_currentUser != null) {
-          _currentUser = User(
-            id: _currentUser!.id,
-            email: _currentUser!.email,
-            firstName: _currentUser!.firstName,
-            lastName: _currentUser!.lastName,
-            phoneNumber: _currentUser!.phoneNumber,
-            role: _currentUser!.role,
-            profilePictureUrl: _currentUser!.profilePictureUrl,
-            photoUrl: photoUrl,
-            aboutMe: _currentUser!.aboutMe,
-          );
-        }
-        // Wait a bit for the server to process
-        await Future.delayed(const Duration(milliseconds: 500));
+        await _userService.uploadUserPhoto(_selectedImageBytes!);
       }
+      
+      // Update first name if changed
+      final newFirstName = _firstNameController.text.trim();
+      if (newFirstName != _currentUser!.firstName) {
+        await _userService.updateUserField(userId, 'firstName', newFirstName);
+      }
+      
+      // Update last name if changed
+      final newLastName = _lastNameController.text.trim();
+      if (newLastName != _currentUser!.lastName) {
+        await _userService.updateUserField(userId, 'lastName', newLastName);
+      }
+      
+      // Update phone number if changed
+      final newPhoneNumber = _phoneNumberController.text.trim();
+      if (newPhoneNumber != (_currentUser!.phoneNumber ?? '')) {
+        await _userService.updateUserField(userId, 'phoneNumber', newPhoneNumber);
+      }
+      
+      // Update AboutMe if changed
+      final newAboutMe = _aboutMeController.text.trim();
+      if (newAboutMe != (_currentUser!.aboutMe ?? '')) {
+        await _userService.updateUserField(userId, 'aboutMe', newAboutMe);
+      }
+      
+      // Reload user profile to get updated data
+      await _loadUserProfile();
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

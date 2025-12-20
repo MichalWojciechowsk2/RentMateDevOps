@@ -69,6 +69,8 @@ namespace Infrastructure.Repositories
     public enum UserFieldToUpdate
     {
         AboutMe,
-        PhoneNumber
+        PhoneNumber,
+        FirstName,
+        LastName
     }
 }

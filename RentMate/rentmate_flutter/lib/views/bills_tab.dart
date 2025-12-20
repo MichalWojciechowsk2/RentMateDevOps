@@ -540,7 +540,31 @@ class _BillsTabState extends State<BillsTab> {
                                       itemCount: _lastPayments.length,
                                       itemBuilder: (context, index) {
                                         final payment = _lastPayments[index];
-                                        final status = payment['status']?.toString() ?? 'Pending';
+                                        // Status może być zwracany jako enum (np. "Completed", "Pending") lub jako liczba
+                                        final statusRaw = payment['status'];
+                                        String status;
+                                        if (statusRaw is int) {
+                                          // Jeśli status jest liczbą, mapuj na string
+                                          // PaymentStatus: Pending=0, Completed=1, Failed=2, Cancelled=3
+                                          switch (statusRaw) {
+                                            case 0:
+                                              status = 'Pending';
+                                              break;
+                                            case 1:
+                                              status = 'Completed';
+                                              break;
+                                            case 2:
+                                              status = 'Failed';
+                                              break;
+                                            case 3:
+                                              status = 'Cancelled';
+                                              break;
+                                            default:
+                                              status = 'Pending';
+                                          }
+                                        } else {
+                                          status = statusRaw?.toString() ?? 'Pending';
+                                        }
                                         final isPaid = status.toLowerCase() == 'completed';
                                         final dueDate = payment['dueDate'] as DateTime?;
                                         final paidAt = payment['paidAt'] as DateTime?;

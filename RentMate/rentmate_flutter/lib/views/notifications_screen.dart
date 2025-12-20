@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart' hide Notification;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/notification.dart' as models;
 import '../models/offer.dart';
 import '../models/property.dart';
@@ -237,6 +238,73 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
+  Future<void> _downloadGeneratedPdf(int offerId) async {
+    try {
+      setState(() => _isLoading = true);
+      
+      if (kIsWeb) {
+        // Na web, użyj URL do pobrania PDF
+        final pdfUrl = 'https://localhost:7281/api/Offer/$offerId/offerContract/pdf';
+        final uri = Uri.parse(pdfUrl);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('PDF został otwarty w przeglądarce'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Nie można otworzyć pliku PDF'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } else {
+        // Na urządzeniu mobilnym, zapisz plik
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Pobieranie PDF...'),
+              backgroundColor: Colors.blue,
+            ),
+          );
+        }
+
+        final filePath = await _offerService.downloadAndSaveContractPdf(offerId);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('PDF został zapisany: $filePath'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Błąd podczas pobierania PDF: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   Future<void> _showOfferDetailsDialog(
     models.Notification notification,
     Offer offer,
@@ -373,27 +441,49 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           ),
                         ),
                         const SizedBox(height: 24),
-                        // Przycisk PDF
-                        if (offer.contractPdfUrl != null && offer.contractPdfUrl!.isNotEmpty) ...[
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                _openContractPdf(offer.contractPdfUrl!);
-                              },
-                              icon: const Icon(Icons.picture_as_pdf, size: 20),
-                              label: const Text('Pobierz umowę PDF'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red[50],
-                                foregroundColor: Colors.red[700],
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                                side: BorderSide(color: Colors.red[300]!),
+                        // Przyciski PDF
+                        Column(
+                          children: [
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  _downloadGeneratedPdf(offer.id);
+                                },
+                                icon: const Icon(Icons.download, size: 20),
+                                label: const Text('Pobierz wygenerowany PDF'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue[50],
+                                  foregroundColor: Colors.blue[700],
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                  side: BorderSide(color: Colors.blue[300]!),
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
+                            if (offer.contractPdfUrl != null && offer.contractPdfUrl!.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                    _openContractPdf(offer.contractPdfUrl!);
+                                  },
+                                  icon: const Icon(Icons.picture_as_pdf, size: 20),
+                                  label: const Text('Pobierz uploadowany PDF'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red[50],
+                                    foregroundColor: Colors.red[700],
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                    side: BorderSide(color: Colors.red[300]!),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 16),
                         // Przyciski akcji (tylko jeśli oferta jest aktywna)
                         if (offer.status == OfferStatus.active) ...[
                           const Divider(height: 32),

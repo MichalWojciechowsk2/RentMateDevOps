@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import '../models/offer.dart';
 import 'auth_service.dart';
 
@@ -252,6 +254,55 @@ class OfferService {
       );
     } catch (e) {
       return false;
+    }
+  }
+
+  // Pobierz wygenerowany PDF umowy
+  Future<Uint8List> downloadGeneratedContractPdf(int offerId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/Offer/$offerId/offerContract/pdf'),
+        headers: {
+          'Authorization': 'Bearer ${await _authService.getToken()}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return response.bodyBytes;
+      } else {
+        throw Exception('Failed to download PDF: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Failed to download PDF: $e');
+    }
+  }
+
+  // Zapisz PDF na urządzeniu
+  Future<String> savePdfToDevice(Uint8List pdfBytes, String fileName) async {
+    try {
+      if (kIsWeb) {
+        // Na web nie możemy zapisać pliku bezpośrednio, więc zwracamy informację
+        throw Exception('Zapisywanie plików na web nie jest obsługiwane. Użyj pobierania przez przeglądarkę.');
+      }
+
+      final directory = await getApplicationDocumentsDirectory();
+      final filePath = '${directory.path}/$fileName';
+      final file = File(filePath);
+      await file.writeAsBytes(pdfBytes);
+      return filePath;
+    } catch (e) {
+      throw Exception('Failed to save PDF: $e');
+    }
+  }
+
+  // Pobierz i zapisz PDF umowy na urządzeniu
+  Future<String> downloadAndSaveContractPdf(int offerId) async {
+    try {
+      final pdfBytes = await downloadGeneratedContractPdf(offerId);
+      final fileName = 'Umowa_Najmu_$offerId.pdf';
+      return await savePdfToDevice(pdfBytes, fileName);
+    } catch (e) {
+      throw Exception('Failed to download and save PDF: $e');
     }
   }
 

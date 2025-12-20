@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../services/auth_service.dart';
+import '../services/user_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -22,6 +23,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _phoneNumberController = TextEditingController();
   final _aboutMeController = TextEditingController();
   final _authService = AuthService();
+  final _userService = UserService();
   bool _isLoading = false;
   File? _selectedImage;
   Uint8List? _selectedImageBytes;
@@ -72,6 +74,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       setState(() => _isLoading = true);
       try {
+        // Najpierw zarejestruj użytkownika bez zdjęcia
         final user = await _authService.register(
           email: _emailController.text,
           password: _passwordController.text,
@@ -79,9 +82,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
           lastName: _lastNameController.text,
           phoneNumber: _phoneNumberController.text,
           role: _selectedRole!,
-          aboutMe: _aboutMeController.text.isEmpty ? null : _aboutMeController.text,
-          photoUrl: _selectedImage?.path, // Use selected image path
+          aboutMe: _aboutMeController.text.trim().isEmpty ? null : _aboutMeController.text.trim(),
+          photoUrl: null, // Zostanie ustawione później, jeśli zdjęcie zostało wybrane
         );
+
+        // Jeśli zdjęcie zostało wybrane, uploaduj je
+        if (_selectedImageBytes != null) {
+          try {
+            await _userService.uploadUserPhoto(_selectedImageBytes!);
+            // PhotoUrl jest już zaktualizowany przez uploadUserPhoto
+          } catch (e) {
+            // Jeśli upload zdjęcia się nie powiódł, kontynuuj - użytkownik został już utworzony
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Użytkownik został utworzony, ale wystąpił błąd podczas przesyłania zdjęcia: $e'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            }
+          }
+        }
+
         if (mounted) {
           Navigator.pushReplacementNamed(context, '/home');
         } 

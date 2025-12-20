@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/property.dart';
 import '../models/offer.dart';
 import '../services/offer_service.dart';
@@ -216,20 +217,39 @@ class _RentalAgreementsTabState extends State<RentalAgreementsTab> {
               'Okres: ${_formatDate(offer.rentalPeriodStart)} - ${_formatDate(offer.rentalPeriodEnd)}',
               style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
-            // Link do PDF umowy jeśli istnieje
-            if (offer.contractPdfUrl != null && offer.contractPdfUrl!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              ElevatedButton.icon(
-                onPressed: () => _openContractPdf(offer.contractPdfUrl!),
-                icon: const Icon(Icons.picture_as_pdf, size: 18),
-                label: const Text('Pobierz umowę PDF'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red[50],
-                  foregroundColor: Colors.red[700],
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            // Przyciski do pobierania PDF
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _downloadGeneratedPdf(offer.id),
+                    icon: const Icon(Icons.download, size: 18),
+                    label: const Text('Pobierz wygenerowany PDF'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[50],
+                      foregroundColor: Colors.blue[700],
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+                if (offer.contractPdfUrl != null && offer.contractPdfUrl!.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _openContractPdf(offer.contractPdfUrl!),
+                      icon: const Icon(Icons.picture_as_pdf, size: 18),
+                      label: const Text('Pobierz uploadowany PDF'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red[50],
+                        foregroundColor: Colors.red[700],
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ],
         ),
       ),
@@ -265,6 +285,73 @@ class _RentalAgreementsTabState extends State<RentalAgreementsTab> {
             backgroundColor: Colors.red,
           ),
         );
+      }
+    }
+  }
+
+  Future<void> _downloadGeneratedPdf(int offerId) async {
+    try {
+      setState(() => _isLoading = true);
+      
+      if (kIsWeb) {
+        // Na web, użyj URL do pobrania PDF
+        final pdfUrl = 'https://localhost:7281/api/Offer/$offerId/offerContract/pdf';
+        final uri = Uri.parse(pdfUrl);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('PDF został otwarty w przeglądarce'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Nie można otworzyć pliku PDF'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } else {
+        // Na urządzeniu mobilnym, zapisz plik
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Pobieranie PDF...'),
+              backgroundColor: Colors.blue,
+            ),
+          );
+        }
+
+        final filePath = await _offerService.downloadAndSaveContractPdf(offerId);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('PDF został zapisany: $filePath'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Błąd podczas pobierania PDF: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
   }
