@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -159,6 +160,55 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     }
   }
 
+  Future<void> _downloadGeneratedPdf(int offerId) async {
+    try {
+      setState(() => _isLoading = true);
+      
+      if (kIsWeb) {
+        // Na web, użyj URL do pobrania PDF
+        final pdfUrl = 'https://localhost:7281/api/Offer/$offerId/offerContract/pdf';
+        final uri = Uri.parse(pdfUrl);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Nie można otworzyć pliku PDF'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } else {
+        // Na urządzeniu mobilnym, zapisz plik
+        final filePath = await _offerService.downloadAndSaveContractPdf(offerId);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('PDF został zapisany: $filePath'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Błąd podczas pobierania PDF: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
     if (_startDate == null || _endDate == null) {
@@ -199,12 +249,32 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Oferta została utworzona i wysłana do najemcy!'),
-            backgroundColor: Colors.green,
+        // Pokaż dialog z opcją pobrania wygenerowanego PDF
+        final shouldDownload = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Oferta utworzona'),
+            content: const Text(
+              'Oferta została utworzona i wysłana do najemcy!\n\n'
+              'Umowa została automatycznie wygenerowana. Czy chcesz pobrać PDF umowy?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Pomiń'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Pobierz PDF'),
+              ),
+            ],
           ),
         );
+
+        if (shouldDownload == true) {
+          await _downloadGeneratedPdf(offer.id);
+        }
+
         Navigator.pop(context, true);
       }
     } catch (e) {

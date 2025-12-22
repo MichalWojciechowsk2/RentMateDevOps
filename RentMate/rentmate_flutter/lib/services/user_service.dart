@@ -126,5 +126,47 @@ class UserService {
       throw Exception('Failed to search users: $e');
     }
   }
+
+  Future<void> updateUserField(int userId, String field, String value) async {
+    try {
+      final token = await _authService.getToken();
+      if (token == null) {
+        throw Exception('No authentication token');
+      }
+
+      // Mapowanie nazwy pola na enum z backendu
+      // UserFieldToUpdate: AboutMe = 0, PhoneNumber = 1, FirstName = 2, LastName = 3
+      int fieldValue;
+      if (field.toLowerCase() == 'aboutme') {
+        fieldValue = 0; // UserFieldToUpdate.AboutMe = 0
+      } else if (field.toLowerCase() == 'phonenumber') {
+        fieldValue = 1; // UserFieldToUpdate.PhoneNumber = 1
+      } else if (field.toLowerCase() == 'firstname') {
+        fieldValue = 2; // UserFieldToUpdate.FirstName = 2
+      } else if (field.toLowerCase() == 'lastname') {
+        fieldValue = 3; // UserFieldToUpdate.LastName = 3
+      } else {
+        throw Exception('Unknown field: $field');
+      }
+
+      final response = await http.patch(
+        Uri.parse('$_baseUrl/User/patchUserAboutMeOrPhoneNumber'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'field': fieldValue,
+          'value': value,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update user field: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Failed to update user field: $e');
+    }
+  }
 }
 

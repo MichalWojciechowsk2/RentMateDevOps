@@ -71,6 +71,12 @@ namespace Services.Services
                 case UserFieldToUpdate.PhoneNumber:
                     user.PhoneNumber = value;
                     break;
+                case UserFieldToUpdate.FirstName:
+                    user.FirstName = value;
+                    break;
+                case UserFieldToUpdate.LastName:
+                    user.LastName = value;
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(field), field, null);
             }

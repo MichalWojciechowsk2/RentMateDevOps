@@ -151,13 +151,38 @@ class PaymentService {
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         return data.map<Map<String, dynamic>>((payment) {
+          // Parsuj status - może być zwracany jako enum (liczba) lub string
+          String status;
+          final statusRaw = payment['status'];
+          if (statusRaw is int) {
+            // PaymentStatus enum: Pending=0, Completed=1, Failed=2, Cancelled=3
+            switch (statusRaw) {
+              case 0:
+                status = 'Pending';
+                break;
+              case 1:
+                status = 'Completed';
+                break;
+              case 2:
+                status = 'Failed';
+                break;
+              case 3:
+                status = 'Cancelled';
+                break;
+              default:
+                status = 'Pending';
+            }
+          } else {
+            status = statusRaw?.toString() ?? 'Pending';
+          }
+          
           return {
             'id': payment['id'] is int ? payment['id'] : int.tryParse(payment['id']?.toString() ?? '') ?? 0,
             'offerId': payment['offerId'] is int ? payment['offerId'] : int.tryParse(payment['offerId']?.toString() ?? '') ?? 0,
             'tenantId': payment['tenantId'] is int ? payment['tenantId'] : int.tryParse(payment['tenantId']?.toString() ?? '') ?? 0,
             'amount': payment['amount'] is double ? payment['amount'] : double.tryParse(payment['amount']?.toString() ?? '') ?? 0.0,
             'description': payment['description']?.toString() ?? '',
-            'status': payment['status']?.toString() ?? 'Pending',
+            'status': status,
             'dueDate': payment['dueDate'] != null ? DateTime.parse(payment['dueDate'].toString()) : null,
             'paidAt': payment['paidAt'] != null ? DateTime.parse(payment['paidAt'].toString()) : null,
             'paymentMethod': payment['paymentMethod']?.toString() ?? '',
