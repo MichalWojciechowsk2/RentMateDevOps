@@ -129,7 +129,6 @@ namespace RentMateApi.Controllers
             }
         }
 
-        //semestrZ-25/26?
         [Authorize]
         [HttpGet("getAvgReview")]
         public async Task<IActionResult> getAvgReview(bool isItUser, int objectId)

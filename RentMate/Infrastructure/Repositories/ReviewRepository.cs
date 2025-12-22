@@ -73,11 +73,19 @@ namespace Infrastructure.Repositories
         }
         public async Task<decimal> GetAvgForUser(int userId)
         {
-            return await _context.Reviews.Where(r => r.UserId == userId).AverageAsync(r => (decimal)r.Rating);
+            var query = _context.Reviews.Where(r => r.UserId == userId);
+
+            return await query.AnyAsync()
+                ? await query.AverageAsync(r => (decimal)r.Rating)
+                : 0;
         }
         public async Task<decimal> GetAvgForProperty(int propertyId)
         {
-            return await _context.Reviews.Where(r => r.PropertyId == propertyId).AverageAsync(r => (decimal)r.Rating);
+            var query = _context.Reviews.Where(r => r.PropertyId == propertyId);
+
+            return await query.AnyAsync()
+                ? await query.AverageAsync(r => (decimal)r.Rating)
+                : 0;
         }
     }
     public interface IReviewRepository
