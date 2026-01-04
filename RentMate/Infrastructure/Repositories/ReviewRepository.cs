@@ -87,6 +87,15 @@ namespace Infrastructure.Repositories
                 ? await query.AverageAsync(r => (decimal)r.Rating)
                 : 0;
         }
+        public async Task<IEnumerable<ReviewEntity>> GetAllReviews()
+        {
+            return await _context.Reviews
+                .Include(r => r.Author)
+                .Include(r => r.User)
+                .Include(r => r.Property)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+        }
     }
     public interface IReviewRepository
     {
@@ -99,5 +108,6 @@ namespace Infrastructure.Repositories
         Task<IEnumerable<ReviewEntity>> GetLast5ReviewsForProperty(int propertyId);
         Task<decimal> GetAvgForUser(int userId);
         Task<decimal> GetAvgForProperty(int propertyId);
+        Task<IEnumerable<ReviewEntity>> GetAllReviews();
     }
 }

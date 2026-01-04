@@ -4,6 +4,7 @@ using Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(RentMateDbContext))]
-    partial class RentMateDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260104154152_addBannedUsers")]
+    partial class addBannedUsers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -455,48 +458,6 @@ namespace Data.Migrations
                     b.ToTable("RecurringPayment");
                 });
 
-            modelBuilder.Entity("Data.Entities.ReportEntity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsResolved")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<int>("ReportedUserId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ReporterId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("ResolvedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("ResolvedByAdminId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReportedUserId");
-
-                    b.HasIndex("ReporterId");
-
-                    b.HasIndex("ResolvedByAdminId");
-
-                    b.ToTable("Reports");
-                });
-
             modelBuilder.Entity("Data.Entities.ReviewEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -771,32 +732,6 @@ namespace Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Payment");
-                });
-
-            modelBuilder.Entity("Data.Entities.ReportEntity", b =>
-                {
-                    b.HasOne("Data.Entities.UserEntity", "ReportedUser")
-                        .WithMany()
-                        .HasForeignKey("ReportedUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Data.Entities.UserEntity", "Reporter")
-                        .WithMany()
-                        .HasForeignKey("ReporterId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Data.Entities.UserEntity", "ResolvedByAdmin")
-                        .WithMany()
-                        .HasForeignKey("ResolvedByAdminId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("ReportedUser");
-
-                    b.Navigation("Reporter");
-
-                    b.Navigation("ResolvedByAdmin");
                 });
 
             modelBuilder.Entity("Data.Entities.ReviewEntity", b =>

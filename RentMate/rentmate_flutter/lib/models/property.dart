@@ -15,6 +15,7 @@ class Property {
   final String area;
   final List<PropertyImage> images;
   final bool isActive;
+  final bool isHidden;
   final int? chatGroupId;
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -36,6 +37,7 @@ class Property {
     required this.area,
     required this.images,
     required this.isActive,
+    this.isHidden = false,
     this.chatGroupId,
     required this.createdAt,
     this.updatedAt,
@@ -59,6 +61,7 @@ class Property {
       area: json['area']?.toString() ?? '',
       images: (json['images'] as List?)?.map((e) => PropertyImage.fromJson(e)).toList() ?? [],
       isActive: json['isActive'] is bool ? json['isActive'] ?? false : (json['isActive']?.toString() == 'true'),
+      isHidden: json['isHidden'] is bool ? json['isHidden'] ?? false : (json['isHidden']?.toString() == 'true'),
       chatGroupId: json['chatGroupId'] is int ? json['chatGroupId'] : int.tryParse(json['chatGroupId']?.toString() ?? ''),
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
@@ -105,6 +108,7 @@ class Property {
     required String ownerUsername,
     List<PropertyImage> images = const [],
     bool isActive = true,
+    bool isHidden = false,
   }) {
     return Property(
       id: 0, // Tymczasowe ID, zostanie nadane przez serwer
@@ -121,6 +125,7 @@ class Property {
       area: area,
       images: images,
       isActive: isActive,
+      isHidden: isHidden,
       createdAt: DateTime.now(),
       ownerUsername: ownerUsername,
       ownerPhoneNumber: null,

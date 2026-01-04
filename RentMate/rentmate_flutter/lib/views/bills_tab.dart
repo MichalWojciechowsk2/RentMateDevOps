@@ -33,6 +33,10 @@ class _BillsTabState extends State<BillsTab> {
   DateTime? _selectedDueDate;
   String _selectedPaymentMethod = 'Przelew';
   
+  // Recurring payment controllers
+  final _recurrenceTimesController = TextEditingController();
+  bool _untilContractEnd = false;
+  
   final List<String> _paymentMethods = ['Przelew', 'Gotówka', 'Inne'];
 
   @override
@@ -213,6 +217,23 @@ class _BillsTabState extends State<BillsTab> {
         throw Exception('Kwota musi być większa od 0');
       }
 
+      // Obsługa rachunków cyklicznych
+      bool generateWithRecurring = false;
+      int? recurrenceTimes;
+      
+      if (_untilContractEnd) {
+        // Jeśli zaznaczono "Do końca trwania umowy", ustaw -1 (backend obliczy automatycznie)
+        generateWithRecurring = true;
+        recurrenceTimes = -1;
+      } else if (_recurrenceTimesController.text.isNotEmpty) {
+        // Jeśli wpisano liczbę powtórzeń, użyj tej wartości
+        final times = int.tryParse(_recurrenceTimesController.text);
+        if (times != null && times > 0) {
+          generateWithRecurring = true;
+          recurrenceTimes = times;
+        }
+      }
+
       await _paymentService.createPayment(
         propertyId: widget.property.id,
         offerId: _selectedOfferId!,
@@ -221,6 +242,8 @@ class _BillsTabState extends State<BillsTab> {
         dueDate: _selectedDueDate!,
         paymentMethod: _selectedPaymentMethod,
         bankAccountNumber: _selectedPaymentMethod == 'Przelew' ? _bankAccountController.text : null,
+        generateWithRecurring: generateWithRecurring,
+        recurrenceTimes: recurrenceTimes,
       );
 
       if (mounted) {
@@ -236,9 +259,11 @@ class _BillsTabState extends State<BillsTab> {
         _amountController.clear();
         _descriptionController.clear();
         _bankAccountController.clear();
+        _recurrenceTimesController.clear();
         _selectedDueDate = null;
         _selectedOfferId = null;
         _selectedPaymentMethod = 'Przelew';
+        _untilContractEnd = false;
         setState(() {});
         
         // Odśwież listę rachunków
@@ -263,7 +288,29 @@ class _BillsTabState extends State<BillsTab> {
     _amountController.dispose();
     _descriptionController.dispose();
     _bankAccountController.dispose();
+    _recurrenceTimesController.dispose();
     super.dispose();
+  }
+  
+  // Oblicz liczbę miesięcy do końca umowy
+  int _calculateMonthsUntilContractEnd() {
+    if (_selectedOfferId == null) return 0;
+    final offer = _offers.firstWhere((o) => o.id == _selectedOfferId);
+    final now = DateTime.now();
+    final endDate = offer.rentalPeriodEnd;
+    
+    if (endDate.isBefore(now)) return 0;
+    
+    int months = 0;
+    DateTime current = DateTime(now.year, now.month, 1);
+    DateTime end = DateTime(endDate.year, endDate.month, 1);
+    
+    while (current.isBefore(end) || current.isAtSameMomentAs(end)) {
+      months++;
+      current = DateTime(current.year, current.month + 1, 1);
+    }
+    
+    return months;
   }
 
   @override
@@ -485,6 +532,59 @@ class _BillsTabState extends State<BillsTab> {
                                   ],
                                   const SizedBox(height: 24),
                                   
+                                  // Sekcja rachunków cyklicznych
+                                  const Text(
+                                    'Rachunek cykliczny',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    'Rachunki cykliczne polegają na automatycznym tworzeniu rachunków z danymi wpisanymi podczas tworzenia pierwszego rachunku pierwszego dnia każdego miesiąca.',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  TextFormField(
+                                    controller: _recurrenceTimesController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Opcje powtórzeń',
+                                      border: OutlineInputBorder(),
+                                      hintText: '5',
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    enabled: !_untilContractEnd,
+                                    validator: (value) {
+                                      if (_untilContractEnd) return null;
+                                      if (value != null && value.isNotEmpty) {
+                                        final times = int.tryParse(value);
+                                        if (times == null || times <= 0) {
+                                          return 'Podaj liczbę większą od 0';
+                                        }
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  const SizedBox(height: 8),
+                                  CheckboxListTile(
+                                    title: const Text('Do końca trwania umowy'),
+                                    value: _untilContractEnd,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _untilContractEnd = value ?? false;
+                                        if (_untilContractEnd) {
+                                          _recurrenceTimesController.clear();
+                                        }
+                                      });
+                                    },
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                  const SizedBox(height: 24),
+                                  
                                   // Przyciski
                                   Row(
                                     children: [
@@ -497,9 +597,11 @@ class _BillsTabState extends State<BillsTab> {
                                                   _amountController.clear();
                                                   _descriptionController.clear();
                                                   _bankAccountController.clear();
+                                                  _recurrenceTimesController.clear();
                                                   _selectedDueDate = null;
                                                   _selectedOfferId = null;
                                                   _selectedPaymentMethod = 'Przelew';
+                                                  _untilContractEnd = false;
                                                   setState(() {});
                                                 },
                                           child: const Text('Anuluj'),

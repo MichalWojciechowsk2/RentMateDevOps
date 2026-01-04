@@ -14,6 +14,8 @@ import '../services/message_service.dart';
 import '../services/notification_service.dart';
 import '../services/review_service.dart';
 import '../models/review.dart';
+import '../services/user_service.dart';
+import '../views/tenant_profile_view.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -29,6 +31,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final MessageService _messageService = MessageService();
   final NotificationService _notificationService = NotificationService();
   final ReviewService _reviewService = ReviewService();
+  final UserService _userService = UserService();
   List<Property> _properties = [];
   bool _isLoading = false;
   User? _currentUser;
@@ -51,6 +54,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final _roomsController = TextEditingController();
   final _minAreaController = TextEditingController();
   final _maxAreaController = TextEditingController();
+
+  // Wyszukiwanie użytkowników
+  final _userSearchController = TextEditingController();
+  List<User> _userSearchResults = [];
+  bool _isSearchingUsers = false;
 
   @override
   void initState() {
@@ -223,6 +231,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await _loadProperties();
   }
 
+  Future<void> _searchUsers(String query) async {
+    if (query.trim().isEmpty) {
+      setState(() {
+        _userSearchResults = [];
+        _isSearchingUsers = false;
+      });
+      return;
+    }
+
+    setState(() => _isSearchingUsers = true);
+    try {
+      final users = await _userService.searchUsersByName(query);
+      setState(() {
+        _userSearchResults = users;
+        _isSearchingUsers = false;
+      });
+    } catch (e) {
+      setState(() => _isSearchingUsers = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Błąd podczas wyszukiwania użytkowników: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _showUserProfile(User user) async {
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (context) => TenantProfileView(
+          tenant: user,
+          propertyId: 0,
+        ),
+      );
+    }
+  }
+
   void _resetFilters() {
     setState(() {
       _selectedCity = null;
@@ -264,6 +313,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _roomsController.dispose();
     _minAreaController.dispose();
     _maxAreaController.dispose();
+    _userSearchController.dispose();
     super.dispose();
   }
 
@@ -387,7 +437,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
               ],
             ),
-          if (_currentUser?.role == 'Owner' || _currentUser?.role == 'Tenant')
+          if (_currentUser?.role == 'Owner' || 
+              _currentUser?.role == 'Tenant' || 
+              _currentUser?.role == 'Administrator')
             Stack(
               children: [
                 IconButton(
@@ -445,6 +497,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _loadProperties();
                 _fetchCities();
                 _fetchDistricts();
+              },
+            ),
+          if (_currentUser?.role == 'Administrator')
+            IconButton(
+              icon: const Icon(Icons.admin_panel_settings),
+              tooltip: 'Panel administratora',
+              onPressed: () {
+                Navigator.pushNamed(context, '/admin-panel');
               },
             ),
           IconButton(
@@ -562,6 +622,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 16),
+                // Wyszukiwanie użytkowników
+                const Text(
+                  'Wyszukaj użytkownika',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _userSearchController,
+                  decoration: InputDecoration(
+                    labelText: 'Wyszukaj użytkownika',
+                    hintText: 'Wpisz imię i nazwisko',
+                    border: const OutlineInputBorder(),
+                    suffixIcon: _isSearchingUsers
+                        ? const Padding(
+                            padding: EdgeInsets.all(12.0),
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : null,
+                  ),
+                  onChanged: (value) {
+                    if (value.length >= 2) {
+                      _searchUsers(value);
+                    } else {
+                      setState(() {
+                        _userSearchResults = [];
+                      });
+                    }
+                  },
+                ),
+                // Lista wyników wyszukiwania użytkowników
+                if (_userSearchResults.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    constraints: const BoxConstraints(maxHeight: 200),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: _userSearchResults.length,
+                      itemBuilder: (context, index) {
+                        final user = _userSearchResults[index];
+                        return ListTile(
+                          leading: const Icon(Icons.person),
+                          title: Text('${user.firstName} ${user.lastName}'),
+                          subtitle: Text('ID: ${user.id}'),
+                          onTap: () {
+                            _userSearchController.clear();
+                            setState(() {
+                              _userSearchResults = [];
+                            });
+                            _showUserProfile(user);
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

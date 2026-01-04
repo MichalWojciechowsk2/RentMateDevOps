@@ -103,11 +103,24 @@ class AuthService {
         final data = jsonDecode(response.body);
         await _persistUserData(data['token'], data['user']);
         return User.fromJson(data['user']);
+      } else if (response.statusCode == 401) {
+        // Unauthorized - sprawdź czy to błąd zbanowania
+        try {
+          final errorData = jsonDecode(response.body);
+          final message = errorData['message']?.toString() ?? 'Nieprawidłowe dane logowania';
+          throw Exception(message);
+        } catch (e) {
+          throw Exception('Nieprawidłowe dane logowania');
+        }
       } else {
-        throw Exception('Failed to login: ${response.body}');
+        throw Exception('Błąd podczas logowania: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Failed to connect to the server: $e');
+      // Jeśli to już Exception z komunikatem, przekaż dalej
+      if (e.toString().contains('Zostałeś zbanowany')) {
+        throw e;
+      }
+      throw Exception('Nie można połączyć się z serwerem: $e');
     }
   }
 

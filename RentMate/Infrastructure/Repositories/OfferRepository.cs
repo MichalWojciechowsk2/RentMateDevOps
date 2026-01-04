@@ -91,7 +91,9 @@ namespace Infrastructure.Repositories
         public async Task<int> GetAcceptedOffersCountByPropertyId(int propertyId)
         {
             return await _context.Offers
-                .Where(o => o.PropertyId == propertyId && o.Status == OfferStatus.Accepted)
+                .Where(o => o.PropertyId == propertyId && 
+                           o.Status == OfferStatus.Accepted && 
+                           o.TenantId != null)
                 .CountAsync();
         }
         public async Task<IEnumerable<OfferEntity>> getOffersByPropertyId(int propertyId)

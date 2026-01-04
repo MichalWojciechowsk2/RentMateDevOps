@@ -34,7 +34,7 @@ namespace Services.Services
         public async Task<PagedResult<PropertyDto>> GetPagedAllActiveProperties(int pageNumber, int pageSize, PropertyFilterDto? filters = null)
         {
             var query = _propertyRepository.GetPropertiesQueryable()
-                .Where(p => p.IsActive);
+                .Where(p => p.IsActive && !p.IsHidden);
 
             // Apply filters if provided
             if (filters != null)
@@ -108,7 +108,8 @@ namespace Services.Services
         }
         public async Task<IEnumerable<PropertyDto>> SearchProperties(PropertyFilterDto filters)
         {
-            var query = _propertyRepository.GetPropertiesQueryable();
+            var query = _propertyRepository.GetPropertiesQueryable()
+                .Where(p => !p.IsHidden);
             
             if (!string.IsNullOrEmpty(filters.City))
                 query = query.Where(p => p.City == filters.City);
@@ -140,7 +141,7 @@ namespace Services.Services
             var entities = await _propertyRepository.GetPropertiesQueryable()
                                                 .Include(p => p.Owner)
                                                 .Include(p => p.PropertyImages)
-                                                .Where(p => p.OwnerId == ownerId)
+                                                .Where(p => p.OwnerId == ownerId && !p.IsHidden)
                                                 .ToListAsync();
             return _mapper.Map<IEnumerable<PropertyDto>>(entities);
         }

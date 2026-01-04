@@ -8,6 +8,7 @@ import 'views/property_details_screen.dart';
 import 'views/my_properties_screen.dart';
 import 'views/profile_screen.dart';
 import 'views/notifications_screen.dart';
+import 'views/admin_panel_screen.dart';
 import 'services/auth_service.dart';
 
 void main() {
@@ -59,6 +60,7 @@ class MyApp extends StatelessWidget {
         '/my-properties': (context) => const MyPropertiesScreen(),
         '/profile': (context) => const ProfileScreen(),
         '/notifications': (context) => const NotificationsScreen(),
+        '/admin-panel': (context) => const AdminPanelScreen(),
       },
     );
   }

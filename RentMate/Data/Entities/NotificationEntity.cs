@@ -37,7 +37,7 @@ namespace Data.Entities
                         break;
                     case NotificationType.CreatePayment:
                         Title = "Nowa płatność";
-                        Message = $"{senderName} utowrzył nową płatność.";
+                        Message = $"{senderName} utworzył nową płatność.";
                         break;
                 case NotificationType.PaymentDue:
                         Title = "Przypomnienie o płatności";

@@ -37,8 +37,18 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       } catch (e) {
         if (mounted) {
+          String errorMessage = e.toString();
+          // Usuń "Exception: " z początku komunikatu jeśli istnieje
+          if (errorMessage.startsWith('Exception: ')) {
+            errorMessage = errorMessage.substring(11);
+          }
+          
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(e.toString())),
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: errorMessage.contains('zbanowany') ? Colors.red : Colors.orange,
+              duration: const Duration(seconds: 5),
+            ),
           );
         }
       } finally {

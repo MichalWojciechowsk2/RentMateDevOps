@@ -3,6 +3,8 @@ using ApplicationCore.Dto.Payment;
 using ApplicationCore.Dto.Property;
 using ApplicationCore.Dto.Property.Offer;
 using ApplicationCore.Dto.User;
+using ApplicationCore.Dto.Admin;
+using ApplicationCore.Dto.Report;
 //using ApplicationCore.Dto.Issue;
 using AutoMapper;
 using Data.Entities;
@@ -66,6 +68,21 @@ namespace Services.AutoMapper
             .ForMember(dest => dest.SenderId, opt => opt.MapFrom(src => src.SenderId));
 
             CreateMap<UserEntity, UserDto>();
+
+            //Admin
+            CreateMap<UserEntity, AdminUserDto>()
+                .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role.ToString()));
+            
+            CreateMap<ReviewEntity, AdminReviewDto>()
+                .ForMember(dest => dest.AuthorName, opt => opt.MapFrom(src => src.Author != null ? $"{src.Author.FirstName} {src.Author.LastName}" : null))
+                .ForMember(dest => dest.PropertyAddress, opt => opt.MapFrom(src => src.Property != null ? $"{src.Property.Address}, {src.Property.City}" : null))
+                .ForMember(dest => dest.ReviewedUserName, opt => opt.MapFrom(src => src.User != null ? $"{src.User.FirstName} {src.User.LastName}" : null));
+
+            //Report
+            CreateMap<ReportEntity, ReportDto>()
+                .ForMember(dest => dest.ReportedUserName, opt => opt.MapFrom(src => src.ReportedUser != null ? $"{src.ReportedUser.FirstName} {src.ReportedUser.LastName}" : null))
+                .ForMember(dest => dest.ReporterName, opt => opt.MapFrom(src => src.Reporter != null ? $"{src.Reporter.FirstName} {src.Reporter.LastName}" : null))
+                .ForMember(dest => dest.ResolvedByAdminName, opt => opt.MapFrom(src => src.ResolvedByAdmin != null ? $"{src.ResolvedByAdmin.FirstName} {src.ResolvedByAdmin.LastName}" : null));
         }
     }
 }

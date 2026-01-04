@@ -4,6 +4,8 @@ import '../models/user.dart';
 import '../models/review.dart';
 import '../services/review_service.dart';
 import '../services/auth_service.dart';
+import '../services/report_service.dart';
+import 'chat_screen.dart';
 
 class TenantProfileView extends StatefulWidget {
   final User tenant;
@@ -22,15 +24,19 @@ class TenantProfileView extends StatefulWidget {
 class _TenantProfileViewState extends State<TenantProfileView> {
   final _reviewService = ReviewService();
   final _authService = AuthService();
+  final _reportService = ReportService();
   final _formKey = GlobalKey<FormState>();
   final _commentController = TextEditingController();
+  final _reportReasonController = TextEditingController();
   
   List<Review> _reviews = [];
   bool _isLoading = true;
   bool _isSubmitting = false;
+  bool _isSubmittingReport = false;
   double _selectedRating = 0;
   bool _canSubmitReview = true;
   int? _currentUserId;
+  User? _currentUser;
 
   @override
   void initState() {
@@ -41,6 +47,7 @@ class _TenantProfileViewState extends State<TenantProfileView> {
   @override
   void dispose() {
     _commentController.dispose();
+    _reportReasonController.dispose();
     super.dispose();
   }
 
@@ -49,6 +56,7 @@ class _TenantProfileViewState extends State<TenantProfileView> {
     try {
       final currentUser = await _authService.getCurrentUser();
       setState(() {
+        _currentUser = currentUser;
         _currentUserId = currentUser != null ? int.tryParse(currentUser.id) : null;
       });
 
@@ -228,6 +236,37 @@ class _TenantProfileViewState extends State<TenantProfileView> {
                                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                             color: Colors.grey[600],
                                           ),
+                                    ),
+                                  ],
+                                  // Przyciski akcji
+                                  if (_currentUserId != null && 
+                                      int.parse(widget.tenant.id) != _currentUserId) ...[
+                                    const SizedBox(height: 16),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        ElevatedButton.icon(
+                                          onPressed: () => _openChat(),
+                                          icon: const Icon(Icons.message),
+                                          label: const Text('Wyślij wiadomość'),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.blue,
+                                            foregroundColor: Colors.white,
+                                          ),
+                                        ),
+                                        if (_currentUser?.role != 'Administrator') ...[
+                                          const SizedBox(width: 12),
+                                          ElevatedButton.icon(
+                                            onPressed: _showReportDialog,
+                                            icon: const Icon(Icons.flag),
+                                            label: const Text('Zgłoś'),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.red,
+                                              foregroundColor: Colors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ],
                                     ),
                                   ],
                                 ],
@@ -453,5 +492,113 @@ class _TenantProfileViewState extends State<TenantProfileView> {
 
   String _formatDate(DateTime date) {
     return '${date.day}.${date.month}.${date.year}';
+  }
+
+  Future<void> _showReportDialog() async {
+    _reportReasonController.clear();
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Zgłoś użytkownika'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Zgłaszasz użytkownika: ${widget.tenant.firstName} ${widget.tenant.lastName}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _reportReasonController,
+                decoration: const InputDecoration(
+                  labelText: 'Powód zgłoszenia',
+                  hintText: 'Opisz dlaczego zgłaszasz tego użytkownika...',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 5,
+                maxLength: 2000,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Anuluj'),
+          ),
+          ElevatedButton(
+            onPressed: _isSubmittingReport ? null : _submitReport,
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: _isSubmittingReport
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                  )
+                : const Text('Zgłoś'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _submitReport() async {
+    if (_reportReasonController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Proszę podać powód zgłoszenia'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isSubmittingReport = true);
+    try {
+      await _reportService.createReport(
+        int.parse(widget.tenant.id),
+        _reportReasonController.text.trim(),
+      );
+
+      if (mounted) {
+        Navigator.of(context).pop(); // Zamknij dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Użytkownik został zgłoszony'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Błąd podczas zgłaszania: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmittingReport = false);
+      }
+    }
+  }
+
+  Future<void> _openChat() async {
+    if (mounted) {
+      Navigator.of(context).pop(); // Zamknij dialog profilu
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatScreen(
+            otherUserId: int.parse(widget.tenant.id),
+            otherUsername: '${widget.tenant.firstName} ${widget.tenant.lastName}',
+          ),
+        ),
+      );
+    }
   }
 }

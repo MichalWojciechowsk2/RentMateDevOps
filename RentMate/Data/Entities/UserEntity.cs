@@ -35,6 +35,7 @@ namespace Data.Entities
         public UserRole Role { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? LastLoginAt { get; set; }
+        public bool IsBanned { get; set; } = false;
     }
 
     public enum UserRole

@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/property.dart';
 import '../models/offer.dart';
@@ -39,8 +36,6 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
   int? _selectedTenantId;
   List<User> _searchResults = [];
   bool _isSearching = false;
-  File? _selectedPdfFile;
-  Uint8List? _selectedPdfBytes;
 
   @override
   void initState() {
@@ -117,42 +112,6 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Błąd podczas wyszukiwania użytkowników: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _pickPdfFile() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf'],
-      );
-
-      if (result != null) {
-        if (kIsWeb) {
-          final bytes = result.files.single.bytes;
-          if (bytes != null) {
-            setState(() {
-              _selectedPdfBytes = bytes;
-              _selectedPdfFile = null;
-            });
-          }
-        } else {
-          final file = File(result.files.single.path!);
-          setState(() {
-            _selectedPdfFile = file;
-            _selectedPdfBytes = null;
-          });
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Błąd podczas wybierania pliku: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -242,11 +201,6 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
       );
 
       final offer = await _offerService.createOffer(dto);
-
-      // Jeśli wybrano plik PDF, wyślij go
-      if (_selectedPdfFile != null || _selectedPdfBytes != null) {
-        await _offerService.uploadContractPdf(offer.id, _selectedPdfFile, _selectedPdfBytes);
-      }
 
       if (mounted) {
         // Pokaż dialog z opcją pobrania wygenerowanego PDF
@@ -488,55 +442,6 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                               setState(() {
                                 _selectedTenantId = null;
                                 _tenantSearchController.clear();
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 16),
-                  // Upload PDF
-                  const Text(
-                    'Umowa najmu (PDF) - opcjonalnie',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton.icon(
-                    onPressed: _pickPdfFile,
-                    icon: const Icon(Icons.upload_file),
-                    label: const Text('Wybierz plik PDF'),
-                  ),
-                  if (_selectedPdfFile != null || _selectedPdfBytes != null) ...[
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.green[50],
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: Colors.green[200]!),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.picture_as_pdf, color: Colors.red),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              kIsWeb
-                                  ? 'Wybrany plik PDF'
-                                  : _selectedPdfFile!.path.split('/').last,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.clear, size: 20),
-                            onPressed: () {
-                              setState(() {
-                                _selectedPdfFile = null;
-                                _selectedPdfBytes = null;
                               });
                             },
                           ),

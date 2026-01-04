@@ -76,6 +76,11 @@ namespace Services.Services
                 throw new Exception("Invalid credentials.");
             }
 
+            if (userEntity.IsBanned)
+            {
+                throw new Exception("Zostałeś zbanowany");
+            }
+
             userEntity.LastLoginAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 

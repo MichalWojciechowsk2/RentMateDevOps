@@ -50,7 +50,9 @@ class _RentalAgreementsTabState extends State<RentalAgreementsTab> {
   @override
   Widget build(BuildContext context) {
     final maxOffers = widget.property.roomCount;
-    final availableSlots = maxOffers - _offers.length;
+    // Licz tylko oferty z przypisanym najemcą (tenantId != null)
+    final offersWithTenant = _offers.where((offer) => offer.tenantId != null).length;
+    final availableSlots = maxOffers - offersWithTenant;
 
     return Column(
       children: [
@@ -61,7 +63,7 @@ class _RentalAgreementsTabState extends State<RentalAgreementsTab> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Umowy wynajmu (${_offers.length}/$maxOffers)',
+                'Umowy wynajmu ($offersWithTenant/$maxOffers)',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               ElevatedButton.icon(

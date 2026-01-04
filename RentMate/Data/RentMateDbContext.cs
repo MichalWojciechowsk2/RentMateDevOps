@@ -17,8 +17,8 @@ namespace Data
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
 
-            optionsBuilder.UseSqlServer("Data Source=DESKTOP-GI765C2;Initial Catalog=RentMate;Integrated Security=True;Encrypt=True;Trust Server Certificate=True");
-            //optionsBuilder.UseSqlServer("Data Source=HP;Initial Catalog=RentMate;Integrated Security=True;Encrypt=True;Trust Server Certificate=True");
+            //optionsBuilder.UseSqlServer("Data Source=DESKTOP-GI765C2;Initial Catalog=RentMate;Integrated Security=True;Encrypt=True;Trust Server Certificate=True");
+            optionsBuilder.UseSqlServer("Data Source=HP;Initial Catalog=RentMate;Integrated Security=True;Encrypt=True;Trust Server Certificate=True");
 
         }
 
@@ -35,6 +35,7 @@ namespace Data
         public DbSet<NotificationEntity> Notifications { get; set; }
         public DbSet<InvitationEntity> Invitation { get; set; }
         public DbSet<PropertyImageEntity> PropertyImages { get; set; }
+        public DbSet<ReportEntity> Reports { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -189,6 +190,25 @@ namespace Data
                 .WithMany(p => p.PropertyImages)
                 .HasForeignKey(pi => pi.PropertyId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // konfiguracja Report
+            modelBuilder.Entity<ReportEntity>()
+                .HasOne(r => r.ReportedUser)
+                .WithMany()
+                .HasForeignKey(r => r.ReportedUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ReportEntity>()
+                .HasOne(r => r.Reporter)
+                .WithMany()
+                .HasForeignKey(r => r.ReporterId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ReportEntity>()
+                .HasOne(r => r.ResolvedByAdmin)
+                .WithMany()
+                .HasForeignKey(r => r.ResolvedByAdminId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
