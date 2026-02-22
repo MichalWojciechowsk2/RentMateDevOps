@@ -143,20 +143,20 @@ namespace Infrastructure.Repositories
             _context.Properties.RemoveRange(properties);
 
             // 9. Usuń tokeny resetowania hasła (jeśli istnieją w kontekście)
-            try
-            {
-                var passwordResetTokens = await _context.Set<PasswordResetTokenEntity>()
-                    .Where(t => t.UserId == userId)
-                    .ToListAsync();
-                if (passwordResetTokens.Any())
-                {
-                    _context.Set<PasswordResetTokenEntity>().RemoveRange(passwordResetTokens);
-                }
-            }
-            catch
-            {
-                // Jeśli PasswordResetTokenEntity nie istnieje w kontekście, zignoruj
-            }
+            //try
+            //{
+            //    var passwordResetTokens = await _context.Set<PasswordResetTokenEntity>()
+            //        .Where(t => t.UserId == userId)
+            //        .ToListAsync();
+            //    if (passwordResetTokens.Any())
+            //    {
+            //        _context.Set<PasswordResetTokenEntity>().RemoveRange(passwordResetTokens);
+            //    }
+            //}
+            //catch
+            //{
+            //    // Jeśli PasswordResetTokenEntity nie istnieje w kontekście, zignoruj
+            //}
 
             // 10. ChatUsersEntity ma Cascade, więc zostanie usunięte automatycznie
 
